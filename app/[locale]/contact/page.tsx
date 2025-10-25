@@ -190,7 +190,7 @@ export default async function ContactPage({ params }: PageProps) {
               </div>
 
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8 mt-8">
-                <div className="my-8 border-t border-gray-200">
+                <div className="my-8">
                   <ContactForm locale={locale} translations={t} />
                 </div>
 
