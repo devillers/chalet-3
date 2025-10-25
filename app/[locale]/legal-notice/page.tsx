@@ -4,22 +4,24 @@ import { generatePageMetadata } from '@/lib/seo/metadata';
 import PageHeader from '@/components/sections/PageHeader';
 
 interface PageProps {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   return generatePageMetadata({
     title: `${translations.legal.title} - Chalet Manager`,
     description: translations.legal.title,
     path: '/legal-notice',
-    locale: params.locale,
+    locale,
   });
 }
 
 export default async function LegalNoticePage({ params }: PageProps) {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   return (
     <div className="bg-white">

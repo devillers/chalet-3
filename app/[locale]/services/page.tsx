@@ -7,22 +7,24 @@ import CTAButton from '@/components/sections/CTAButton';
 import PageHeader from '@/components/sections/PageHeader';
 
 interface PageProps {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   return generatePageMetadata({
     title: `${translations.services.title} - Chalet Manager`,
     description: translations.services.subtitle,
     path: '/services',
-    locale: params.locale,
+    locale,
   });
 }
 
 export default async function ServicesPage({ params }: PageProps) {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   const services = [
     {
@@ -69,7 +71,7 @@ export default async function ServicesPage({ params }: PageProps) {
         </div>
 
           <div className="mt-16 text-center">
-            <CTAButton href={`/${params.locale}/contact`}>
+            <CTAButton href={`/${locale}/contact`}>
               {translations.cta.quote}
             </CTAButton>
           </div>
