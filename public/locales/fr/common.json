@@ -1,0 +1,150 @@
+{
+  "site": {
+    "title": "Chalet Manager - Gestion de Chalets Premium",
+    "description": "Service professionnel de gestion de chalets : réservations, entretien, marketing et accueil des clients. Maximisez vos revenus locatifs en toute sérénité."
+  },
+  "nav": {
+    "home": "Accueil",
+    "services": "Services",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "footer": {
+    "description": "Service professionnel de gestion de chalets dans les Alpes",
+    "links": {
+      "legal": "Mentions légales",
+      "privacy": "Politique de confidentialité"
+    },
+    "copyright": "© {{year}} Chalet Manager. Tous droits réservés."
+  },
+  "cta": {
+    "contact": "Contactez-nous",
+    "quote": "Demander un devis",
+    "learn": "En savoir plus"
+  },
+  "home": {
+    "hero": {
+      "title": "Gérez vos chalets en toute sérénité",
+      "subtitle": "Service complet de gestion de propriétés de luxe dans les Alpes. Maximisez vos revenus tout en préservant votre bien.",
+      "cta": "Découvrir nos services"
+    },
+    "services": {
+      "title": "Nos Services Premium",
+      "subtitle": "Une gestion complète pour propriétaires exigeants",
+      "viewAll": "Voir tous les services"
+    },
+    "why": {
+      "title": "Pourquoi Chalet Manager ?",
+      "expertise": "15 ans d'expérience dans la gestion de propriétés de luxe",
+      "trust": "Plus de 120 chalets gérés avec satisfaction client de 98%",
+      "availability": "Service client disponible 7j/7 pour vous et vos hôtes"
+    }
+  },
+  "services": {
+    "title": "Nos Services",
+    "subtitle": "Une gestion complète et personnalisée de votre chalet",
+    "reservations": {
+      "title": "Gestion des Réservations",
+      "description": "Optimisation de votre calendrier de réservations, tarification dynamique et gestion complète des paiements pour maximiser vos revenus."
+    },
+    "cleaning": {
+      "title": "Entretien & Ménage",
+      "description": "Service d'entretien professionnel entre chaque séjour, inspection qualité et maintenance préventive de votre propriété."
+    },
+    "marketing": {
+      "title": "Marketing & Photos",
+      "description": "Photographie professionnelle, rédaction d'annonces optimisées SEO et diffusion sur les plateformes principales."
+    },
+    "welcome": {
+      "title": "Accueil des Hôtes",
+      "description": "Service de conciergerie premium avec remise des clés, présentation du chalet et assistance 24/7 pendant le séjour."
+    }
+  },
+  "about": {
+    "title": "À Propos",
+    "subtitle": "Votre partenaire de confiance pour la gestion de chalets",
+    "story": {
+      "title": "Notre Histoire",
+      "content": "Fondé en 2009, Chalet Manager est né d'une passion pour l'immobilier de luxe et l'hospitalité alpine. Nous avons développé une expertise unique dans la gestion de propriétés haut de gamme, alliant technologie moderne et service personnalisé."
+    },
+    "values": {
+      "title": "Nos Valeurs",
+      "excellence": {
+        "title": "Excellence",
+        "description": "Standards de qualité irréprochables pour chaque prestation"
+      },
+      "trust": {
+        "title": "Confiance",
+        "description": "Transparence totale et communication régulière avec nos propriétaires"
+      },
+      "innovation": {
+        "title": "Innovation",
+        "description": "Technologies de pointe pour optimiser votre rentabilité"
+      }
+    }
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "subtitle": "Discutons de vos besoins en gestion de chalet",
+    "form": {
+      "name": "Nom complet",
+      "email": "Adresse email",
+      "phone": "Téléphone (optionnel)",
+      "message": "Votre message",
+      "consent": "J'accepte que mes données soient utilisées pour me recontacter conformément à la <privacy>politique de confidentialité</privacy>",
+      "submit": "Envoyer le message",
+      "sending": "Envoi en cours...",
+      "success": "Message envoyé avec succès ! Nous vous répondrons dans les 24h.",
+      "error": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "info": {
+      "title": "Informations de Contact",
+      "address": "Les Alpes, France",
+      "email": "contact@chaletmanager.fr",
+      "phone": "+33 4 50 XX XX XX"
+    }
+  },
+  "legal": {
+    "title": "Mentions Légales",
+    "publisher": {
+      "title": "Éditeur du site",
+      "content": "Chalet Manager\nSARL au capital de 50 000 €\nSIRET : XXX XXX XXX XXXXX\nSiège social : Les Alpes, France"
+    },
+    "host": {
+      "title": "Hébergement",
+      "content": "Ce site est hébergé par Vercel Inc.\n340 S Lemon Ave #4133\nWalnut, CA 91789\nÉtats-Unis"
+    }
+  },
+  "privacy": {
+    "title": "Politique de Confidentialité",
+    "intro": "Chalet Manager s'engage à protéger votre vie privée et vos données personnelles conformément au RGPD.",
+    "data": {
+      "title": "Données Collectées",
+      "content": "Nous collectons uniquement les données que vous nous fournissez volontairement via le formulaire de contact : nom, email, téléphone (optionnel) et message."
+    },
+    "purpose": {
+      "title": "Finalité du Traitement",
+      "content": "Vos données sont utilisées exclusivement pour répondre à votre demande de contact et vous fournir des informations sur nos services."
+    },
+    "retention": {
+      "title": "Durée de Conservation",
+      "content": "Vos données sont conservées pendant 3 ans maximum, sauf demande de suppression de votre part."
+    },
+    "rights": {
+      "title": "Vos Droits",
+      "content": "Vous disposez d'un droit d'accès, de rectification, de suppression et d'opposition au traitement de vos données. Pour exercer ces droits, contactez-nous à : privacy@chaletmanager.fr"
+    }
+  },
+  "errors": {
+    "404": {
+      "title": "Page non trouvée",
+      "description": "La page que vous recherchez n'existe pas.",
+      "home": "Retour à l'accueil"
+    },
+    "500": {
+      "title": "Erreur serveur",
+      "description": "Une erreur inattendue s'est produite.",
+      "home": "Retour à l'accueil"
+    }
+  }
+}

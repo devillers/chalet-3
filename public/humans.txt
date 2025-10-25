@@ -1,0 +1,13 @@
+# humanstxt.org/
+
+# TEAM
+Site: Chalet Manager
+Location: Les Alpes, France
+
+# THANKS
+Built with Next.js, TypeScript, and Tailwind CSS
+
+# TECHNOLOGY COLOPHON
+Standards: HTML5, CSS3
+Components: Next.js 13, React 18, TypeScript, Tailwind CSS
+IDE: Visual Studio Code

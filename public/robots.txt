@@ -1,0 +1,10 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /api/
+
+# Host
+Host: https://chaletmanager.fr
+
+# Sitemaps
+Sitemap: https://chaletmanager.fr/sitemap.xml

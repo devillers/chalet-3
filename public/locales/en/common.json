@@ -1,0 +1,150 @@
+{
+  "site": {
+    "title": "Chalet Manager - Premium Chalet Management",
+    "description": "Professional chalet management service: reservations, maintenance, marketing and guest welcome. Maximize your rental income with peace of mind."
+  },
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "footer": {
+    "description": "Professional chalet management service in the Alps",
+    "links": {
+      "legal": "Legal Notice",
+      "privacy": "Privacy Policy"
+    },
+    "copyright": "© {{year}} Chalet Manager. All rights reserved."
+  },
+  "cta": {
+    "contact": "Contact us",
+    "quote": "Request a quote",
+    "learn": "Learn more"
+  },
+  "home": {
+    "hero": {
+      "title": "Manage Your Chalets with Peace of Mind",
+      "subtitle": "Complete luxury property management service in the Alps. Maximize your income while preserving your property.",
+      "cta": "Discover our services"
+    },
+    "services": {
+      "title": "Our Premium Services",
+      "subtitle": "Complete management for demanding owners",
+      "viewAll": "View all services"
+    },
+    "why": {
+      "title": "Why Chalet Manager?",
+      "expertise": "15 years of experience in luxury property management",
+      "trust": "Over 120 chalets managed with 98% client satisfaction",
+      "availability": "Customer service available 7/7 for you and your guests"
+    }
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Complete and personalized management of your chalet",
+    "reservations": {
+      "title": "Reservation Management",
+      "description": "Optimize your booking calendar, dynamic pricing, and complete payment management to maximize your revenue."
+    },
+    "cleaning": {
+      "title": "Maintenance & Cleaning",
+      "description": "Professional maintenance service between each stay, quality inspection, and preventive maintenance of your property."
+    },
+    "marketing": {
+      "title": "Marketing & Photography",
+      "description": "Professional photography, SEO-optimized listing copy, and distribution across major platforms."
+    },
+    "welcome": {
+      "title": "Guest Welcome",
+      "description": "Premium concierge service with key handover, chalet presentation, and 24/7 assistance during the stay."
+    }
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Your trusted partner for chalet management",
+    "story": {
+      "title": "Our Story",
+      "content": "Founded in 2009, Chalet Manager was born from a passion for luxury real estate and Alpine hospitality. We have developed unique expertise in managing high-end properties, combining modern technology with personalized service."
+    },
+    "values": {
+      "title": "Our Values",
+      "excellence": {
+        "title": "Excellence",
+        "description": "Impeccable quality standards for every service"
+      },
+      "trust": {
+        "title": "Trust",
+        "description": "Complete transparency and regular communication with our owners"
+      },
+      "innovation": {
+        "title": "Innovation",
+        "description": "Cutting-edge technology to optimize your profitability"
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Let's discuss your chalet management needs",
+    "form": {
+      "name": "Full name",
+      "email": "Email address",
+      "phone": "Phone (optional)",
+      "message": "Your message",
+      "consent": "I agree that my data may be used to contact me in accordance with the <privacy>privacy policy</privacy>",
+      "submit": "Send message",
+      "sending": "Sending...",
+      "success": "Message sent successfully! We will respond within 24 hours.",
+      "error": "An error occurred. Please try again."
+    },
+    "info": {
+      "title": "Contact Information",
+      "address": "The Alps, France",
+      "email": "contact@chaletmanager.fr",
+      "phone": "+33 4 50 XX XX XX"
+    }
+  },
+  "legal": {
+    "title": "Legal Notice",
+    "publisher": {
+      "title": "Site Publisher",
+      "content": "Chalet Manager\nSARL with capital of €50,000\nSIRET: XXX XXX XXX XXXXX\nRegistered office: The Alps, France"
+    },
+    "host": {
+      "title": "Hosting",
+      "content": "This site is hosted by Vercel Inc.\n340 S Lemon Ave #4133\nWalnut, CA 91789\nUnited States"
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "Chalet Manager is committed to protecting your privacy and personal data in accordance with GDPR.",
+    "data": {
+      "title": "Data Collected",
+      "content": "We only collect data that you voluntarily provide to us via the contact form: name, email, phone (optional), and message."
+    },
+    "purpose": {
+      "title": "Processing Purpose",
+      "content": "Your data is used exclusively to respond to your contact request and provide you with information about our services."
+    },
+    "retention": {
+      "title": "Retention Period",
+      "content": "Your data is kept for a maximum of 3 years, unless you request deletion."
+    },
+    "rights": {
+      "title": "Your Rights",
+      "content": "You have the right to access, rectify, delete, and object to the processing of your data. To exercise these rights, contact us at: privacy@chaletmanager.fr"
+    }
+  },
+  "errors": {
+    "404": {
+      "title": "Page not found",
+      "description": "The page you are looking for does not exist.",
+      "home": "Back to home"
+    },
+    "500": {
+      "title": "Server error",
+      "description": "An unexpected error occurred.",
+      "home": "Back to home"
+    }
+  }
+}
