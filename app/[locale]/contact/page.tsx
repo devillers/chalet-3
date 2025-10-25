@@ -50,7 +50,7 @@ export default async function ContactPage({ params }: PageProps) {
       <PageHeader
         title={t.contact.title}
         description={t.contact.subtitle}
-        imageUrl="https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1920"
+        imageUrl="/images/TOPO-CHALET-3.png"
       />
 
       {/* MAIN */}

@@ -15,7 +15,7 @@ export default function PageHeader({
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${imageUrl})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/60 to-slate-900/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/30 to-slate-900/80" />
       </div>
 
       <div className="relative h-full flex items-center justify-center px-4 sm:px-6 lg:px-8">
