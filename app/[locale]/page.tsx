@@ -7,22 +7,24 @@ import ServiceCard from '@/components/sections/ServiceCard';
 import CTAButton from '@/components/sections/CTAButton';
 
 interface PageProps {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   return generatePageMetadata({
     title: translations.site.title,
     description: translations.site.description,
     path: '',
-    locale: params.locale,
+    locale,
   });
 }
 
 export default async function HomePage({ params }: PageProps) {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   const services = [
     {
@@ -58,11 +60,11 @@ export default async function HomePage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(generateLocalBusinessSchema(params.locale)),
+          __html: JSON.stringify(generateLocalBusinessSchema(locale)),
         }}
       />
 
-      <HeroSection locale={params.locale} translations={translations} />
+      <HeroSection locale={locale} translations={translations} />
 
       <section className="py-16 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -87,7 +89,7 @@ export default async function HomePage({ params }: PageProps) {
           </div>
 
           <div className="mt-12 text-center">
-            <CTAButton href={`/${params.locale}/services`}>
+            <CTAButton href={`/${locale}/services`}>
               {translations.home.services.viewAll}
             </CTAButton>
           </div>
@@ -112,7 +114,7 @@ export default async function HomePage({ params }: PageProps) {
           </div>
 
           <div className="mt-12 text-center">
-            <CTAButton href={`/${params.locale}/contact`}>
+            <CTAButton href={`/${locale}/contact`}>
               {translations.cta.contact}
             </CTAButton>
           </div>

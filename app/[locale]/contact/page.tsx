@@ -6,22 +6,24 @@ import ContactForm from '@/components/forms/ContactForm';
 import PageHeader from '@/components/sections/PageHeader';
 
 interface PageProps {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   return generatePageMetadata({
     title: `${translations.contact.title} - Chalet Manager`,
     description: translations.contact.subtitle,
     path: '/contact',
-    locale: params.locale,
+    locale,
   });
 }
 
 export default async function ContactPage({ params }: PageProps) {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   return (
     <div className="bg-white">
@@ -82,7 +84,7 @@ export default async function ContactPage({ params }: PageProps) {
           </div>
 
           <div className="bg-gray-50 rounded-lg p-8">
-            <ContactForm locale={params.locale} translations={translations} />
+            <ContactForm locale={locale} translations={translations} />
           </div>
           </div>
         </div>

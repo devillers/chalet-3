@@ -6,22 +6,24 @@ import CTAButton from '@/components/sections/CTAButton';
 import PageHeader from '@/components/sections/PageHeader';
 
 interface PageProps {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   return generatePageMetadata({
     title: `${translations.about.title} - Chalet Manager`,
     description: translations.about.subtitle,
     path: '/about',
-    locale: params.locale,
+    locale,
   });
 }
 
 export default async function AboutPage({ params }: PageProps) {
-  const translations = await getTranslations(params.locale);
+  const { locale } = await params;
+  const translations = await getTranslations(locale);
 
   const values = [
     {
@@ -85,9 +87,9 @@ export default async function AboutPage({ params }: PageProps) {
         </section>
 
           <div className="mt-16 text-center">
-            <CTAButton href={`/${params.locale}/contact`}>
-              {translations.cta.contact}
-            </CTAButton>
+          <CTAButton href={`/${locale}/contact`}>
+            {translations.cta.contact}
+          </CTAButton>
           </div>
         </div>
       </div>
