@@ -54,7 +54,7 @@ export default function LoginPage() {
           <Link href="/" className="inline-block">
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Chalet Manager</h1>
           </Link>
-          <p className="text-slate-600">Espace d'administration</p>
+          <p className="text-slate-600">Espace d&apos;administration</p>
         </div>
 
         <Card className="shadow-xl border-slate-200">
