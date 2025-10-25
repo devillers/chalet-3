@@ -85,9 +85,17 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+   <form
+  onSubmit={handleSubmit(onSubmit)}
+  className="space-y-6 !border-t-0 pt-0"
+  noValidate
+>
+     <h2 className="text-2xl font-thin text-gray-800 !mt-0 !pt-0 !border-0">Formulaire de contact</h2>
+       
       <div>
+        
         <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+         
           {translations.contact.form.name} <span className="text-red-500">*</span>
         </Label>
         <Input
