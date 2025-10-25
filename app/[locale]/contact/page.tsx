@@ -58,7 +58,7 @@ export default async function ContactPage({ params }: PageProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Quick CTA bar */}
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-gray-600">{t.contact.subtitle}</div>
+            <div className="text-4xl font-thin uppercase  text-gray-600">{t.contact.subtitle}</div>
           </div>
 
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
@@ -92,7 +92,7 @@ export default async function ContactPage({ params }: PageProps) {
                         href={phoneHref}
                         className="text-gray-600 underline-offset-4 hover:text-gray-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bd9254] rounded"
                       >
-                        {t.contact.info.phone}
+                        {t.contact.info.phone} 
                       </a>
                     </div>
                   </li>

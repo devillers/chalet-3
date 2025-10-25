@@ -89,7 +89,7 @@
     "form": {
       "name": "Nom complet",
       "email": "Adresse email",
-      "phone": "Téléphone (optionnel)",
+      "phone": "Téléphone ",
       "message": "Votre message",
       "consent": "J'accepte que mes données soient utilisées pour me recontacter conformément à la <privacy>politique de confidentialité</privacy>",
       "submit": "Envoyer le message",
@@ -101,7 +101,7 @@
       "title": "Informations de Contact",
       "address": "Les Alpes, France",
       "email": "contact@chaletmanager.fr",
-      "phone": "+33 4 50 XX XX XX"
+      "phone": "+33 6 07 85 90 58"
     }
   },
   "legal": {
