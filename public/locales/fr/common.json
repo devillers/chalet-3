@@ -4,18 +4,69 @@
     "description": "Service professionnel de gestion de chalets : réservations, entretien, marketing et accueil des clients. Maximisez vos revenus locatifs en toute sérénité."
   },
   "nav": {
+    "brandName": "Chalet Manager",
     "home": "Accueil",
     "services": "Services",
     "about": "À propos",
     "contact": "Contact"
   },
   "footer": {
-    "description": "Service professionnel de gestion de chalets dans les Alpes",
-    "links": {
-      "legal": "Mentions légales",
-      "privacy": "Politique de confidentialité"
+    "brand": {
+      "description": "Services professionnels de gestion de chalets pour propriétaires de montagne haut de gamme. Nous gérons, développons et entretenons votre investissement."
     },
-    "copyright": "© {{year}} Chalet Manager. Tous droits réservés."
+    "contact": {
+      "email": "contact@chaletmanager.fr",
+      "phone": "+33 6 07 85 90 58",
+      "locationLines": [
+        "Chamonix-Mont-Blanc",
+        "Haute-Savoie, France"
+      ]
+    },
+    "sections": {
+      "services": {
+        "title": "Nos services",
+        "links": [
+          { "name": "Gestion locative", "href": "/fr/services#gestion-locative" },
+          { "name": "Conciergerie", "href": "/fr/services#conciergerie" },
+          { "name": "Maintenance", "href": "/fr/services#maintenance" },
+          { "name": "Gestion fiscale", "href": "/fr/services#gestion-fiscale" }
+        ]
+      },
+      "company": {
+        "title": "Entreprise",
+        "links": [
+          { "name": "À propos", "href": "/fr/about" },
+          { "name": "Portfolio", "href": "/fr/about#portfolio" },
+          { "name": "Portage salarial", "href": "/fr/services#portage" },
+          { "name": "Séminaires", "href": "/fr/services#seminaires" },
+          { "name": "Contact", "href": "/fr/contact" }
+        ]
+      },
+      "legal": {
+        "links": [
+          { "name": "Mentions légales", "href": "/fr/legal-notice" },
+          { "name": "Conditions d'utilisation", "href": "/fr/terms" },
+          { "name": "Politique de confidentialité", "href": "/fr/privacy-policy" },
+          { "name": "Gestion des cookies", "href": "/fr/cookies" }
+        ]
+      }
+    },
+    "newsletter": {
+      "title": "Restez connectés",
+      "description": "Inscrivez-vous à notre newsletter pour recevoir nos actualités en avant-première.",
+      "placeholder": "Votre adresse email",
+      "button": "Je m'abonne",
+      "followUs": "Suivez-nous"
+    },
+    "bottomBar": {
+      "copyright": "Tous droits réservés.",
+      "links": [
+        { "name": "Mentions légales", "href": "/fr/legal-notice" },
+        { "name": "Politique de confidentialité", "href": "/fr/privacy-policy" },
+        { "name": "Conditions d'utilisation", "href": "/fr/terms" },
+        { "name": "Gestion des cookies", "href": "/fr/cookies" }
+      ]
+    }
   },
   "cta": {
     "contact": "Contactez-nous",
