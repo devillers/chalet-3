@@ -205,6 +205,7 @@
       "phone": "Téléphone ",
       "message": "Votre message",
       "consent": "J'accepte que mes données soient utilisées pour me recontacter conformément à la <privacy>politique de confidentialité</privacy>",
+      "helperNote": "En soumettant ce formulaire, vous acceptez d'être recontacté. Vos données sont traitées conformément à notre politique de confidentialité.",
       "submit": "Envoyer le message",
       "sending": "Envoi en cours...",
       "success": "Message envoyé avec succès ! Nous vous répondrons dans les 24h.",
