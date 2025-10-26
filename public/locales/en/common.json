@@ -207,7 +207,15 @@
       "submit": "Send message",
       "sending": "Sending...",
       "success": "Message sent successfully! We will respond within 24 hours.",
-      "error": "An error occurred. Please try again."
+      "error": "An error occurred. Please try again.",
+      "attachmentsTitle": "Add your visuals",
+      "attachmentsDescription": "Drag and drop your images here or click to browse (JPEG, PNG, or WebP - 10 MB max per image).",
+      "attachmentsButton": "Choose files",
+      "attachmentsPreviewTitle": "Selected files",
+      "attachmentsRemove": "Remove",
+      "attachmentsErrorType": "Unsupported image format. Please use JPEG, PNG, or WebP.",
+      "attachmentsErrorSize": "Each image must be 10 MB or less.",
+      "attachmentsErrorRead": "We couldn't process one of your files. Please try again."
     },
     "info": {
       "title": "Contact Information",

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Buffer } from 'node:buffer';
 import { validateContactData } from '@/lib/validators/contact';
 import { sendEmail } from '@/lib/mail/sendEmail';
 
@@ -45,7 +46,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, phone, message } = validation.data!;
+    const { name, email, phone, message, attachments } = validation.data!;
+
+    const attachmentsHtml =
+      attachments && attachments.length > 0
+        ? `
+          <p><strong>Attachments:</strong></p>
+          <ul>
+            ${attachments
+              .map(
+                (file) =>
+                  `<li>${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)</li>`
+              )
+              .join('')}
+          </ul>
+        `
+        : '';
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -56,6 +72,7 @@ export async function POST(request: NextRequest) {
           ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
           <p><strong>Message:</strong></p>
           <p style="white-space: pre-wrap;">${message}</p>
+          ${attachmentsHtml}
         </div>
       </div>
     `;
@@ -69,6 +86,15 @@ ${phone ? `Phone: ${phone}` : ''}
 
 Message:
 ${message}
+
+Attachments:
+${
+  attachments && attachments.length > 0
+    ? attachments
+        .map((file) => `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`)
+        .join('\n')
+    : 'None'
+}
     `;
 
     const result = await sendEmail({
@@ -78,6 +104,14 @@ ${message}
       subject: `Contact Form: ${name}`,
       html: htmlContent,
       text: textContent,
+      attachments:
+        attachments && attachments.length > 0
+          ? attachments.map((file) => ({
+              filename: file.name,
+              content: Buffer.from(file.data, 'base64'),
+              contentType: file.type,
+            }))
+          : undefined,
       meta: {
         ip,
         userAgent: request.headers.get('user-agent') || undefined,

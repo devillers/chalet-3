@@ -1,5 +1,25 @@
 import { z } from 'zod';
 
+export const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
+export const ALLOWED_ATTACHMENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export type AttachmentMimeType = (typeof ALLOWED_ATTACHMENT_TYPES)[number];
+
+const attachmentSchema = z
+  .object({
+    name: z.string().min(1, 'Attachment name is required'),
+    type: z
+      .string()
+      .refine((value) => ALLOWED_ATTACHMENT_TYPES.includes(value as AttachmentMimeType), {
+        message: 'Unsupported attachment type',
+      }),
+    size: z
+      .number()
+      .nonnegative()
+      .max(MAX_ATTACHMENT_SIZE, 'Each attachment must be 10MB or less'),
+    data: z.string().min(1, 'Attachment data is required'),
+  })
+  .strict();
+
 export const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().email('Invalid email address'),
@@ -8,6 +28,7 @@ export const contactSchema = z.object({
   consent: z.boolean().refine((val) => val === true, {
     message: 'You must accept the privacy policy',
   }),
+  attachments: z.array(attachmentSchema).optional().default([]),
 });
 
 export type ContactFormData = z.infer<typeof contactSchema>;
