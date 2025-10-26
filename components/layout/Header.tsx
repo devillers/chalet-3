@@ -152,7 +152,7 @@ export default function Header({ locale, translations }: HeaderProps) {
                           transition={{ duration: 0.18, ease: 'easeOut' }}
                           className="absolute left-1/2 top-full mt-4 w-screen max-w-4xl -translate-x-1/2 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl ring-1 ring-black/5"
                         >
-                          <div className="grid gap-8 p-8 lg:grid-cols-[2fr,1fr]">
+                          <div className="grid gap-8 p-8 items-center justify-center lg:grid-cols-[2fr,1fr]">
                             <div className="space-y-8">
                               <div>
                                 <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
