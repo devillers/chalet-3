@@ -224,6 +224,113 @@
       "phone": "+33 4 50 XX XX XX"
     }
   },
+  "faq": {
+    "title": "FAQ – Luxury concierge services",
+    "subtitle": "Every answer you need for elevated property management",
+    "intro": "Discover how our mountain concierge delivers bespoke care and five-star standards. Each answer clarifies our premium approach so you can entrust your residence with absolute confidence.",
+    "items": [
+      {
+        "id": "luxury-concierge-definition",
+        "question": "What is a luxury concierge service?",
+        "answer": "A luxury concierge delivers bespoke assistance for high-end property and stay management. We coordinate every service—welcome, housekeeping, linen, transfers, maintenance, estate care—to create a seamless, effortless experience for every guest."
+      },
+      {
+        "id": "property-types",
+        "question": "What types of properties do you manage?",
+        "answer": "We oversee prestigious chalets, apartments, and villas located in alpine resorts and exclusive residential areas, with unwavering standards of quality, privacy, and comfort."
+      },
+      {
+        "id": "on-site-welcome",
+        "question": "Do you provide an on-site welcome service?",
+        "answer": "Yes. Every arrival is tailored: warm greeting, property tour, key handover, and constant availability for any request throughout the stay."
+      },
+      {
+        "id": "transfers",
+        "question": "Can you arrange transfers from stations or airports?",
+        "answer": "Yes, we arrange chauffeured vehicles, private shuttles, or even helicopter transfers depending on your comfort and timing preferences."
+      },
+      {
+        "id": "checkin-checkout",
+        "question": "Do you handle check-in and check-out?",
+        "answer": "Yes, we supervise key handover, inventory walkthroughs, luggage assistance, and technical checks so departure is as smooth as arrival."
+      },
+      {
+        "id": "housekeeping-linen",
+        "question": "Do you take care of housekeeping and linen?",
+        "answer": "Yes, we partner with professional cleaning companies and premium laundries providing hotel-grade linen, towels, and robes. Services follow para-hotel standards and can be scheduled between stays or on demand."
+      },
+      {
+        "id": "private-chef",
+        "question": "Do you offer private chef or catering services?",
+        "answer": "Yes. We collaborate with trusted chefs and caterers to craft bespoke dining experiences—breakfast, gastronomic dinners, or private soirées—according to your tastes and dietary preferences."
+      },
+      {
+        "id": "arrival-prep",
+        "question": "Can you prepare the property before arrival?",
+        "answer": "Absolutely. Our pre-arrival service covers grocery shopping, linen setup, fire preparation, temperature settings, and even curated playlists if requested."
+      },
+      {
+        "id": "availability",
+        "question": "Is your concierge service available 24/7?",
+        "answer": "Yes, for Premium clients. We provide on-demand concierge support, available seven days a week, around the clock, for urgent or unexpected needs."
+      },
+      {
+        "id": "supplier-selection",
+        "question": "How do you select your service providers?",
+        "answer": "We vet every partner for professionalism, reliability, and discretion. Each supplier—housekeeping, laundry, drivers, chefs, electricians, plumbers, spa experts—is audited to guarantee hotel-level standards and a refined alpine luxury spirit."
+      },
+      {
+        "id": "full-management",
+        "question": "Can you take over full property management?",
+        "answer": "Yes. We offer comprehensive management mandates covering marketing, guest coordination, maintenance, and administrative follow-up so owners enjoy transparent, end-to-end oversight."
+      },
+      {
+        "id": "emergency-support",
+        "question": "Do you handle technical emergencies?",
+        "answer": "Yes. Our team manages preventive maintenance and responds rapidly to breakdowns, water damage, or any incident requiring urgent intervention."
+      },
+      {
+        "id": "working-hours",
+        "question": "What are your operating hours?",
+        "answer": "Our teams are typically on site from 8 a.m. to 8 p.m. We can set up on-call duty or night coverage for Premium owners."
+      },
+      {
+        "id": "a-la-carte",
+        "question": "Can I book services à la carte?",
+        "answer": "Yes. Every service—housekeeping, linen, welcome, estate management, transport, private chef, or technical maintenance—can be ordered individually with no annual commitment."
+      },
+      {
+        "id": "year-round-care",
+        "question": "Do you offer year-round property care?",
+        "answer": "Yes. We provide ongoing estate management: inspections, airing, regular cleaning, meter readings, project supervision, and garden upkeep so your residence remains immaculate even when unoccupied."
+      },
+      {
+        "id": "billing",
+        "question": "How does billing work for your services?",
+        "answer": "Our billing model is fully transparent:\n\n• Concierge and coordination services are invoiced by our management company.\n• Operational services (housekeeping, laundry, electrical, plumbing, etc.) are invoiced directly by partner providers.\n\nThis structure ensures perfect traceability, regulatory compliance, and fair compensation, while keeping a single point of contact for you."
+      },
+      {
+        "id": "non-rental-owners",
+        "question": "Can I work with you even if I do not rent my property?",
+        "answer": "Yes. We offer year-round estate care for resident and non-resident owners to guarantee security and continuous maintenance."
+      },
+      {
+        "id": "rental-platforms",
+        "question": "Do you manage listings on rental platforms?",
+        "answer": "Yes, we can manage listings and stay logistics on major platforms (Airbnb, Booking, Vrbo, etc.) while preserving your luxury positioning and brand consistency."
+      },
+      {
+        "id": "service-area",
+        "question": "Which areas do you cover?",
+        "answer": "We primarily serve Chamonix, Megève, Combloux, Saint-Gervais, Les Houches, and Passy, and we review bespoke requests for other alpine destinations or exclusive estates."
+      },
+      {
+        "id": "custom-quote",
+        "question": "How can I request a tailored quote?",
+        "answer": "Contact us via the form or by phone. After an initial discussion, we send a detailed proposal within 24 hours, aligned with your needs and property profile."
+      }
+    ]
+  },
   "legal": {
     "title": "Legal Notice",
     "publisher": {
