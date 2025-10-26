@@ -118,10 +118,16 @@ export default function Header({ locale, translations }: HeaderProps) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
+
                         className="fixed inset-x-0 bottom-0 top-16 z-[60] w-screen overflow-y-auto border-t-2 border-amber-500/30 bg-white/95 shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-1 ring-black/5 backdrop-blur-lg"
                         style={{ WebkitOverflowScrolling: 'touch' }}
                       >
                         <div className="relative mx-auto grid min-h-full w-full items-start gap-10 px-6 py-10 lg:grid-cols-[2fr,1fr] lg:px-12 lg:py-12">
+
+                        className="fixed inset-0 top-16 h-[800px] z-50 w-screen overflow-y-auto border-t-2 border-amber-500/30 bg-white shadow-lg"
+                      >
+                        <div className="relative mx-auto grid min-h-screen w-full items-start gap-10 px-6 py-12 lg:grid-cols-[2fr,1fr] lg:px-12">
+
                           <button
                             type="button"
                             className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber-200 bg-white/70 text-gray-700 shadow-sm transition hover:bg-white"
