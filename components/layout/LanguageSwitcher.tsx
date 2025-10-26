@@ -14,21 +14,19 @@ export default function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
   const pathWithoutLocale = getPathWithoutLocale(pathname);
 
   return (
-    <div className="flex items-center space-x-2">
-      <Globe className="h-4 w-4 text-gray-500" aria-hidden="true" />
-      <div className="flex space-x-1">
+    <div className="flex items-center gap-2">
+      <Globe className="h-4 w-4 text-gray-500" />
+      <div className="flex gap-1">
         {locales.map((loc) => (
           <Link
             key={loc}
             href={`/${loc}${pathWithoutLocale}`}
-            locale={loc}
-            className={`text-sm font-medium px-2 py-1 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 ${
+            className={`text-xs font-light px-2 py-1 rounded transition-colors ${
               locale === loc
-                ? 'text-blue-700 bg-blue-50'
+                ? 'bg-amber-500 text-white'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
             aria-label={`Switch to ${loc === 'fr' ? 'French' : 'English'}`}
-            aria-current={locale === loc ? 'true' : undefined}
           >
             {loc.toUpperCase()}
           </Link>
