@@ -82,6 +82,7 @@ export default function Footer({ locale, translations }: FooterProps) {
             <h3 className="text-lg uppercase text-neutral-100 font-thin mb-6">
               {navigation.services?.title}
             </h3>
+<<<<<<< HEAD
             <ul className="space-y-3">
               {navigation.services?.links?.map((item: any) => (
                 <li key={item.name}>
@@ -93,6 +94,22 @@ export default function Footer({ locale, translations }: FooterProps) {
                   </Link>
                 </li>
               ))}
+=======
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center space-x-2">
+                <Mail className="h-4 w-4" aria-hidden="true" />
+                <a
+                  href="mailto:contact@chaletmanager.fr"
+                  className="text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors"
+                >
+                  contact@chaletmanager.fr
+                </a>
+              </li>
+              <li className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+                <span>Les Alpes, France</span>
+              </li>
+>>>>>>> 04d44df83778e7b717fe0db0c39ed08488e2ebf1
             </ul>
           </div>
 
@@ -179,17 +196,38 @@ export default function Footer({ locale, translations }: FooterProps) {
             <div className="flex items-center space-x-6">
               {navigation.legal?.links?.map((item: any) => (
                 <Link
+<<<<<<< HEAD
                   key={item.name}
                   href={item.href}
                   className="text-[11px] text-neutral-600 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+=======
+                  href={`/${locale}/legal-notice`}
+                  className="text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors"
+>>>>>>> 04d44df83778e7b717fe0db0c39ed08488e2ebf1
                 >
                   {item.name}
                 </Link>
+<<<<<<< HEAD
               ))}
               {!navigation.legal && (
                 <Link
                   href="/auth/login"
                   className="text-[11px] text-neutral-600 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+=======
+              </li>
+              <li>
+                <Link
+                  href={`/${locale}/privacy-policy`}
+                  className="text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors"
+                >
+                  {translations.footer.links.privacy}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/auth/login"
+                  className="text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors"
+>>>>>>> 04d44df83778e7b717fe0db0c39ed08488e2ebf1
                 >
                   {locale === 'fr' ? 'Connexion Admin' : 'Admin Login'}
                 </Link>
