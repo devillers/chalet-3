@@ -28,21 +28,25 @@ export default async function ServicesPage({ params }: PageProps) {
 
   const services = [
     {
+      id: 'reservations',
       icon: Calendar,
       title: translations.services.reservations.title,
       description: translations.services.reservations.description,
     },
     {
+      id: 'cleaning',
       icon: Sparkles,
       title: translations.services.cleaning.title,
       description: translations.services.cleaning.description,
     },
     {
+      id: 'marketing',
       icon: Camera,
       title: translations.services.marketing.title,
       description: translations.services.marketing.description,
     },
     {
+      id: 'welcome',
       icon: Heart,
       title: translations.services.welcome.title,
       description: translations.services.welcome.description,
@@ -63,6 +67,7 @@ export default async function ServicesPage({ params }: PageProps) {
           {services.map((service) => (
             <ServiceCard
               key={service.title}
+              id={service.id}
               icon={service.icon}
               title={service.title}
               description={service.description}

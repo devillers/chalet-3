@@ -4,11 +4,15 @@ interface ServiceCardProps {
   icon: LucideIcon;
   title: string;
   description: string;
+  id?: string;
 }
 
-export default function ServiceCard({ icon: Icon, title, description }: ServiceCardProps) {
+export default function ServiceCard({ icon: Icon, title, description, id }: ServiceCardProps) {
   return (
-    <div className="relative rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div
+      id={id}
+      className="relative rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+    >
       <div className="mb-4 inline-flex rounded-lg bg-blue-100 p-3 text-blue-700">
         <Icon className="h-6 w-6" aria-hidden="true" />
       </div>
