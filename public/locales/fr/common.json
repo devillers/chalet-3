@@ -226,6 +226,113 @@
       "phone": "+33 6 07 85 90 58"
     }
   },
+  "faq": {
+    "title": "FAQ – Conciergerie de luxe",
+    "subtitle": "Toutes les réponses pour une gestion de propriété haut de gamme",
+    "intro": "Explorez notre conciergerie, ses prestations sur mesure et ses engagements d'excellence. Chaque réponse a été pensée pour vous offrir la vision la plus claire de notre accompagnement premium.",
+    "items": [
+      {
+        "id": "luxury-concierge-definition",
+        "question": "Qu’est-ce qu’une conciergerie de luxe ?",
+        "answer": "Une conciergerie de luxe offre un accompagnement sur mesure pour la gestion de propriétés et de séjours haut de gamme. Elle coordonne l’ensemble des services — accueil, ménage, linge, transferts, maintenance, intendance — pour offrir à chaque client une expérience fluide, élégante et sans contrainte."
+      },
+      {
+        "id": "property-types",
+        "question": "Quels types de biens gérez-vous ?",
+        "answer": "Nous prenons en charge la gestion de chalets, appartements et villas de prestige, situés dans les stations alpines et zones résidentielles haut de gamme, avec un haut niveau d’exigence sur la qualité, la confidentialité et le confort."
+      },
+      {
+        "id": "on-site-welcome",
+        "question": "Proposez-vous un service d’accueil sur place ?",
+        "answer": "Oui. Chaque arrivée est personnalisée : accueil chaleureux, présentation du bien, remise des clés et disponibilité permanente pour toute demande durant le séjour."
+      },
+      {
+        "id": "transfers",
+        "question": "Organisez-vous les transferts depuis les gares ou aéroports ?",
+        "answer": "Oui, nous pouvons organiser des transferts en véhicule avec chauffeur, en navette privée ou même en hélicoptère selon les besoins et le niveau de confort souhaité."
+      },
+      {
+        "id": "checkin-checkout",
+        "question": "Gérez-vous les check-in et check-out ?",
+        "answer": "Oui, nous assurons la remise des clés, l’état des lieux, l’assistance bagages et la vérification du bon fonctionnement de toutes les installations, garantissant un départ aussi fluide que l’arrivée."
+      },
+      {
+        "id": "housekeeping-linen",
+        "question": "Prenez-vous en charge le ménage et le linge ?",
+        "answer": "Oui, nous travaillons avec des entreprises de nettoyage professionnelles et des blanchisseries haut de gamme fournissant linge hôtelier, serviettes et peignoirs. Les prestations respectent les standards para-hôteliers et peuvent être planifiées entre chaque séjour ou à la demande."
+      },
+      {
+        "id": "private-chef",
+        "question": "Offrez-vous un service de chef privé ou traiteur ?",
+        "answer": "Oui. Nous collaborons avec des chefs et traiteurs partenaires pour organiser des repas sur mesure : petit-déjeuner, dîner gastronomique, ou soirée privée, toujours selon vos envies et préférences culinaires."
+      },
+      {
+        "id": "arrival-prep",
+        "question": "Pouvez-vous préparer le logement avant l’arrivée ?",
+        "answer": "Tout à fait. Nous proposons un service de pré-arrivée comprenant les courses, la mise en place du linge, la préparation du feu, le réglage de la température et la sélection musicale si souhaitée."
+      },
+      {
+        "id": "availability",
+        "question": "Votre conciergerie est-elle disponible 24 h / 24 ?",
+        "answer": "Oui, pour nos clients Premium. Nous assurons un service de conciergerie sur demande, disponible 7 j/7, 24 h/24 pour toute demande urgente ou imprévue."
+      },
+      {
+        "id": "supplier-selection",
+        "question": "Comment sélectionnez-vous vos prestataires ?",
+        "answer": "Nos prestataires sont choisis avec rigueur pour leur professionnalisme, leur fiabilité et leur discrétion. Chaque partenaire (ménage, blanchisserie, chauffeur, chef, électricien, plombier, spa, etc.) est audité avant collaboration afin de garantir des prestations conformes à nos standards hôteliers et à l’esprit “luxe alpin”."
+      },
+      {
+        "id": "full-management",
+        "question": "Peut-on vous confier la gestion complète du bien ?",
+        "answer": "Oui. Nous proposons des mandats de gestion haut de gamme comprenant la commercialisation, la coordination des séjours, la maintenance et le suivi administratif, pour que chaque propriétaire bénéficie d’un pilotage global et transparent."
+      },
+      {
+        "id": "emergency-support",
+        "question": "Prenez-vous en charge les urgences techniques ?",
+        "answer": "Oui. Notre équipe supervise la maintenance préventive et intervient rapidement en cas de panne, dégât des eaux, ou tout autre incident nécessitant une intervention d’urgence."
+      },
+      {
+        "id": "working-hours",
+        "question": "Quels sont vos horaires d’intervention ?",
+        "answer": "Nos équipes interviennent généralement de 8 h à 20 h. Une permanence ou astreinte peut être mise en place pour les propriétaires disposant d’un contrat Premium."
+      },
+      {
+        "id": "a-la-carte",
+        "question": "Peut-on réserver uniquement certains services ?",
+        "answer": "Oui. Nos prestations sont entièrement modulables : ménage, linge, accueil, intendance, transport, chef privé, ou maintenance technique peuvent être commandés individuellement, sans engagement annuel."
+      },
+      {
+        "id": "year-round-care",
+        "question": "Offrez-vous un service d’intendance à l’année ?",
+        "answer": "Oui. Nous assurons la surveillance, l’aération, le ménage régulier, la relève des compteurs, la coordination des travaux et l’entretien du jardin. Votre résidence reste ainsi parfaitement entretenue, même en votre absence."
+      },
+      {
+        "id": "billing",
+        "question": "Comment fonctionne la facturation des prestations ?",
+        "answer": "La facturation est totalement transparente :\n\n• Les prestations de conciergerie et de coordination sont facturées par notre entreprise de portage.\n• Les services opérationnels (ménage, blanchisserie, électricité, plomberie, etc.) sont facturés directement au client par les prestataires partenaires.\n\nCe système garantit une traçabilité parfaite, une conformité fiscale optimale et la juste rémunération de chaque professionnel, tout en vous assurant un interlocuteur unique pour la coordination."
+      },
+      {
+        "id": "non-rental-owners",
+        "question": "Puis-je faire appel à vous même sans louer mon bien ?",
+        "answer": "Oui. Nous proposons des formules d’intendance à l’année pour les propriétaires occupants ou non, afin de garantir la sécurité et la maintenance continue du bien."
+      },
+      {
+        "id": "rental-platforms",
+        "question": "Collaborez-vous avec des plateformes de location ?",
+        "answer": "Oui, nous pouvons gérer les annonces et la logistique des séjours sur les principales plateformes (Airbnb, Booking, Abritel, etc.), tout en maintenant le positionnement haut de gamme et la cohérence de votre image."
+      },
+      {
+        "id": "service-area",
+        "question": "Quelles sont vos zones d’intervention ?",
+        "answer": "Nos services couvrent principalement Chamonix, Megève, Combloux, Saint-Gervais, Les Houches et Passy. Nous étudions également les demandes dans d’autres stations alpines ou propriétés exclusives sur devis."
+      },
+      {
+        "id": "custom-quote",
+        "question": "Comment obtenir un devis personnalisé ?",
+        "answer": "Il vous suffit de nous contacter via le formulaire de contact ou par téléphone. Après un premier échange, nous vous adresserons une proposition détaillée sous 24 h, parfaitement adaptée à vos besoins et à votre bien."
+      }
+    ]
+  },
   "legal": {
     "title": "Mentions Légales",
     "publisher": {
