@@ -40,6 +40,9 @@ export default async function ContactPage({ params }: PageProps) {
   const phoneLabel = t.contact?.form?.phone ?? 'Téléphone';
   const addressLine = t.contact?.info?.address ?? '';
   const addressTitle = (addressLine.split(',')[0] || 'Adresse').trim();
+  const helperNote =
+    t.contact?.form?.helperNote ??
+    "En soumettant ce formulaire, vous acceptez d'être recontacté. Vos données sont traitées conformément à notre politique de confidentialité.";
 
   const emailHref = 'mailto:contact@chaletmanager.fr';
   const phoneHref = `tel:${(t.contact?.info?.phone || '').replace(/\s+/g, '')}`;
@@ -66,10 +69,7 @@ export default async function ContactPage({ params }: PageProps) {
             </div>
 
             {/* Helper notes */}
-            <p className="mt-4 text-xs leading-relaxed text-gray-500">
-              En soumettant ce formulaire, vous acceptez d'être recontacté. Vos données sont
-              traitées conformément à notre politique de confidentialité.
-            </p>
+            <p className="mt-4 text-xs leading-relaxed text-gray-500">{helperNote}</p>
           </div>
         </div>
       </div>

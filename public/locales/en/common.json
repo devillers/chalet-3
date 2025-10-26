@@ -203,6 +203,7 @@
       "phone": "Phone (optional)",
       "message": "Your message",
       "consent": "I agree that my data may be used to contact me in accordance with the <privacy>privacy policy</privacy>",
+      "helperNote": "By submitting this form, you agree to be contacted. Your data is processed in accordance with our privacy policy.",
       "submit": "Send message",
       "sending": "Sending...",
       "success": "Message sent successfully! We will respond within 24 hours.",
