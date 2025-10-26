@@ -57,10 +57,10 @@ export default async function ContactPage({ params }: PageProps) {
       <div className="py-12 sm:py-16  max-w-5xl mx-auto">
       
         <div className="grid grid-cols-1 md:grid-cols-5 gap-12 mx-auto px-4 sm:px-6 lg:px-8">
-          <div className=" col-span-2  bg-white p-4 shadow-sm mt-8">
+          <div className=" col-span-2  bg-white p-4  mt-8">
             <div className="text-4xl font-thin uppercase  text-gray-600">{t.contact.subtitle}</div>
           </div>
-          <div className=" col-span-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm mt-8">
+          <div className=" col-span-3  sm:border-l-[1px]  sm:pl-6 border-gray-200 bg-white p-4  mt-8">
             <div className="my-8">
               <ContactForm locale={locale} translations={t} />
             </div>

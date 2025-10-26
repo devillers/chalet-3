@@ -93,7 +93,7 @@ export default function Header({ locale, translations }: HeaderProps) {
                 >
                   <button
                     type="button"
-                    className={`flex items-center gap-1 text-sm font-light transition-colors ${
+                    className={`flex items-center gap-1 text-[11px] font-light uppercase transition-colors ${
                       isActive(item.href) ? 'text-amber-500' : 'text-gray-700 hover:text-amber-700'
                     }`}
                     aria-expanded={megaMenuOpen}
@@ -194,7 +194,7 @@ export default function Header({ locale, translations }: HeaderProps) {
 
                                 <Link
                                   href={localizeHref(servicesMenu.cta?.href ?? '/contact')}
-                                  className="mt-6 inline-flex items-center justify-center rounded-md bg-white/90 px-6 py-2 text-sm font-light text-amber-500 hover:bg-white transition"
+                                  className="mt-6 inline-flex items-center justify-center rounded-md bg-white/90 px-6 py-2 text-[11px] font-light text-amber-500 hover:bg-white transition"
                                   onClick={() => setMegaMenuOpen(false)}
                                 >
                                   {servicesMenu.cta?.button}
@@ -211,8 +211,8 @@ export default function Header({ locale, translations }: HeaderProps) {
                 <Link
                   key={item.key}
                   href={localizeHref(item.href)}
-                  className={`text-sm font-light px-2 py-1 transition-colors ${
-                    isActive(item.href) ? 'text-amber-500' : 'text-gray-700 hover:text-amber-700'
+                  className={`text-[11px] font-light px-2 py-1 transition-colors ${
+                    isActive(item.href) ? 'text-amber-500' : 'text-gray-700 hover:text-amber-700 uppercase '
                   }`}
                 >
                   {item.label}
@@ -280,7 +280,7 @@ export default function Header({ locale, translations }: HeaderProps) {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`rounded-md px-3 py-2 transition-colors ${
                         isActive(item.href)
-                          ? 'bg-amber-100/60 text-amber-600 font-medium'
+                          ? 'bg-amber-100/60 text-amber-500 font-medium'
                           : 'hover:bg-amber-50/60 text-gray-700'
                       }`}
                     >
