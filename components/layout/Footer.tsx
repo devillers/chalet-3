@@ -16,6 +16,13 @@ export default function Footer({ locale, translations }: FooterProps) {
   const brand = footer.brand ?? {};
   const bottomBar = footer.bottomBar ?? {}; // ✅ ajouté
   const bottomLinks = (bottomBar.links ?? navigation.legal?.links ?? []) as any[];
+  const adminLoginLabel = locale === 'fr' ? 'Connexion Admin' : 'Admin Login';
+  const adminLoginLink = { name: adminLoginLabel, href: '/auth/login' };
+  const displayBottomLinks = Array.isArray(bottomLinks)
+    ? bottomLinks.some((link) => link?.href === adminLoginLink.href)
+      ? bottomLinks
+      : [...bottomLinks, adminLoginLink]
+    : [adminLoginLink];
   const brandName: string = translations.nav?.brandName || 'Chalet Manager';
 
   return (
@@ -178,23 +185,18 @@ export default function Footer({ locale, translations }: FooterProps) {
               © {currentYear} {brandName}. {bottomBar?.copyright}
             </div>
             <div className="flex items-center space-x-6">
-              {bottomLinks.map((item: any) => (
+              {displayBottomLinks.map((item: any) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-[11px] text-neutral-600 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                  className={[
+                    'text-[11px] uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded',
+                    item.href === adminLoginLink.href ? 'text-orange-700' : 'text-neutral-600',
+                  ].join(' ')}
                 >
                   {item.name}
                 </Link>
               ))}
-              {bottomLinks.length === 0 && (
-                <Link
-                  href="/auth/login"
-                  className="text-[11px] text-orange-700 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
-                >
-                  {locale === 'fr' ? 'Connexion Admin' : 'Admin Login'}dede
-                </Link>
-              )}
             </div>
           </div>
         </div>
