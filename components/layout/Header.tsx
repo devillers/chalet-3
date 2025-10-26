@@ -114,15 +114,24 @@ export default function Header({ locale, translations }: HeaderProps) {
                     {megaMenuOpen && (
                       <motion.div
                         key="services-mega-menu"
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
+                        exit={{ opacity: 0, y: 20 }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="absolute left-[-1280px] top-full mt-4 w-screen overflow-hidden border-t-2 border-amber-500/30 bg-white/95 shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-1 ring-black/5 backdrop-blur-lg"
+                        className="fixed inset-x-0 bottom-0 top-16 z-[60] w-screen overflow-y-auto border-t-2 border-amber-500/30 bg-white/95 shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-1 ring-black/5 backdrop-blur-lg"
+                        style={{ WebkitOverflowScrolling: 'touch' }}
                       >
-                        <div className="mx-auto w-full max-w-7xl px-6 py-10 grid gap-10 lg:grid-cols-[2fr,1fr] items-start">
+                        <div className="relative mx-auto grid min-h-full w-full items-start gap-10 px-6 py-10 lg:grid-cols-[2fr,1fr] lg:px-12 lg:py-12">
+                          <button
+                            type="button"
+                            className="absolute right-6 top-6 inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber-200 bg-white/70 text-gray-700 shadow-sm transition hover:bg-white"
+                            onClick={() => setMegaMenuOpen(false)}
+                            aria-label={translations.nav?.close ?? 'Close menu'}
+                          >
+                            <X className="h-5 w-5" />
+                          </button>
                           {/* Left content */}
-                          <div className="space-y-10">
+                          <div className="space-y-10 pr-0 lg:pr-8">
                             <div>
                               <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
                                 {servicesMenu.eyebrow}
