@@ -4,18 +4,7 @@ import { useState, useRef, type FocusEvent } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  Menu,
-  X,
-  Mountain,
-  ChevronDown,
-  Calendar,
-  Users,
-  Shield,
-  Sparkles,
-  Phone,
-
-} from 'lucide-react';
+import { Menu, X, Mountain, ChevronDown, Calendar, Users, Shield, Sparkles , Globe} from 'lucide-react';
 import { Locale } from '@/lib/i18n';
 import LanguageSwitcher from './LanguageSwitcher';
 import { Pacifico } from 'next/font/google';
@@ -245,77 +234,57 @@ export default function Header({ locale, translations }: HeaderProps) {
         </div>
 
         {/* Mobile menu */}
-       <AnimatePresence>
-  {mobileMenuOpen && (
-    <motion.div
-      key="mobile-menu"
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="fixed inset-0 z-50 flex flex-col bg-neutral-900/60 backdrop-blur-xl text-amber-50 shadow-2xl"
-    >
-      <div className="flex items-center justify-between px-6 py-5 border-b border-white/20">
-        <Link href={`/${locale}`} className="flex items-center gap-3">
-          <Mountain className="h-7 w-7 text-amber-400" />
-          <span className="text-xl font-light tracking-wide">Chalet Manager</span>
-        </Link>
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              key="mobile-menu"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 z-50 flex flex-col backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 text-gray-900 dark:text-gray-100 shadow-2xl"
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/20">
+                <Link href={`/${locale}`} className="flex items-center gap-2">
+                  <Mountain className="h-7 w-7 text-amber-500" />
+                  <span className="text-xl font-light">Chalet Manager</span>
+                </Link>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href={localizeHref('/contact')}
-            onClick={() => setMobileMenuOpen(false)}
-            className="hidden rounded-full border border-amber-400/70 px-4 py-2 text-sm font-medium uppercase tracking-[0.12em] text-amber-100 transition hover:bg-amber-400/20 md:inline-flex"
-          >
-            {translations.nav?.ctaLabel ?? 'Contactez-nous'}
-          </Link>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg border border-amber-400/70 p-2 hover:bg-amber-50/50 transition"
+                  aria-label="Fermer le menu"
+                >
+                  <X className="h-5 w-5 text-amber-500" />
+                </button>
+              </div>
 
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="rounded-full border border-amber-400/70 p-2 transition hover:bg-amber-400/20"
-            aria-label="Fermer le menu"
-          >
-            <X className="h-5 w-5 text-amber-200" />
-          </button>
-        </div>
-      </div>
+              {/* Liens de navigation */}
+              <div className="flex flex-col space-y-2 p-6 text-lg font-light">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.key}
+                    href={localizeHref(item.href)}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`rounded-md px-3 py-2 transition-colors ${
+                      isActive(item.href)
+                        ? 'bg-amber-100/40 text-amber-600 font-medium'
+                        : 'hover:bg-amber-50/40 text-gray-700'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
 
-      {/* Liens */}
-      <div className="flex flex-col space-y-3 px-6 py-8 text-lg font-light uppercase tracking-[0.14em]">
-        {navigation.map((item) => (
-          <Link
-            key={item.key}
-            href={localizeHref(item.href)}
-            onClick={() => setMobileMenuOpen(false)}
-            className={`rounded-lg px-4 py-3 transition ${
-              isActive(item.href)
-                ? 'bg-amber-400/20 text-amber-100'
-                : 'text-amber-50/90 hover:bg-white/10 hover:text-amber-50'
-            }`}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </div>
-
-      <div className="mt-auto space-y-4 border-t border-white/10 px-6 py-6">
-        <Link
-          href="tel:+33686020184"
-          className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-amber-400/90 px-6 py-3 text-base font-medium tracking-wide text-neutral-900 transition hover:bg-amber-300"
-        >
-          <Phone className="h-4 w-4" />
-          06 86 02 01 84
-        </Link>
-
-        <div className="flex items-center justify-between text-sm uppercase tracking-[0.2em] text-amber-100/70">
-          <span>{translations.footer?.languageLabel ?? 'Langue'}</span>
-          <LanguageSwitcher locale={locale} />
-        </div>
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
-
+              {/* Sélecteur de langue */}
+              <div className="mt-auto flex items-center gap-4 border-t border-white/20 px-6 py-4">
+                <Globe className="h-5 w-5 text-amber-500" />
+                <LanguageSwitcher locale={locale} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
     </header>
   );
