@@ -33,7 +33,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                 <Mail className="h-4 w-4" aria-hidden="true" />
                 <a
                   href="mailto:contact@chaletmanager.fr"
-                  className="hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                  className="text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors"
                 >
                   contact@chaletmanager.fr
                 </a>
@@ -53,7 +53,7 @@ export default function Footer({ locale, translations }: FooterProps) {
               <li>
                 <Link
                   href={`/${locale}/legal-notice`}
-                  className="hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                  className="text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors"
                 >
                   {translations.footer.links.legal}
                 </Link>
@@ -61,7 +61,7 @@ export default function Footer({ locale, translations }: FooterProps) {
               <li>
                 <Link
                   href={`/${locale}/privacy-policy`}
-                  className="hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                  className="text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors"
                 >
                   {translations.footer.links.privacy}
                 </Link>
@@ -69,7 +69,7 @@ export default function Footer({ locale, translations }: FooterProps) {
               <li>
                 <Link
                   href="/auth/login"
-                  className="hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                  className="text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition-colors"
                 >
                   {locale === 'fr' ? 'Connexion Admin' : 'Admin Login'}
                 </Link>
