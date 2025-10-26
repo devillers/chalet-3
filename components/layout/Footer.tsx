@@ -197,6 +197,17 @@ export default function Footer({ locale, translations }: FooterProps) {
                   {item.name}
                 </Link>
               ))}
+
+
+              {bottomLinks.length === 0 && (
+                <Link
+                  href="/auth/login"
+                  className="text-[11px] text-orange-700 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                >
+                  {locale === 'fr' ? 'Connexion Admin' : 'Admin Login'}
+                </Link>
+              )}
+
             </div>
           </div>
         </div>
