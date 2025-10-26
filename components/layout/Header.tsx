@@ -46,6 +46,7 @@ export default function Header({ locale, translations }: HeaderProps) {
       megaMenu: !!servicesMenu,
     },
     { key: 'about', label: translations.nav.about, href: '/about' },
+    { key: 'faq', label: translations.nav.faq, href: '/faq' },
     { key: 'contact', label: translations.nav.contact, href: '/contact' },
   ];
 

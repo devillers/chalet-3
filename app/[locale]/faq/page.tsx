@@ -45,37 +45,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function FAQPage({ params }: PageProps) {
   const { locale } = params;
 
-  const [translations, frTranslations, enTranslations] = await Promise.all([
-    getTranslations(locale),
-    getTranslations('fr'),
-    getTranslations('en'),
-  ]);
+  const translations = await getTranslations(locale);
+  const faq = translations.faq as FAQTranslations;
 
-  const faqFr = frTranslations.faq as FAQTranslations;
-  const faqEn = enTranslations.faq as FAQTranslations;
+  const languageLabel = locale === 'fr' ? 'Français' : 'English';
 
-  const pairedItems = faqFr.items.map((item, index) => {
-    const matchingEnglish =
-      faqEn.items.find((entry) => entry.id === item.id) ??
-      faqEn.items[index] ?? {
-        id: item.id,
-        question: item.question,
-        answer: item.answer,
-      };
-
-    return {
-      id: item.id,
-      fr: item,
-      en: matchingEnglish,
-    };
-  });
-
-  const primaryLanguage = locale === 'fr' ? 'Français' : 'English';
-  const secondaryLanguage = locale === 'fr' ? 'English' : 'Français';
-
-  const localizedSchemaEntities = pairedItems.map((item) => {
-    const question = locale === 'fr' ? item.fr.question : item.en.question;
-    const answer = locale === 'fr' ? item.fr.answer : item.en.answer;
+  const localizedSchemaEntities = faq.items.map((item) => {
+    const question = item.question;
+    const answer = item.answer;
 
     return {
       '@type': 'Question',
@@ -111,7 +88,7 @@ export default async function FAQPage({ params }: PageProps) {
         <div className="rounded-3xl border border-white/60 bg-white/70 p-10 shadow-sm backdrop-blur">
           <div className="flex items-center gap-3 text-xs uppercase tracking-[0.45em] text-slate-400">
             <span className="h-px flex-1 bg-slate-200" />
-            {primaryLanguage} · {secondaryLanguage}
+            {languageLabel}
             <span className="h-px flex-1 bg-slate-200" />
           </div>
           <p className="mt-6 text-lg leading-relaxed text-slate-600 sm:text-xl">
@@ -125,50 +102,32 @@ export default async function FAQPage({ params }: PageProps) {
             collapsible
             className="overflow-hidden rounded-3xl border border-white/60 bg-white/70 shadow-sm backdrop-blur"
           >
-            {pairedItems.map((item, index) => {
-              const primaryQuestion =
-                locale === 'fr' ? item.fr.question : item.en.question;
-              const secondaryQuestion =
-                locale === 'fr' ? item.en.question : item.fr.question;
-
+            {faq.items.map((item, index) => {
               return (
                 <AccordionItem
                   key={item.id}
                   value={item.id}
                   className={
-                    index === pairedItems.length - 1
+                    index === faq.items.length - 1
                       ? 'border-none'
                       : 'border-b border-white/60'
                   }
                 >
                   <AccordionTrigger className="px-6 py-8 text-left text-slate-900 transition-colors hover:bg-white/40 hover:no-underline sm:px-10">
                     <div className="flex flex-col text-left">
-                      <span className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                        {secondaryQuestion}
-                      </span>
                       <span className="mt-3 text-2xl font-light leading-snug text-slate-900 sm:text-[28px]">
-                        {primaryQuestion}
+                        {item.question}
                       </span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-6 pb-10 sm:px-10">
-                    <div className="grid gap-8 md:grid-cols-2">
-                      <div className="space-y-3">
-                        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                          Français
-                        </p>
-                        <p className="text-base leading-relaxed text-slate-700 sm:text-lg">
-                          {item.fr.answer}
-                        </p>
-                      </div>
-                      <div className="space-y-3">
-                        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                          English
-                        </p>
-                        <p className="text-base leading-relaxed text-slate-700 sm:text-lg">
-                          {item.en.answer}
-                        </p>
-                      </div>
+                    <div className="space-y-3">
+                      <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+                        {languageLabel}
+                      </p>
+                      <p className="text-base leading-relaxed text-slate-700 sm:text-lg">
+                        {item.answer}
+                      </p>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
