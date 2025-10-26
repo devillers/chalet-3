@@ -9,7 +9,68 @@
     "services": "Services",
     "about": "À propos",
     "contact": "Contact",
-    "dashboard": "Tableau de bord"
+    "dashboard": "Tableau de bord",
+    "servicesMenu": {
+      "eyebrow": "Couverture complète",
+      "title": "Construisez votre programme sur mesure",
+      "description": "Associez nos équipes opérationnelles, hôtelières et techniques pour une expérience fluide.",
+      "sections": [
+        {
+          "title": "Opérations",
+          "icon": "Calendar",
+          "links": [
+            {
+              "name": "Gestion des réservations",
+              "description": "Tarification dynamique, coordination des séjours et qualification des hôtes.",
+              "href": "/services#reservations"
+            },
+            {
+              "name": "Marketing & diffusion",
+              "description": "Shooting photo, rédaction d'annonce et visibilité multi-plateformes.",
+              "href": "/services#marketing"
+            }
+          ]
+        },
+        {
+          "title": "Expérience hôte",
+          "icon": "Users",
+          "links": [
+            {
+              "name": "Accueil conciergerie",
+              "description": "Accueil personnalisé, remise des clés et assistance 24/7.",
+              "href": "/services#welcome"
+            },
+            {
+              "name": "Séjours signatures",
+              "description": "Forfaits ski, chefs privés et activités sur-mesure organisés par nos équipes.",
+              "href": "/contact"
+            }
+          ]
+        },
+        {
+          "title": "Soins du chalet",
+          "icon": "Shield",
+          "links": [
+            {
+              "name": "Ménage & maintenance",
+              "description": "Standards premium et maintenance préventive planifiée.",
+              "href": "/services#cleaning"
+            },
+            {
+              "name": "Services propriétaires",
+              "description": "Inventaires, réassorts et reportings dédiés aux propriétaires.",
+              "href": "/auth/login"
+            }
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Besoin d'une offre personnalisée ?",
+        "description": "Échangez avec nos conseillers pour bâtir la combinaison de services idéale.",
+        "button": "Planifier un échange",
+        "href": "/contact"
+      }
+    }
   },
   "footer": {
     "brand": {

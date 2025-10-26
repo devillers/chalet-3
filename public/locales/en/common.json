@@ -9,7 +9,68 @@
     "services": "Services",
     "about": "About",
     "contact": "Contact",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "servicesMenu": {
+      "eyebrow": "Full-service coverage",
+      "title": "Design your bespoke chalet program",
+      "description": "Combine our operational, hospitality, and property care teams for a seamless owner and guest experience.",
+      "sections": [
+        {
+          "title": "Operations",
+          "icon": "Calendar",
+          "links": [
+            {
+              "name": "Reservation management",
+              "description": "Dynamic pricing, booking coordination, and guest screening on every platform.",
+              "href": "/services#reservations"
+            },
+            {
+              "name": "Marketing & distribution",
+              "description": "Photography, storytelling, and multi-channel visibility for your chalet.",
+              "href": "/services#marketing"
+            }
+          ]
+        },
+        {
+          "title": "Guest experience",
+          "icon": "Users",
+          "links": [
+            {
+              "name": "Concierge welcome",
+              "description": "Personalised greetings, key handover, and 24/7 support for every stay.",
+              "href": "/services#welcome"
+            },
+            {
+              "name": "Signature experiences",
+              "description": "Ski passes, private chefs, and curated activities managed by our team.",
+              "href": "/contact"
+            }
+          ]
+        },
+        {
+          "title": "Property care",
+          "icon": "Shield",
+          "links": [
+            {
+              "name": "Housekeeping & maintenance",
+              "description": "Premium cleaning standards and preventive maintenance programmes.",
+              "href": "/services#cleaning"
+            },
+            {
+              "name": "Owner services",
+              "description": "Inventory checks, restocking, and dedicated reporting for owners.",
+              "href": "/auth/login"
+            }
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Need a tailor-made package?",
+        "description": "Speak with our chalet advisors to create the right combination of services.",
+        "button": "Book a consultation",
+        "href": "/contact"
+      }
+    }
   },
   "footer": {
     "brand": {
