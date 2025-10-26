@@ -23,6 +23,8 @@ export default function Header({ locale, translations }: HeaderProps) {
     { name: translations.nav.contact, href: `/${locale}/contact` },
   ];
 
+  const dashboardLink = { name: translations.nav.dashboard, href: '/auth/login' };
+
   const isActive = (href: string) => {
     if (href === `/${locale}`) {
       return pathname === `/${locale}` || pathname === `/${locale}/`;
@@ -55,6 +57,12 @@ export default function Header({ locale, translations }: HeaderProps) {
                 {item.name}
               </Link>
             ))}
+            <Link
+              href={dashboardLink.href}
+              className="text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 rounded-md px-3 py-1.5 transition-colors"
+            >
+              {dashboardLink.name}
+            </Link>
             <LanguageSwitcher locale={locale} />
           </div>
 
@@ -89,6 +97,13 @@ export default function Header({ locale, translations }: HeaderProps) {
                 {item.name}
               </Link>
             ))}
+            <Link
+              href={dashboardLink.href}
+              className="block px-3 py-2 text-base font-semibold rounded-md text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-700"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {dashboardLink.name}
+            </Link>
             <div className="px-3 py-2">
               <LanguageSwitcher locale={locale} />
             </div>
