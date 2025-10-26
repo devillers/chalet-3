@@ -35,7 +35,7 @@ export default function Footer({ locale, translations }: FooterProps) {
           {/* Colonne 1 : Infos entreprise & contact */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-6">
-              <Mountain className="h-8 w-8 text-orange-700" aria-hidden="true" />
+              <Mountain className="h-8 w-8 text-amber-700" aria-hidden="true" />
               <span className={`${pacifico.className} text-xl text-neutral-100`}>{brandName}</span>
             </div>
 
@@ -48,7 +48,7 @@ export default function Footer({ locale, translations }: FooterProps) {
             <div className="space-y-3">
               {contact.email && (
                 <div className="flex items-center space-x-3">
-                  <Mail className="h-5 w-5 text-orange-700 flex-shrink-0" aria-hidden="true" />
+                  <Mail className="h-5 w-5 text-amber-700 flex-shrink-0" aria-hidden="true" />
                   <a
                     href={`mailto:${contact.email}`}
                     className="text-neutral-600 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
@@ -60,7 +60,7 @@ export default function Footer({ locale, translations }: FooterProps) {
 
               {contact.phone && (
                 <div className="flex items-center space-x-3">
-                  <Phone className="h-5 w-5 text-orange-700 flex-shrink-0" aria-hidden="true" />
+                  <Phone className="h-5 w-5 text-amber-700 flex-shrink-0" aria-hidden="true" />
                   <a
                     href={`tel:${contact.phone.replace(/\s+/g, '')}`}
                     className="text-neutral-600 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
@@ -72,7 +72,7 @@ export default function Footer({ locale, translations }: FooterProps) {
 
               {Array.isArray(contact.locationLines) && contact.locationLines.length > 0 && (
                 <div className="flex items-start space-x-3">
-                  <MapPin className="h-5 w-5 text-orange-700 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                  <MapPin className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span className="text-neutral-600">
                     {contact.locationLines.map((line: string, index: number) => (
                       <span key={index}>
@@ -143,7 +143,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                   />
                   <button
                     type="submit"
-                    className="w-full px-4 py-2 bg-orange-700 text-white rounded-lg font-medium 
+                    className="w-full px-4 py-2 bg-amber-700 text-white rounded-lg font-medium 
                                hover:bg-primary-800 transition-colors duration-200"
                   >
                     {newsletter.button}
@@ -165,7 +165,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                     <a
                       key={name}
                       href={href}
-                      className="p-2 bg-neutral-800 rounded-lg hover:bg-orange-700 transition-colors duration-200 group"
+                      className="p-2 bg-neutral-800 rounded-lg hover:bg-amber-700 transition-colors duration-200 group"
                       aria-label={name}
                     >
                       <IconComponent className="h-5 w-5 text-neutral-600 group-hover:text-white" aria-hidden="true" />
@@ -192,7 +192,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                   href={item.href}
                   className={[
                     'text-[11px] uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded',
-                    item.href === adminLoginLink.href ? 'text-orange-700' : 'text-neutral-600',
+                    item.href === adminLoginLink.href ? 'text-amber-700' : 'text-neutral-600',
                   ].join(' ')}
                 >
                   {item.name}
@@ -203,7 +203,7 @@ export default function Footer({ locale, translations }: FooterProps) {
               {bottomLinks.length === 0 && (
                 <Link
                   href="/auth/login"
-                  className="text-[11px] text-orange-700 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                  className="text-[11px] text-amber-700 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
                 >
                   {locale === 'fr' ? 'Connexion Admin' : 'Admin Login'}
                 </Link>

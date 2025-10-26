@@ -256,7 +256,7 @@ export default function Header({ locale, translations }: HeaderProps) {
                 aria-modal="true"
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center justify-between px-6 py-4 border-b bg-white border-gray-100">
                   <Link href={`/${locale}`} className="flex items-center gap-2">
                     <Mountain className="h-7 w-7 text-amber-500" />
                     <span className="text-xl font-light">Chalet Manager</span>

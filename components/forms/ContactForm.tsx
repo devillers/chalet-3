@@ -20,7 +20,9 @@ interface ContactFormProps {
 }
 
 export default function ContactForm({ locale, translations }: ContactFormProps) {
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    'idle'
+  );
 
   const {
     register,
@@ -73,7 +75,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         {parts[1] && (
           <Link
             href={`/${locale}/privacy-policy`}
-            className="text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-700 rounded"
+            className="text-amber-500 hover:text-amber-700 text-sm font-light "
             target="_blank"
           >
             {parts[1]}
@@ -85,17 +87,9 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
   };
 
   return (
-   <form
-  onSubmit={handleSubmit(onSubmit)}
-  className="space-y-6 !border-t-0 pt-0"
-  noValidate
->
-     <h2 className="text-2xl font-thin text-gray-800 !mt-0 !pt-0 !border-0">Formulaire de contact</h2>
-       
-      <div>
-        
-        <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-         
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 !border-t-0 pt-0" noValidate>
+      <div className='p-4'>
+        <Label htmlFor="name" className="text-sm font-light text-gray-700">
           {translations.contact.form.name} <span className="text-red-500">*</span>
         </Label>
         <Input
@@ -113,8 +107,8 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         )}
       </div>
 
-      <div>
-        <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+      <div className='px-4'>
+        <Label htmlFor="email" className="text-sm font-light text-gray-700">
           {translations.contact.form.email} <span className="text-red-500">*</span>
         </Label>
         <Input
@@ -132,20 +126,15 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         )}
       </div>
 
-      <div>
-        <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+      <div className='px-4'>
+        <Label htmlFor="phone" className="text-sm font-light text-gray-700">
           {translations.contact.form.phone}
         </Label>
-        <Input
-          id="phone"
-          type="tel"
-          {...register('phone')}
-          className="mt-1"
-        />
+        <Input id="phone" type="tel" {...register('phone')} className="mt-1" />
       </div>
 
-      <div>
-        <Label htmlFor="message" className="text-sm font-medium text-gray-700">
+      <div className='px-4'>
+        <Label htmlFor="message" className="text-sm font-light text-gray-700">
           {translations.contact.form.message} <span className="text-red-500">*</span>
         </Label>
         <Textarea
@@ -163,7 +152,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         )}
       </div>
 
-      <div className="flex items-start space-x-2">
+      <div className="flex items-center space-x-2 justify-center">
         <Checkbox
           id="consent"
           checked={consentValue}
@@ -173,7 +162,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         />
         <Label
           htmlFor="consent"
-          className="text-sm text-gray-600 font-normal leading-relaxed cursor-pointer"
+          className="text-xs text-gray-500 font-normal leading-relaxed cursor-pointer"
         >
           {renderConsentLabel()} <span className="text-red-500">*</span>
         </Label>
@@ -205,7 +194,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
       <Button
         type="submit"
         disabled={submitStatus === 'loading'}
-        className="w-full bg-blue-700 hover:bg-blue-600 text-white"
+        className="w-full bg-amber-500 hover:bg-amber-600 text-white"
       >
         {submitStatus === 'loading' ? (
           <>
