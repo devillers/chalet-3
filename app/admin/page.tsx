@@ -12,9 +12,10 @@ import {
   Shield,
   Home,
   MessageSquare,
-  Settings
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
+import { pacifico } from '@/lib/fonts';
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
@@ -101,7 +102,7 @@ export default function AdminDashboard() {
             <div className="flex items-center space-x-3">
               <Shield className="h-8 w-8 text-blue-600" />
               <div>
-                <h1 className="text-xl font-bold text-slate-900">Chalet Manager</h1>
+                <h1 className={`${pacifico.className} text-2xl text-slate-900`}>Chalet Manager</h1>
                 <p className="text-xs text-slate-500">Administration</p>
               </div>
             </div>

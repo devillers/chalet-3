@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, LogIn, AlertCircle } from 'lucide-react';
+import { pacifico } from '@/lib/fonts';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Chalet Manager</h1>
+            <h1 className={`${pacifico.className} text-4xl text-slate-900 mb-2`}>Chalet Manager</h1>
           </Link>
           <p className="text-slate-600">Espace d&apos;administration</p>
         </div>

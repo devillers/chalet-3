@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Mountain, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { pacifico } from '@/lib/fonts';
 
 interface FooterProps {
   locale: string; // e.g. 'fr' or 'en'
@@ -28,7 +29,7 @@ export default function Footer({ locale, translations }: FooterProps) {
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-6">
               <Mountain className="h-8 w-8 text-orange-700" aria-hidden="true" />
-              <span className="text-lg uppercase text-neutral-100 font-thin">{brandName}</span>
+              <span className={`${pacifico.className} text-xl text-neutral-100`}>{brandName}</span>
             </div>
 
             {brand.description && (
