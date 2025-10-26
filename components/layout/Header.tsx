@@ -211,8 +211,8 @@ export default function Header({ locale, translations }: HeaderProps) {
                 <Link
                   key={item.key}
                   href={localizeHref(item.href)}
-                  className={`text-[11px] font-light px-2 py-1 transition-colors ${
-                    isActive(item.href) ? 'text-amber-500' : 'text-gray-700 hover:text-amber-700 uppercase '
+                  className={`text-[11px] font-light uppercase px-2 py-1 transition-colors ${
+                    isActive(item.href) ? 'text-amber-500' : 'text-gray-700 hover:text-amber-700'
                   }`}
                 >
                   {item.label}
