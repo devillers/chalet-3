@@ -237,51 +237,64 @@ export default function Header({ locale, translations }: HeaderProps) {
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
-              key="mobile-menu"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-              className="fixed inset-0 z-50 flex flex-col backdrop-blur-xl bg-white/70 dark:bg-neutral-900/70 text-gray-900 dark:text-gray-100 shadow-2xl"
+              key="mobile-menu-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+              onClick={() => setMobileMenuOpen(false)}
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/20">
-                <Link href={`/${locale}`} className="flex items-center gap-2">
-                  <Mountain className="h-7 w-7 text-amber-500" />
-                  <span className="text-xl font-light">Chalet Manager</span>
-                </Link>
-
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg border border-amber-400/70 p-2 hover:bg-amber-50/50 transition"
-                  aria-label="Fermer le menu"
-                >
-                  <X className="h-5 w-5 text-amber-500" />
-                </button>
-              </div>
-
-              {/* Liens de navigation */}
-              <div className="flex flex-col space-y-2 p-6 text-lg font-light">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.key}
-                    href={localizeHref(item.href)}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`rounded-md px-3 py-2 transition-colors ${
-                      isActive(item.href)
-                        ? 'bg-amber-100/40 text-amber-600 font-medium'
-                        : 'hover:bg-amber-50/40 text-gray-700'
-                    }`}
-                  >
-                    {item.label}
+              <motion.aside
+                key="mobile-menu"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                className="ml-auto flex h-full w-80 max-w-full flex-col bg-white text-gray-900 shadow-2xl"
+                role="dialog"
+                aria-modal="true"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                  <Link href={`/${locale}`} className="flex items-center gap-2">
+                    <Mountain className="h-7 w-7 text-amber-500" />
+                    <span className="text-xl font-light">Chalet Manager</span>
                   </Link>
-                ))}
-              </div>
 
-              {/* Sélecteur de langue */}
-              <div className="mt-auto flex items-center gap-4 border-t border-white/20 px-6 py-4">
-                <Globe className="h-5 w-5 text-amber-500" />
-                <LanguageSwitcher locale={locale} />
-              </div>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-lg border border-amber-400/70 p-2 hover:bg-amber-50/80 transition"
+                    aria-label="Fermer le menu"
+                  >
+                    <X className="h-5 w-5 text-amber-500" />
+                  </button>
+                </div>
+
+                {/* Liens de navigation */}
+                <div className="flex flex-col space-y-2 p-6 text-lg font-light">
+                  {navigation.map((item) => (
+                    <Link
+                      key={item.key}
+                      href={localizeHref(item.href)}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`rounded-md px-3 py-2 transition-colors ${
+                        isActive(item.href)
+                          ? 'bg-amber-100/60 text-amber-600 font-medium'
+                          : 'hover:bg-amber-50/60 text-gray-700'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Sélecteur de langue */}
+                <div className="mt-auto flex items-center gap-4 border-t border-gray-100 px-6 py-4">
+                  <Globe className="h-5 w-5 text-amber-500" />
+                  <LanguageSwitcher locale={locale} />
+                </div>
+              </motion.aside>
             </motion.div>
           )}
         </AnimatePresence>
