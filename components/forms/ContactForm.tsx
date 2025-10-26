@@ -75,7 +75,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         {parts[1] && (
           <Link
             href={`/${locale}/privacy-policy`}
-            className="text-amber-500 hover:text-amber-700 text-sm font-light "
+            className="text-amber-500 hover:text-amber-700 text-xs font-light "
             target="_blank"
           >
             {parts[1]}
