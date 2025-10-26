@@ -9,6 +9,15 @@ const emailPayloadSchema = z.object({
   html: z.string().optional(),
   text: z.string().optional(),
   replyTo: z.string().email().optional(),
+  attachments: z
+    .array(
+      z.object({
+        filename: z.string().min(1),
+        content: z.any(),
+        contentType: z.string().optional(),
+      })
+    )
+    .optional(),
   meta: z
     .object({
       ip: z.string().optional(),
@@ -60,6 +69,7 @@ export async function sendEmail(payload: EmailPayload): Promise<{
         text: validated.text,
         html: validated.html,
         replyTo: validated.replyTo,
+        attachments: validated.attachments,
       });
 
       updateEmailLog(log.id, {

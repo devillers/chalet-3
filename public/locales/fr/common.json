@@ -209,7 +209,15 @@
       "submit": "Envoyer le message",
       "sending": "Envoi en cours...",
       "success": "Message envoyé avec succès ! Nous vous répondrons dans les 24h.",
-      "error": "Une erreur est survenue. Veuillez réessayer."
+      "error": "Une erreur est survenue. Veuillez réessayer.",
+      "attachmentsTitle": "Ajoutez vos visuels",
+      "attachmentsDescription": "Glissez-déposez vos images ici ou cliquez pour sélectionner (JPEG, PNG ou WebP - 10 Mo maximum par image).",
+      "attachmentsButton": "Choisir des fichiers",
+      "attachmentsPreviewTitle": "Fichiers sélectionnés",
+      "attachmentsRemove": "Supprimer",
+      "attachmentsErrorType": "Format d'image non pris en charge. Utilisez JPEG, PNG ou WebP.",
+      "attachmentsErrorSize": "Chaque image doit faire moins de 10 Mo.",
+      "attachmentsErrorRead": "Impossible de traiter l'un de vos fichiers. Veuillez réessayer."
     },
     "info": {
       "title": "Informations de Contact",
