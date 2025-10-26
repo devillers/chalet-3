@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import type { ChangeEvent, DragEvent, KeyboardEvent } from 'react';
+import type { CheckedState } from '@radix-ui/react-checkbox';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -27,9 +28,7 @@ interface ContactFormProps {
 }
 
 export default function ContactForm({ locale, translations }: ContactFormProps) {
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
-    'idle'
-  );
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const {
     register,
@@ -52,9 +51,9 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
   const attachments = watch('attachments') || [];
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   const attachmentsErrorTypeMessage =
-    translations.contact?.form?.attachmentsErrorType ??
-    'Only JPEG, PNG, or WebP images are allowed.';
+    translations.contact?.form?.attachmentsErrorType ?? 'Only JPEG, PNG, or WebP images are allowed.';
   const attachmentsErrorSizeMessage =
     translations.contact?.form?.attachmentsErrorSize ?? 'Each image must be 10MB or less.';
   const attachmentsErrorReadMessage =
@@ -63,13 +62,10 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
 
   const onSubmit = async (data: ContactFormData) => {
     setSubmitStatus('loading');
-
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
@@ -78,13 +74,11 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
       if (response.ok) {
         setSubmitStatus('success');
         reset();
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
+        if (fileInputRef.current) fileInputRef.current.value = '';
       } else {
         setSubmitStatus('error');
       }
-    } catch (error) {
+    } catch {
       setSubmitStatus('error');
     }
   };
@@ -122,43 +116,31 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
       for (const file of incomingFiles) {
         if (!ALLOWED_ATTACHMENT_TYPES.includes(file.type as AttachmentMimeType)) {
           hasError = true;
-          setError('attachments', {
-            type: 'manual',
-            message: attachmentsErrorTypeMessage,
-          });
+          setError('attachments', { type: 'manual', message: attachmentsErrorTypeMessage });
           continue;
         }
 
         if (file.size > MAX_ATTACHMENT_SIZE) {
           hasError = true;
-          setError('attachments', {
-            type: 'manual',
-            message: attachmentsErrorSizeMessage,
-          });
+          setError('attachments', { type: 'manual', message: attachmentsErrorSizeMessage });
           continue;
         }
 
         try {
           const attachment = await convertFileToAttachment(file);
           validAttachments.push(attachment);
-        } catch (error) {
-          console.error('Attachment conversion error', error);
+        } catch {
           hasError = true;
-          setError('attachments', {
-            type: 'manual',
-            message: attachmentsErrorReadMessage,
-          });
+          setError('attachments', { type: 'manual', message: attachmentsErrorReadMessage });
         }
       }
 
       if (validAttachments.length > 0) {
         const nextAttachments = [...attachments, ...validAttachments];
         setValue('attachments', nextAttachments, { shouldValidate: true });
-        if (!hasError) {
-          clearErrors('attachments');
-        }
+        if (!hasError) clearErrors('attachments');
       } else if (!attachments.length && hasError) {
-        // keep error set
+        // keep error
       } else if (!hasError) {
         clearErrors('attachments');
       }
@@ -191,16 +173,12 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
     setIsDragging(true);
   }, []);
 
-  const handleDragLeave = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+  const handleDragLeave = useCallback(() => setIsDragging(false), []);
 
   const handleFileInputChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files;
-      if (files?.length) {
-        await handleFiles(files);
-      }
+      if (files?.length) await handleFiles(files);
       event.target.value = '';
     },
     [handleFiles]
@@ -210,9 +188,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
     (index: number) => {
       const nextAttachments = attachments.filter((_, idx) => idx !== index);
       setValue('attachments', nextAttachments, { shouldValidate: true });
-      if (nextAttachments.length === 0) {
-        clearErrors('attachments');
-      }
+      if (nextAttachments.length === 0) clearErrors('attachments');
     },
     [attachments, clearErrors, setValue]
   );
@@ -227,7 +203,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         {parts[1] && (
           <Link
             href={`/${locale}/privacy-policy`}
-            className="text-amber-500 hover:text-amber-700 text-xs font-light "
+            className="text-amber-500 hover:text-amber-700 text-xs font-light"
             target="_blank"
           >
             {parts[1]}
@@ -242,7 +218,8 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 !border-t-0 pt-0" noValidate>
-      <div className='p-4'>
+      {/* --- Name --- */}
+      <div className="p-4">
         <Label htmlFor="name" className="text-sm font-light text-gray-700">
           {translations.contact.form.name} <span className="text-red-500">*</span>
         </Label>
@@ -261,7 +238,8 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         )}
       </div>
 
-      <div className='px-4'>
+      {/* --- Email --- */}
+      <div className="px-4">
         <Label htmlFor="email" className="text-sm font-light text-gray-700">
           {translations.contact.form.email} <span className="text-red-500">*</span>
         </Label>
@@ -280,14 +258,16 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         )}
       </div>
 
-      <div className='px-4'>
+      {/* --- Phone --- */}
+      <div className="px-4">
         <Label htmlFor="phone" className="text-sm font-light text-gray-700">
           {translations.contact.form.phone}
         </Label>
         <Input id="phone" type="tel" {...register('phone')} className="mt-1" />
       </div>
 
-      <div className='px-4'>
+      {/* --- Message --- */}
+      <div className="px-4">
         <Label htmlFor="message" className="text-sm font-light text-gray-700">
           {translations.contact.form.message} <span className="text-red-500">*</span>
         </Label>
@@ -306,13 +286,14 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         )}
       </div>
 
-      <div className='px-4'>
+      {/* --- Attachments --- */}
+      <div className="px-4">
         <Label className="text-sm font-light text-gray-700">
           {translations.contact?.form?.attachmentsTitle ?? 'Add visuals'}
         </Label>
         <div
           className={`mt-2 flex flex-col items-center justify-center rounded-md border-2 border-dashed p-6 text-center transition-colors ${
-            isDragging ? 'border-amber-500 bg-amber-50' : 'border-gray-300'
+            isDragging ? 'border-amber-500' : 'border-amber-700'
           }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -329,7 +310,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
           aria-describedby={attachmentsError ? 'attachments-error' : undefined}
         >
           <Upload className="h-6 w-6 text-amber-500" aria-hidden="true" />
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-xs text-gray-500">
             {translations.contact?.form?.attachmentsDescription ??
               'Drag and drop your images here or click to browse. JPEG, PNG or WebP. 10MB max per image.'}
           </p>
@@ -337,7 +318,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
             type="button"
             variant="outline"
             size="sm"
-            className="mt-3 border-amber-500 text-amber-600 hover:bg-amber-50"
+            className="mt-3 border-amber-500 text-amber-600"
             onClick={(event) => {
               event.stopPropagation();
               fileInputRef.current?.click();
@@ -354,6 +335,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
             onChange={handleFileInputChange}
           />
         </div>
+
         {attachmentsError && (
           <p id="attachments-error" className="mt-2 text-sm text-red-600" role="alert">
             {attachmentsError}
@@ -409,11 +391,12 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         )}
       </div>
 
+      {/* --- Consent --- */}
       <div className="flex items-center space-x-2 justify-center">
         <Checkbox
           id="consent"
           checked={consentValue}
-          onCheckedChange={(checked) => setValue('consent', checked as boolean)}
+          onCheckedChange={(checked: CheckedState) => setValue('consent', checked === true)}
           aria-invalid={errors.consent ? 'true' : 'false'}
           aria-describedby={errors.consent ? 'consent-error' : undefined}
         />
@@ -424,12 +407,14 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
           {renderConsentLabel()} <span className="text-red-500">*</span>
         </Label>
       </div>
+
       {errors.consent && (
         <p id="consent-error" className="text-sm text-red-600" role="alert">
           {errors.consent.message}
         </p>
       )}
 
+      {/* --- Alerts --- */}
       {submitStatus === 'success' && (
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -448,6 +433,7 @@ export default function ContactForm({ locale, translations }: ContactFormProps) 
         </Alert>
       )}
 
+      {/* --- Submit Button --- */}
       <Button
         type="submit"
         disabled={submitStatus === 'loading'}
