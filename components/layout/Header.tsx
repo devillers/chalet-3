@@ -6,6 +6,7 @@ import { Menu, X, Mountain } from 'lucide-react';
 import { useState } from 'react';
 import { Locale } from '@/lib/i18n';
 import LanguageSwitcher from './LanguageSwitcher';
+import { pacifico } from '@/lib/fonts';
 
 interface HeaderProps {
   locale: Locale;
@@ -39,7 +40,7 @@ export default function Header({ locale, translations }: HeaderProps) {
           <div className="flex items-center">
             <Link href={`/${locale}`} className="flex items-center space-x-2">
               <Mountain className="h-8 w-8 text-blue-700" aria-hidden="true" />
-              <span className="text-xl font-bold text-gray-900">Chalet Manager</span>
+              <span className={`${pacifico.className} text-2xl text-gray-900`}>Chalet Manager</span>
             </Link>
           </div>
 

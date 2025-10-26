@@ -1,12 +1,10 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { Inter } from 'next/font/google';
 import '../globals.css';
 import { locales, Locale, getTranslations } from '@/lib/i18n';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-
-const inter = Inter({ subsets: ['latin'] });
+import { inter } from '@/lib/fonts';
 
 export async function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
