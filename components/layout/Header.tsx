@@ -126,8 +126,7 @@ export default function Header({ locale, translations }: HeaderProps) {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10, scale: 0.98 }}
                           transition={{ type: 'spring', stiffness: 120, damping: 14 }}
-                          className="absolute top-full left-1/2 mt-4 w-[1100px] -translate-x-1/2 lg:left-1/2 lg:-translate-x-1/2 xl:-translate-x-1/2 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-lg rounded-3xl border border-gray-200"
-                          style={{ transform: 'translateX(-50%)', left: '50%' }}
+                          className="absolute top-full left-1/2 mt-4 w-[min(1100px,calc(100vw-2rem))] -translate-x-1/2 rounded-3xl border border-gray-200 bg-white/95 shadow-xl ring-1 ring-black/5 backdrop-blur-lg sm:w-[min(1100px,calc(100vw-4rem))] lg:w-[min(1100px,calc(100vw-6rem))]"
                         >
                           <div className="grid gap-10 p-10 items-start justify-center lg:grid-cols-[2fr,1fr]">
                             <div className="space-y-10">
