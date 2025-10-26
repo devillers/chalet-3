@@ -29,8 +29,8 @@
         "links": [
           { "name": "Gestion locative", "href": "/fr/services#gestion-locative" },
           { "name": "Conciergerie", "href": "/fr/services#conciergerie" },
-          { "name": "Maintenance", "href": "/fr/services#maintenance" },
-          { "name": "Gestion fiscale", "href": "/fr/services#gestion-fiscale" }
+          { "name": "Maintenance", "href": "/fr/services#maintenance" }
+       
         ]
       },
       "company": {

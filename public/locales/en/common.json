@@ -29,8 +29,7 @@
         "links": [
           { "name": "Rental management", "href": "/en/services#rental-management" },
           { "name": "Concierge", "href": "/en/services#concierge" },
-          { "name": "Maintenance", "href": "/en/services#maintenance" },
-          { "name": "Tax management", "href": "/en/services#tax-management" }
+          { "name": "Maintenance", "href": "/en/services#maintenance" }
         ]
       },
       "company": {
