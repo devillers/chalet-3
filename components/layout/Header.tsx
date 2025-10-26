@@ -39,7 +39,7 @@ export default function Header({ locale, translations }: HeaderProps) {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <Link href={`/${locale}`} className="flex items-center space-x-2">
-              <Mountain className="h-8 w-8 text-blue-700" aria-hidden="true" />
+              <Mountain className="h-8 w-8 text-orange-700" aria-hidden="true" />
               <span className={`${pacifico.className} text-2xl text-gray-900`}>Chalet Manager</span>
             </Link>
           </div>
