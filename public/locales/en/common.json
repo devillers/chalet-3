@@ -4,18 +4,69 @@
     "description": "Professional chalet management service: reservations, maintenance, marketing and guest welcome. Maximize your rental income with peace of mind."
   },
   "nav": {
+    "brandName": "Chalet Manager",
     "home": "Home",
     "services": "Services",
     "about": "About",
     "contact": "Contact"
   },
   "footer": {
-    "description": "Professional chalet management service in the Alps",
-    "links": {
-      "legal": "Legal Notice",
-      "privacy": "Privacy Policy"
+    "brand": {
+      "description": "Professional chalet management services for discerning mountain property owners. We operate, grow, and maintain your investment."
     },
-    "copyright": "© {{year}} Chalet Manager. All rights reserved."
+    "contact": {
+      "email": "contact@chaletmanager.fr",
+      "phone": "+33 6 07 85 90 58",
+      "locationLines": [
+        "Chamonix-Mont-Blanc",
+        "Haute-Savoie, France"
+      ]
+    },
+    "sections": {
+      "services": {
+        "title": "Our services",
+        "links": [
+          { "name": "Rental management", "href": "/en/services#rental-management" },
+          { "name": "Concierge", "href": "/en/services#concierge" },
+          { "name": "Maintenance", "href": "/en/services#maintenance" },
+          { "name": "Tax management", "href": "/en/services#tax-management" }
+        ]
+      },
+      "company": {
+        "title": "Company",
+        "links": [
+          { "name": "About", "href": "/en/about" },
+          { "name": "Portfolio", "href": "/en/about#portfolio" },
+          { "name": "Employment services", "href": "/en/services#employment" },
+          { "name": "Corporate retreats", "href": "/en/services#retreats" },
+          { "name": "Contact", "href": "/en/contact" }
+        ]
+      },
+      "legal": {
+        "links": [
+          { "name": "Legal notice", "href": "/en/legal-notice" },
+          { "name": "Terms of use", "href": "/en/terms" },
+          { "name": "Privacy policy", "href": "/en/privacy-policy" },
+          { "name": "Cookie settings", "href": "/en/cookies" }
+        ]
+      }
+    },
+    "newsletter": {
+      "title": "Stay connected",
+      "description": "Subscribe to our newsletter to receive exclusive news and updates.",
+      "placeholder": "Your email address",
+      "button": "Subscribe",
+      "followUs": "Follow us"
+    },
+    "bottomBar": {
+      "copyright": "All rights reserved.",
+      "links": [
+        { "name": "Legal notice", "href": "/en/legal-notice" },
+        { "name": "Privacy policy", "href": "/en/privacy-policy" },
+        { "name": "Terms of use", "href": "/en/terms" },
+        { "name": "Cookie settings", "href": "/en/cookies" }
+      ]
+    }
   },
   "cta": {
     "contact": "Contact us",

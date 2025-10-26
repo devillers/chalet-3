@@ -15,6 +15,7 @@ export default function Footer({ locale, translations }: FooterProps) {
   const newsletter = footer.newsletter ?? {};
   const brand = footer.brand ?? {};
   const bottomBar = footer.bottomBar ?? {}; // ✅ ajouté
+  const bottomLinks = (bottomBar.links ?? navigation.legal?.links ?? []) as any[];
   const brandName: string = translations.nav?.brandName || 'Chalet Manager';
 
   return (
@@ -177,7 +178,7 @@ export default function Footer({ locale, translations }: FooterProps) {
               © {currentYear} {brandName}. {bottomBar?.copyright}
             </div>
             <div className="flex items-center space-x-6">
-              {navigation.legal?.links?.map((item: any) => (
+              {bottomLinks.map((item: any) => (
                 <Link
                   key={item.name}
                   href={item.href}
@@ -186,7 +187,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                   {item.name}
                 </Link>
               ))}
-              {!navigation.legal && (
+              {bottomLinks.length === 0 && (
                 <Link
                   href="/auth/login"
                   className="text-[11px] text-neutral-300 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
