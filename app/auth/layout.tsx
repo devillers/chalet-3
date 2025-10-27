@@ -1,8 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import '../globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
+import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
   title: 'Connexion - Chalet Manager',
@@ -13,11 +10,7 @@ export const metadata: Metadata = {
 export default function AuthLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  return (
-    <html lang="fr">
-      <body className={inter.className}>{children}</body>
-    </html>
-  );
+  return children;
 }
