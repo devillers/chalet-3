@@ -2,26 +2,42 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { env } from '@/env';
 import { PropertyModel, type PropertyDocument } from '@/lib/db/models/property';
+import { locales, type Locale } from '@/lib/i18n';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 
 interface PortfolioPageProps {
+  params: Promise<{ locale: Locale }>;
   searchParams: Record<string, string | string[] | undefined>;
 }
 
 const PAGE_SIZE = 12;
 
-export async function generateMetadata({ searchParams }: PortfolioPageProps): Promise<Metadata> {
+const OG_LOCALES: Record<Locale, string> = {
+  fr: 'fr_FR',
+  en: 'en_US',
+};
+
+export async function generateMetadata({ params, searchParams }: PortfolioPageProps): Promise<Metadata> {
+  const { locale } = await params;
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
   const pageParam = Number(searchParams.page ?? '1');
-  const canonical = `${baseUrl}/portfolio${pageParam > 1 ? `?page=${pageParam}` : ''}`;
+  const querySuffix = pageParam > 1 ? `?page=${pageParam}` : '';
+  const canonicalPath = `/${locale}/portfolio${querySuffix}`;
+  const canonical = `${baseUrl}${canonicalPath}`;
   const hasFilters = ['city', 'capacityMin', 'dateFrom', 'dateTo'].some((key) => Boolean(searchParams[key]));
+
+  const languageAlternates = locales.reduce<Record<string, string>>((acc, currentLocale) => {
+    acc[currentLocale] = `${baseUrl}/${currentLocale}/portfolio${querySuffix}`;
+    return acc;
+  }, {});
 
   return {
     title: 'Portfolio — Chalet Manager',
     description: 'Découvrez les locations de prestige disponibles à la réservation.',
     alternates: {
       canonical,
+      languages: languageAlternates,
     },
     openGraph: {
       url: canonical,
@@ -29,6 +45,7 @@ export async function generateMetadata({ searchParams }: PortfolioPageProps): Pr
       description: 'Sélection de locations publiées',
       type: 'website',
       siteName: 'Chalet Manager',
+      locale: OG_LOCALES[locale],
     },
     twitter: {
       card: 'summary_large_image',
@@ -44,7 +61,8 @@ export async function generateMetadata({ searchParams }: PortfolioPageProps): Pr
   };
 }
 
-export default async function PortfolioPage({ searchParams }: PortfolioPageProps) {
+export default async function PortfolioPage({ params, searchParams }: PortfolioPageProps) {
+  const { locale } = await params;
   const page = Number(searchParams.page ?? '1');
   const skip = (page - 1) * PAGE_SIZE;
   const properties: PropertyDocument[] = await PropertyModel.find({ status: 'published' }, {
@@ -83,7 +101,7 @@ export default async function PortfolioPage({ searchParams }: PortfolioPageProps
                 </CardDescription>
               </CardHeader>
               <CardContent className="mt-auto">
-                <Link href={`/portfolio/${property.slug}`} className="text-primary underline">
+                <Link href={`/${locale}/portfolio/${property.slug}`} className="text-primary underline">
                   Voir le détail
                 </Link>
               </CardContent>
@@ -98,7 +116,7 @@ export default async function PortfolioPage({ searchParams }: PortfolioPageProps
               const pageNumber = index + 1;
               return (
                 <PaginationItem key={pageNumber}>
-                  <PaginationLink href={`/portfolio?page=${pageNumber}`} isActive={pageNumber === page}>
+                  <PaginationLink href={`/${locale}/portfolio?page=${pageNumber}`} isActive={pageNumber === page}>
                     {pageNumber}
                   </PaginationLink>
                 </PaginationItem>
