@@ -21,7 +21,7 @@ import {
 
 interface PortfolioPageProps {
   params: { locale: Locale };
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams?: Record<string, string | string[] | undefined>;
 }
 
 const PAGE_SIZE = 12;
@@ -33,7 +33,7 @@ const OG_LOCALES: Record<Locale, string> = {
 
 export async function generateMetadata({
   params,
-  searchParams,
+  searchParams = {},
 }: PortfolioPageProps): Promise<Metadata> {
   const { locale } = params;
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
@@ -84,7 +84,7 @@ export async function generateMetadata({
 
 export default async function PortfolioPage({
   params,
-  searchParams,
+  searchParams = {},
 }: PortfolioPageProps) {
   const { locale } = params;
   const page = Number(searchParams.page ?? '1');
