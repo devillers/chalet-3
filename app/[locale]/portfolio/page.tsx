@@ -19,9 +19,11 @@ import {
   PaginationLink,
 } from '@/components/ui/pagination';
 
+type PortfolioSearchParams = Record<string, string | string[] | undefined>;
+
 interface PortfolioPageProps {
-  params: { locale: Locale };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: { locale: Locale } | Promise<{ locale: Locale }>;
+  searchParams: PortfolioSearchParams | Promise<PortfolioSearchParams>;
 }
 
 const PAGE_SIZE = 12;
@@ -35,14 +37,15 @@ export async function generateMetadata({
   params,
   searchParams,
 }: PortfolioPageProps): Promise<Metadata> {
-  const { locale } = params;
+  const { locale } = await params;
+  const resolvedSearchParams = await searchParams;
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
-  const pageParam = Number(searchParams.page ?? '1');
+  const pageParam = Number(resolvedSearchParams.page ?? '1');
   const querySuffix = pageParam > 1 ? `?page=${pageParam}` : '';
   const canonicalPath = `/${locale}/portfolio${querySuffix}`;
   const canonical = `${baseUrl}${canonicalPath}`;
   const hasFilters = ['city', 'capacityMin', 'dateFrom', 'dateTo'].some(
-    (key) => Boolean(searchParams[key])
+    (key) => Boolean(resolvedSearchParams[key])
   );
 
   const languageAlternates = locales.reduce<Record<string, string>>(
@@ -86,8 +89,9 @@ export default async function PortfolioPage({
   params,
   searchParams,
 }: PortfolioPageProps) {
-  const { locale } = params;
-  const page = Number(searchParams.page ?? '1');
+  const { locale } = await params;
+  const resolvedSearchParams = await searchParams;
+  const page = Number(resolvedSearchParams.page ?? '1');
   const skip = (page - 1) * PAGE_SIZE;
 
   // Fetch MongoDB
