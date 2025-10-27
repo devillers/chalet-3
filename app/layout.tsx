@@ -13,13 +13,14 @@ export default async function RootLayout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ locale?: string }>;
+  params: Promise<{ locale?: string }> | { locale?: string };
 }) {
-  const { locale } = await params;
-  const lang = typeof locale === 'string' && locale.length > 0 ? locale : 'fr';
+  const resolvedParams = await Promise.resolve(params);
+  const lang =
+    typeof resolvedParams.locale === 'string' && resolvedParams.locale.length > 0 ? resolvedParams.locale : 'fr';
 
   return (
-    <html lang={lang}>
+    <html lang={lang} suppressHydrationWarning>
       <body className={inter.className}>{children}</body>
     </html>
   );

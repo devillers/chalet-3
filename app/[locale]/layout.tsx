@@ -13,9 +13,9 @@ export default async function LocaleLayout({
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: string }> | { locale: string };
 }) {
-  const { locale: paramsLocale } = await params;
+  const { locale: paramsLocale } = await Promise.resolve(params);
 
   if (!locales.includes(paramsLocale as Locale)) {
     notFound();
@@ -25,12 +25,10 @@ export default async function LocaleLayout({
   const translations = await getTranslations(locale);
 
   return (
-    <html lang={locale}>
-      <body className="flex min-h-screen flex-col">
-        <Header locale={locale} translations={translations} />
-        <main className="flex-1">{children}</main>
-        <Footer locale={locale} translations={translations} />
-      </body>
-    </html>
+    <div className="flex min-h-screen flex-col">
+      <Header locale={locale} translations={translations} />
+      <div className="flex-1">{children}</div>
+      <Footer locale={locale} translations={translations} />
+    </div>
   );
 }
