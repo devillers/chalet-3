@@ -25,10 +25,12 @@ export default async function LocaleLayout({
   const translations = await getTranslations(locale);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header locale={locale} translations={translations} />
-      <main className="flex-1">{children}</main>
-      <Footer locale={locale} translations={translations} />
-    </div>
+    <html lang={locale}>
+      <body className="flex min-h-screen flex-col">
+        <Header locale={locale} translations={translations} />
+        <main className="flex-1">{children}</main>
+        <Footer locale={locale} translations={translations} />
+      </body>
+    </html>
   );
 }
