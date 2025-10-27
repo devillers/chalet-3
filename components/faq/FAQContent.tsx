@@ -39,20 +39,11 @@ export default function FAQContent({ languageLabel, intro, items }: FAQContentPr
   }, [items, query]);
 
   return (
-    <motion.div
-      className="mx-auto max-w-5xl px-4 py-20 sm:px-6 lg:px-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-    >
+    <>
       {/* Intro */}
-      <div className="rounded-3xl border border-white/60 bg-white/70 p-10 shadow-md backdrop-blur-xl">
-        <div className="flex items-center gap-3 text-xs uppercase tracking-[0.45em] text-gray-400">
-          <span className="h-px flex-1 bg-gray-200" />
-          {languageLabel}
-          <span className="h-px flex-1 bg-gray-200" />
-        </div>
-        <p className="mt-6 text-lg leading-relaxed text-gray-700 sm:text-xl">{intro}</p>
+      <div className=" max-w-5xl  p-4 ">
+    
+        <p className="mt-6 text-3xl leading-12 uppercase font-thin text-gray-600 max-w-md ">{intro}</p>
       </div>
 
       {/* Accordion */}
@@ -107,6 +98,6 @@ export default function FAQContent({ languageLabel, intro, items }: FAQContentPr
           )}
         </Accordion>
       </div>
-    </motion.div>
+    </>
   );
 }
