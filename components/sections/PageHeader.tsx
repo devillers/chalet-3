@@ -20,7 +20,7 @@ export default function PageHeader({
 
       <div className="relative h-full flex items-center justify-start px-4 sm:px-6 lg:px-8">
         <div className=" max-w-4xl space-y-4">
-          <h1 className="text-4xl uppercase sm:text-5xl lg:text-7xl font-thin text-white tracking-tight">
+          <h1 className="text-4xl uppercase sm:text-5xl lg:text-7xl font-bold text-white tracking-tight">
             {title}
           </h1>
           {description && (
