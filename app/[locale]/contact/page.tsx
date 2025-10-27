@@ -5,15 +5,18 @@ import { generatePageMetadata } from '@/lib/seo/metadata';
 import ContactForm from '@/components/forms/ContactForm';
 import PageHeader from '@/components/sections/PageHeader';
 
+// ----------
+// Types
+// ----------
 interface PageProps {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
 // ----------
 // SEO
 // ----------
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { locale } = params;
+  const { locale } = await params;
   const translations = await getTranslations(locale);
 
   return generatePageMetadata({
@@ -28,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // Page
 // ----------
 export default async function ContactPage({ params }: PageProps) {
-  const { locale } = params;
+  const { locale } = await params;
   const t = await getTranslations(locale);
 
   const helperNote =
