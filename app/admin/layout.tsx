@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import type { ReactNode } from 'react';
 import SessionProvider from '@/components/providers/SessionProvider';
-import '../globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Administration - Chalet Manager',
@@ -14,13 +11,7 @@ export const metadata: Metadata = {
 export default function AdminLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  return (
-    <html lang="fr">
-      <body className={inter.className}>
-        <SessionProvider>{children}</SessionProvider>
-      </body>
-    </html>
-  );
+  return <SessionProvider>{children}</SessionProvider>;
 }
