@@ -10,8 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 
 interface PortfolioPageProps {
-  params: Promise<{ locale: Locale }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  params: { locale: Locale };
+  searchParams?: Record<string, string | string[] | undefined>;
 }
 
 const PAGE_SIZE = 12;
@@ -21,9 +21,9 @@ const OG_LOCALES: Record<Locale, string> = {
   en: 'en_US',
 };
 
-export async function generateMetadata({ params, searchParams }: PortfolioPageProps): Promise<Metadata> {
-  const { locale } = await params;
-  const resolvedSearchParams = await searchParams;
+export async function generateMetadata({ params, searchParams = {} }: PortfolioPageProps): Promise<Metadata> {
+  const { locale } = params;
+  const resolvedSearchParams = searchParams;
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
   const pageParam = Number(resolvedSearchParams.page ?? '1');
   const querySuffix = pageParam > 1 ? `?page=${pageParam}` : '';
@@ -65,9 +65,9 @@ export async function generateMetadata({ params, searchParams }: PortfolioPagePr
   };
 }
 
-export default async function PortfolioPage({ params, searchParams }: PortfolioPageProps) {
-  const { locale } = await params;
-  const resolvedSearchParams = await searchParams;
+export default async function PortfolioPage({ params, searchParams = {} }: PortfolioPageProps) {
+  const { locale } = params;
+  const resolvedSearchParams = searchParams;
   const page = Number(resolvedSearchParams.page ?? '1');
   const skip = (page - 1) * PAGE_SIZE;
   const properties: PropertyDocument[] = await PropertyModel.find({ status: 'published' }, {
