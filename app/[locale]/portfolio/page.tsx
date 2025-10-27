@@ -11,7 +11,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@
 
 interface PortfolioPageProps {
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 const PAGE_SIZE = 12;
@@ -23,7 +23,7 @@ const OG_LOCALES: Record<Locale, string> = {
 
 export async function generateMetadata({ params, searchParams }: PortfolioPageProps): Promise<Metadata> {
   const { locale } = await params;
-  const resolvedSearchParams = await searchParams;
+  const resolvedSearchParams = (searchParams ? await searchParams : {}) ?? {};
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
   const pageParam = Number(resolvedSearchParams.page ?? '1');
   const querySuffix = pageParam > 1 ? `?page=${pageParam}` : '';
@@ -67,7 +67,7 @@ export async function generateMetadata({ params, searchParams }: PortfolioPagePr
 
 export default async function PortfolioPage({ params, searchParams }: PortfolioPageProps) {
   const { locale } = await params;
-  const resolvedSearchParams = await searchParams;
+  const resolvedSearchParams = (searchParams ? await searchParams : {}) ?? {};
   const page = Number(resolvedSearchParams.page ?? '1');
   const skip = (page - 1) * PAGE_SIZE;
   const properties: PropertyDocument[] = await PropertyModel.find({ status: 'published' }, {
