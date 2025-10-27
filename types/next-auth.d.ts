@@ -1,12 +1,13 @@
-import 'next-auth';
+import { DefaultSession } from 'next-auth';
 
 declare module 'next-auth' {
+  type AppRole = 'OWNER' | 'TENANT' | 'SUPERADMIN';
+
   interface Session {
-    user: {
+    user: DefaultSession['user'] & {
       id: string;
-      email: string;
-      name: string;
-      role: string;
+      role: AppRole;
+      onboardingCompleted?: boolean;
     };
   }
 
@@ -14,13 +15,17 @@ declare module 'next-auth' {
     id: string;
     email: string;
     name: string;
-    role: string;
+    role: AppRole;
+    onboardingCompleted?: boolean;
   }
 }
 
 declare module 'next-auth/jwt' {
+  type AppRole = 'OWNER' | 'TENANT' | 'SUPERADMIN';
+
   interface JWT {
     id: string;
-    role: string;
+    role: AppRole;
+    onboardingCompleted?: boolean;
   }
 }

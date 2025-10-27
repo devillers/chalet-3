@@ -1,305 +1,196 @@
 'use client';
 
-import { useState, useRef, type FocusEvent } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X, Mountain, ChevronDown, Calendar, Users, Shield, Sparkles , Globe} from 'lucide-react';
-import { Locale } from '@/lib/i18n';
+import { Menu, X, LogOut, LayoutDashboard, Image as ImageIcon } from 'lucide-react';
+import { signOut, useSession } from 'next-auth/react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 import LanguageSwitcher from './LanguageSwitcher';
-import { Pacifico } from 'next/font/google';
-
-const pacifico = Pacifico({
-  weight: '400',
-  subsets: ['latin'],
-  display: 'swap',
-});
+import type { Locale } from '@/lib/i18n';
 
 interface HeaderProps {
   locale: Locale;
-  translations: any;
+  translations: Record<string, unknown>;
+}
+
+interface NavLink {
+  href: string;
+  label: string;
+  auth?: boolean;
+  roles?: Array<'OWNER' | 'TENANT' | 'SUPERADMIN'>;
+  id: string;
+  ariaLabel?: string;
 }
 
 export default function Header({ locale, translations }: HeaderProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
+  const session = useSession();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const t = (key: string, fallback: string) =>
+    (translations?.[key] as string | undefined) ?? fallback;
 
-  const servicesMenu = translations.nav.servicesMenu;
-  const iconComponents = { Calendar, Users, Shield, Sparkles } as const;
+  const role = session.data?.user.role;
 
-  const localizeHref = (href: string) => {
-    if (!href || typeof href !== 'string') return href;
-    if (!href.startsWith('/')) return href;
-    if (href === '/') return `/${locale}`;
-    if (href.startsWith('/auth')) return href;
+  const publicLinks: NavLink[] = [
+    { id: 'portfolio', href: '/portfolio', label: t('nav.portfolio', 'Portfolio') },
+    { id: 'signin', href: '/signin', label: t('nav.signin', 'Se connecter'), auth: false },
+    { id: 'signup', href: '/signup', label: t('nav.signup', 'Créer un compte'), auth: false },
+  ];
+
+  const ownerTenantLinks: NavLink[] = [
+    { id: 'portfolio', href: '/portfolio', label: t('nav.portfolio', 'Portfolio') },
+    {
+      id: 'dashboard',
+      href: role === 'TENANT' ? '/dashboard/tenant' : '/dashboard/owner',
+      label: t('nav.dashboard', 'Tableau de bord'),
+      auth: true,
+      roles: ['OWNER', 'TENANT'],
+    },
+    {
+      id: 'account',
+      href: '/account',
+      label: t('nav.account', 'Compte'),
+      auth: true,
+      roles: ['OWNER', 'TENANT'],
+    },
+  ];
+
+  const superadminLinks: NavLink[] = [
+    { id: 'portfolio', href: '/portfolio', label: t('nav.portfolio', 'Portfolio') },
+    {
+      id: 'superadmin',
+      href: '/superadmin',
+      label: t('nav.superadmin', 'Console SuperAdmin'),
+      roles: ['SUPERADMIN'],
+      auth: true,
+    },
+  ];
+
+  const computedLinks = useMemo(() => {
+    if (!session.data) {
+      return publicLinks;
+    }
+    if (role === 'SUPERADMIN') {
+      return [...superadminLinks, { id: 'account', href: '/account', label: t('nav.account', 'Compte'), roles: ['SUPERADMIN'] }];
+    }
+    return ownerTenantLinks;
+  }, [session.data, role, ownerTenantLinks, superadminLinks, publicLinks]);
+
+  const linkShouldRender = (link: NavLink): boolean => {
+    if (!session.data && link.auth) {
+      return false;
+    }
+    if (session.data && (link.id === 'signin' || link.id === 'signup')) {
+      return false;
+    }
+    if (link.roles && role && !link.roles.includes(role)) {
+      return false;
+    }
+    if (link.roles && !role) {
+      return false;
+    }
+    return true;
+  };
+
+  const localizedHref = (href: string) => {
+    if (!href.startsWith('/')) {
+      return href;
+    }
+    if (href === '/') {
+      return `/${locale}`;
+    }
     return `/${locale}${href}`;
   };
 
-  const navigation = [
-    { key: 'home', label: translations.nav.home, href: '/' },
-    {
-      key: 'services',
-      label: translations.nav.services,
-      href: '/services',
-      megaMenu: !!servicesMenu,
-    },
-    { key: 'about', label: translations.nav.about, href: '/about' },
-    { key: 'faq', label: translations.nav.faq, href: '/faq' },
-    { key: 'contact', label: translations.nav.contact, href: '/contact' },
-  ];
-
   const isActive = (href: string) => {
-    const activeHref = (localizeHref(href) ?? '').split('#')[0];
-    if (activeHref === `/${locale}`) {
-      return pathname === `/${locale}` || pathname === `/${locale}/`;
-    }
-    return pathname.startsWith(activeHref);
+    const localized = localizedHref(href);
+    return pathname === localized || pathname.startsWith(`${localized}/`);
   };
 
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setMegaMenuOpen(true);
+  const desktopLinks = computedLinks.filter(linkShouldRender);
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: localizedHref('/portfolio') });
   };
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => setMegaMenuOpen(false), 400);
-  };
-  const handleBlur = (event: FocusEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-      setMegaMenuOpen(false);
-    }
-  };
+
+  const mobileLinks = desktopLinks;
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200 backdrop-blur-md">
-      <nav className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
-        <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link href={`/${locale}`} className="flex items-center gap-2">
-            <Mountain className="h-8 w-8 text-amber-500" />
-            <span className="text-2xl font-light text-gray-900">Chalet Manager</span>
-          </Link>
-
-          {/* Desktop navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {navigation.map((item) =>
-              item.megaMenu ? (
-                <div
-                  key={item.key}
-                  className="relative"
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                  onBlur={handleBlur}
-                >
-                  <button
-                    type="button"
-                    className={`flex items-center gap-1 text-[11px] font-light uppercase transition-colors ${
-                      isActive(item.href) ? 'text-amber-500' : 'text-gray-700 hover:text-amber-700'
-                    }`}
-                    aria-expanded={megaMenuOpen}
-                  >
-                    {item.label}
-                    <ChevronDown
-                      className={`h-4 w-4 transition-transform ${megaMenuOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-
-                  {/* FULL-WIDTH MEGA MENU — HEIGHT AUTO ADAPT */}
-                  <AnimatePresence>
-                    {megaMenuOpen && (
-                      <motion.div
-                        key="services-mega-menu"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="fixed left-0 top-16 z-50 w-screen overflow-y-auto border-t border-gray-200 bg-white shadow-lg"
-                        style={{
-                          maxHeight: `calc(100vh - 4rem)`, // 4rem = hauteur du header
-                        }}
-                      >
-                        <div className="mx-auto w-full px-6 py-12 lg:px-12">
-                          {/* Titre et intro */}
-                          <div className="space-y-10">
-                            <div>
-                              <p className="text-xs font-semibold uppercase tracking-wide text-amber-500">
-                                {servicesMenu.eyebrow}
-                              </p>
-                              <p className="mt-2 text-2xl font-semibold text-gray-900">
-                                {servicesMenu.title}
-                              </p>
-                              <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                                {servicesMenu.description}
-                              </p>
-                            </div>
-
-                            {/* Sections + CTA alignés sur 4 colonnes */}
-                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 items-stretch">
-                              {servicesMenu.sections?.map((section: any, index: number) => {
-                                const Icon =
-                                  iconComponents[section.icon as keyof typeof iconComponents] ??
-                                  Sparkles;
-                                return (
-                                  <motion.div
-                                    key={section.title}
-                                    className="rounded-2xl bg-gray-50 p-5 shadow-sm hover:bg-gray-100 transition flex flex-col justify-between"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.2, delay: index * 0.05 }}
-                                  >
-                                    <div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="rounded-full p-2 text-amber-500 drop-shadow-md">
-                                          <Icon className="h-5 w-5" />
-                                        </span>
-                                        <p className="text-sm font-semibold text-gray-900">
-                                          {section.title}
-                                        </p>
-                                      </div>
-                                      <ul className="mt-4 space-y-2">
-                                        {section.links?.map((link: any) => (
-                                          <li key={link.name}>
-                                            <Link
-                                              href={localizeHref(link.href)}
-                                              className="block rounded-lg px-3 py-2 hover:bg-white transition"
-                                              onClick={() => setMegaMenuOpen(false)}
-                                            >
-                                              <p className="text-xs font-medium text-gray-900">
-                                                {link.name}
-                                              </p>
-                                              <p className="mt-1 text-xs text-gray-600">
-                                                {link.description}
-                                              </p>
-                                            </Link>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  </motion.div>
-                                );
-                              })}
-
-                              {/* CTA 4ᵉ colonne */}
-                              <div className="flex flex-col items-center justify-center text-center rounded-2xl bg-gradient-to-br from-amber-600 via-amber-500 to-amber-400 text-white shadow-lg p-8 h-full">
-                                <div>
-                                  <p
-                                    className={`text-2xl text-white tracking-wide ${pacifico.className}`}
-                                  >
-                                    {servicesMenu.cta?.title}
-                                  </p>
-                                  <p className="mt-8 text-xs text-amber-50 ">
-                                    {servicesMenu.cta?.description}
-                                  </p>
-                                </div>
-
-                                <Link
-                                  href={localizeHref(servicesMenu.cta?.href ?? '/contact')}
-                                  className="mt-6 inline-flex items-center justify-center rounded-md bg-white/90 px-6 py-2 text-[11px] font-light text-amber-500 hover:bg-white transition"
-                                  onClick={() => setMegaMenuOpen(false)}
-                                >
-                                  {servicesMenu.cta?.button}
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <Link
-                  key={item.key}
-                  href={localizeHref(item.href)}
-                  className={`text-[11px] font-light uppercase px-2 py-1 transition-colors ${
-                    isActive(item.href) ? 'text-amber-500' : 'text-gray-700 hover:text-amber-700'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              )
-            )}
-            <LanguageSwitcher locale={locale} />
-          </div>
-
-          {/* Mobile button */}
-          <button
-            type="button"
-            className="md:hidden p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-amber-600"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
-
-        {/* Mobile menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              key="mobile-menu-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
-              onClick={() => setMobileMenuOpen(false)}
+    <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <Link href={`/${locale}`} className="flex items-center gap-2 text-lg font-semibold">
+          <ImageIcon className="h-6 w-6 text-primary" aria-hidden="true" />
+          <span>Chalet Manager</span>
+        </Link>
+        <nav className="hidden items-center gap-6 md:flex" aria-label={t('nav.primary', 'Navigation principale')}>
+          {desktopLinks.map((link) => (
+            <Link
+              key={link.id}
+              href={localizedHref(link.href)}
+              aria-label={link.ariaLabel ?? link.label}
+              aria-current={isActive(link.href) ? 'page' : undefined}
+              className="text-sm font-medium text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <motion.aside
-                key="mobile-menu"
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                className="ml-auto flex h-full w-80 max-w-full flex-col bg-white text-gray-900 shadow-2xl"
-                role="dialog"
-                aria-modal="true"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="flex items-center justify-between px-6 py-4 border-b bg-white border-gray-100">
-                  <Link href={`/${locale}`} className="flex items-center gap-2">
-                    <Mountain className="h-7 w-7 text-amber-500" />
-                    <span className="text-xl font-light">Chalet Manager</span>
-                  </Link>
-
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="rounded-lg border border-amber-400/70 p-2 hover:bg-amber-50/80 transition"
-                    aria-label="Fermer le menu"
+              {link.label}
+            </Link>
+          ))}
+          {session.data ? (
+            <Button variant="ghost" className="text-sm" onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              {t('nav.signout', 'Se déconnecter')}
+            </Button>
+          ) : null}
+        </nav>
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher locale={locale} />
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden" aria-label={t('nav.mobileMenu', 'Ouvrir le menu')}>
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72">
+              <SheetHeader>
+                <SheetTitle>{t('nav.mobileTitle', 'Menu')}</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 flex flex-col gap-3">
+                {mobileLinks.map((link) => (
+                  <Link
+                    key={`mobile-${link.id}`}
+                    href={localizedHref(link.href)}
+                    onClick={() => setMobileOpen(false)}
+                    aria-current={isActive(link.href) ? 'page' : undefined}
+                    className="rounded-md px-3 py-2 text-left text-sm font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <X className="h-5 w-5 text-amber-500" />
-                  </button>
-                </div>
-
-                {/* Liens de navigation */}
-                <div className="flex flex-col space-y-2 p-6 text-lg font-light">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.key}
-                      href={localizeHref(item.href)}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`rounded-md px-3 py-2 transition-colors ${
-                        isActive(item.href)
-                          ? 'bg-amber-100/60 text-amber-500 font-medium'
-                          : 'hover:bg-amber-50/60 text-gray-700'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </div>
-
-                {/* Sélecteur de langue */}
-                <div className="mt-auto flex items-center gap-4 border-t border-gray-100 px-6 py-4">
-                  <Globe className="h-5 w-5 text-amber-500" />
-                  <LanguageSwitcher locale={locale} />
-                </div>
-              </motion.aside>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+                    {link.label}
+                  </Link>
+                ))}
+                {session.data ? (
+                  <>
+                    <Separator />
+                    <Button onClick={handleSignOut} variant="secondary" className="justify-start">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {t('nav.signout', 'Se déconnecter')}
+                    </Button>
+                    {role === 'SUPERADMIN' ? (
+                      <Link
+                        href={localizedHref('/superadmin')}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                      >
+                        <LayoutDashboard className="h-4 w-4" /> {t('nav.superadmin', 'Console SuperAdmin')}
+                      </Link>
+                    ) : null}
+                  </>
+                ) : null}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
     </header>
   );
 }
