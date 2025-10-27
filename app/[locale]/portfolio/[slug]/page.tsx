@@ -3,13 +3,20 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { env } from '@/env';
 import { PropertyModel } from '@/lib/db/models/property';
+import type { Locale } from '@/lib/i18n';
 
 interface PortfolioDetailProps {
-  params: { slug: string };
+  params: Promise<{ locale: Locale; slug: string }>;
 }
 
+const OG_LOCALES: Record<Locale, string> = {
+  fr: 'fr_FR',
+  en: 'en_US',
+};
+
 export async function generateMetadata({ params }: PortfolioDetailProps): Promise<Metadata> {
-  const property = await PropertyModel.findOne({ slug: params.slug, status: 'published' });
+  const { locale, slug } = await params;
+  const property = await PropertyModel.findOne({ slug, status: 'published' });
   if (!property) {
     return {
       title: 'Bien introuvable — Chalet Manager',
@@ -19,18 +26,21 @@ export async function generateMetadata({ params }: PortfolioDetailProps): Promis
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
   const hero = property.images.find((image) => image.isHero) ?? property.images[0];
   const imageUrl = hero ? `${hero.url}?w=1200&h=630&c=fill&g=auto&f=auto&q=auto` : undefined;
+  const canonical = `${baseUrl}/${locale}/portfolio/${property.slug}`;
 
   return {
     title: `${property.title} — Chalet Manager`,
     description: property.description ?? 'Découvrez ce bien disponible à la location.',
     alternates: {
-      canonical: `${baseUrl}/portfolio/${property.slug}`,
+      canonical,
     },
     openGraph: {
-      url: `${baseUrl}/portfolio/${property.slug}`,
+      url: canonical,
       title: property.title,
       description: property.description ?? 'Découvrez ce bien disponible à la location.',
       type: 'article',
+      siteName: 'Chalet Manager',
+      locale: OG_LOCALES[locale],
       images: imageUrl
         ? [
             {
@@ -50,7 +60,8 @@ export async function generateMetadata({ params }: PortfolioDetailProps): Promis
 }
 
 export default async function PortfolioDetailPage({ params }: PortfolioDetailProps) {
-  const property = await PropertyModel.findOne({ slug: params.slug, status: 'published' });
+  const { slug } = await params;
+  const property = await PropertyModel.findOne({ slug, status: 'published' });
   if (!property) {
     notFound();
   }

@@ -1,8 +1,10 @@
 import { env } from '@/env';
+import { locales } from '@/lib/i18n';
 
 export async function GET() {
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
-  const urls = ['/', '/portfolio'];
+  const localePaths = locales.flatMap((locale) => [`/${locale}`, `/${locale}/portfolio`]);
+  const urls = ['/', ...localePaths];
   const body = `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">` +
     urls
