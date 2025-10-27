@@ -11,7 +11,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@
 
 interface PortfolioPageProps {
   params: Promise<{ locale: Locale }>;
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 const PAGE_SIZE = 12;
@@ -23,12 +23,13 @@ const OG_LOCALES: Record<Locale, string> = {
 
 export async function generateMetadata({ params, searchParams }: PortfolioPageProps): Promise<Metadata> {
   const { locale } = await params;
+  const resolvedSearchParams = await searchParams;
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
-  const pageParam = Number(searchParams.page ?? '1');
+  const pageParam = Number(resolvedSearchParams.page ?? '1');
   const querySuffix = pageParam > 1 ? `?page=${pageParam}` : '';
   const canonicalPath = `/${locale}/portfolio${querySuffix}`;
   const canonical = `${baseUrl}${canonicalPath}`;
-  const hasFilters = ['city', 'capacityMin', 'dateFrom', 'dateTo'].some((key) => Boolean(searchParams[key]));
+  const hasFilters = ['city', 'capacityMin', 'dateFrom', 'dateTo'].some((key) => Boolean(resolvedSearchParams[key]));
 
   const languageAlternates = locales.reduce<Record<string, string>>((acc, currentLocale) => {
     acc[currentLocale] = `${baseUrl}/${currentLocale}/portfolio${querySuffix}`;
@@ -66,7 +67,8 @@ export async function generateMetadata({ params, searchParams }: PortfolioPagePr
 
 export default async function PortfolioPage({ params, searchParams }: PortfolioPageProps) {
   const { locale } = await params;
-  const page = Number(searchParams.page ?? '1');
+  const resolvedSearchParams = await searchParams;
+  const page = Number(resolvedSearchParams.page ?? '1');
   const skip = (page - 1) * PAGE_SIZE;
   const properties: PropertyDocument[] = await PropertyModel.find({ status: 'published' }, {
     sort: { publishedAt: -1 },
