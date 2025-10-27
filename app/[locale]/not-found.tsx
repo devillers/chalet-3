@@ -1,3 +1,5 @@
+// app/[locale]/not-found.tsx
+
 import Link from 'next/link';
 import { Home } from 'lucide-react';
 import { getTranslations, defaultLocale } from '@/lib/i18n';

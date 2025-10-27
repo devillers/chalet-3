@@ -1,4 +1,8 @@
+// app/[locale]/error.tsx
+
 'use client';
+
+
 
 import { useEffect } from 'react';
 import Link from 'next/link';
@@ -11,37 +15,42 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Log l’erreur côté client pour le débogage
   useEffect(() => {
-    console.error('Error:', error);
+    console.error('App Error:', error);
   }, [error]);
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center bg-gray-50">
-      <div className="text-center px-4">
+    <main className="min-h-[80vh] flex items-center justify-center bg-gray-50 px-4">
+      <section className="text-center max-w-lg">
         <h1 className="text-6xl font-bold text-gray-900 mb-4">500</h1>
         <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-          Something went wrong
+          Une erreur est survenue
         </h2>
         <p className="text-gray-600 mb-8">
-          An unexpected error occurred. Please try again.
+          Une erreur inattendue s’est produite. Vous pouvez réessayer ou revenir à
+          l’accueil.
         </p>
-        <div className="flex items-center justify-center space-x-4">
+
+        <div className="flex flex-wrap justify-center gap-4">
           <button
+            type="button"
             onClick={() => reset()}
-            className="inline-flex items-center space-x-2 rounded-md bg-blue-700 px-6 py-3 text-base font-semibold text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 transition-all"
+            className="inline-flex items-center gap-2 rounded-md bg-[#bd9254] px-6 py-3 text-base font-semibold text-white hover:bg-[#a97f45] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bd9254] focus-visible:ring-offset-2 transition-all"
           >
             <RefreshCw className="h-5 w-5" aria-hidden="true" />
-            <span>Try again</span>
+            Réessayer
           </button>
+
           <Link
             href="/fr"
-            className="inline-flex items-center space-x-2 rounded-md border-2 border-blue-700 px-6 py-3 text-base font-semibold text-blue-700 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 transition-all"
+            className="inline-flex items-center gap-2 rounded-md border-2 border-[#bd9254] px-6 py-3 text-base font-semibold text-[#bd9254] hover:bg-[#f9f5f0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#bd9254] focus-visible:ring-offset-2 transition-all"
           >
             <Home className="h-5 w-5" aria-hidden="true" />
-            <span>Back to home</span>
+            Accueil
           </Link>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
