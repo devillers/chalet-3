@@ -1,61 +1,117 @@
-import { NextAuthOptions } from 'next-auth';
+import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { getUserByEmail, verifyPassword } from '../db/users';
+import GoogleProvider from 'next-auth/providers/google';
+import { signInSchema } from '@/lib/validators/sign-in';
+import { env } from '@/env';
+import { checkRateLimit, resetRateLimit } from './rateLimit';
+import { getUserByEmail, verifyPassword, updateUser } from '../db/users';
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
+const providers: NextAuthOptions['providers'] = [
+  CredentialsProvider({
+      id: 'credentials',
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
+        password: { label: 'Mot de passe', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        const result = signInSchema.safeParse(credentials);
+        if (!result.success) {
           return null;
         }
 
-        const user = getUserByEmail(credentials.email);
+        const { email, password, role: requestedRole } = result.data;
+        const rate = checkRateLimit(email);
+        if (!rate.allowed) {
+          throw new Error(`Too many attempts. Retry after ${rate.retryAfter ?? 60}s.`);
+        }
+
+        const user = await getUserByEmail(email);
         if (!user) {
           return null;
         }
 
-        const isValid = await verifyPassword(credentials.password, user.password_hash);
-        if (!isValid) {
+        const valid = await verifyPassword(password, user.passwordHash);
+        if (!valid) {
           return null;
         }
 
+        if (requestedRole && requestedRole !== user.role) {
+          throw new Error('ACCESS_RESTRICTED');
+        }
+
+        resetRateLimit(email);
+
         return {
-          id: user.id,
+          id: user._id,
           email: user.email,
           name: user.name,
           role: user.role,
+          onboardingCompleted: user.onboardingCompleted,
         };
       },
-    }),
-  ],
+  }),
+];
+
+if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    GoogleProvider({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      async profile(profile) {
+        return {
+          id: profile.sub,
+          email: profile.email ?? '',
+          name: profile.name ?? profile.email ?? 'Utilisateur',
+          role: 'TENANT' as const,
+          onboardingCompleted: false,
+        };
+      },
+    })
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  providers,
+  pages: {
+    signIn: '/signin',
+  },
+  session: {
+    strategy: 'jwt',
+    maxAge: 60 * 60 * 24 * 30,
+  },
+  secret: env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = (user as any).role;
+        token.id = (user as { id: string }).id;
+        token.role = (user as { role: 'OWNER' | 'TENANT' | 'SUPERADMIN' }).role;
+        token.onboardingCompleted = (user as { onboardingCompleted?: boolean }).onboardingCompleted;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
+        session.user.id = String(token.id);
+        session.user.role = (token.role ?? 'TENANT') as 'OWNER' | 'TENANT' | 'SUPERADMIN';
+        session.user.onboardingCompleted = token.onboardingCompleted;
       }
       return session;
     },
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        if (!user.email) {
+          return false;
+        }
+        const existing = await getUserByEmail(user.email);
+        if (!existing) {
+          await updateUser(user.id, { onboardingCompleted: false });
+        }
+      }
+      return true;
+    },
+    async redirect({ url }) {
+      return url;
+    },
   },
-  pages: {
-    signIn: '/auth/login',
-  },
-  session: {
-    strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60,
-  },
-  secret: process.env.NEXTAUTH_SECRET,
 };

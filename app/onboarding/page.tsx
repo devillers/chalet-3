@@ -1,0 +1,37 @@
+import { Suspense } from 'react';
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+import { authOptions } from '@/lib/auth/config';
+import OnboardingClient from './onboarding-client';
+import { getOnboardingDraft } from '@/lib/db/onboarding';
+
+export const metadata: Metadata = {
+  title: 'Onboarding — Chalet Manager',
+  description: "Complétez votre profil pour accéder à toutes les fonctionnalités.",
+};
+
+interface OnboardingPageProps {
+  searchParams: Record<string, string | string[] | undefined>;
+}
+
+export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    redirect('/signin');
+  }
+  const role = session.user.role;
+  if (role === 'SUPERADMIN') {
+    redirect('/superadmin');
+  }
+
+  const draft = await getOnboardingDraft(session.user.id);
+
+  const openModal = searchParams.modal === '1';
+
+  return (
+    <Suspense fallback={<div className="p-8">Chargement...</div>}>
+      <OnboardingClient role={role} openModal={openModal} draft={draft?.data ?? null} />
+    </Suspense>
+  );
+}
