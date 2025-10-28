@@ -74,7 +74,14 @@ export default function Header({ locale, translations }: HeaderProps) {
       return publicLinks;
     }
     if (role === 'SUPERADMIN') {
-      return [...superadminLinks, { id: 'account', href: '/account', label: t('nav.account', 'Compte'), roles: ['SUPERADMIN'] }];
+      const accountLink: NavLink = {
+        id: 'account', 
+        href: '/account',
+        label: t('nav.account', 'Compte'),
+        roles: ['SUPERADMIN'],
+        auth: true,
+      };
+      return [...superadminLinks, accountLink];
     }
     return ownerTenantLinks;
   }, [session.data, role, ownerTenantLinks, superadminLinks, publicLinks]);
