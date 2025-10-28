@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
-import { createEmailLog, updateEmailLog } from '../db/emailLogs.js';
+import { createEmailLog, updateEmailLog } from '../db/emailLogs';
 
 const emailPayloadSchema = z.object({
   to: z.union([z.string().email(), z.array(z.string().email())]),
