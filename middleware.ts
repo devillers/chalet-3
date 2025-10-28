@@ -20,37 +20,48 @@ const TRACKING_PARAMS = new Set([
 export function middleware(request: NextRequest) {
   const { nextUrl } = request;
 
-  if (nextUrl.pathname.startsWith('/api/') || nextUrl.pathname.startsWith('/_next/') || nextUrl.pathname.includes('.')) {
+  // ✅ Ignore les routes API, les assets statiques, etc.
+  if (
+    nextUrl.pathname.startsWith('/api/') ||
+    nextUrl.pathname.startsWith('/_next/') ||
+    nextUrl.pathname.includes('.')
+  ) {
     return NextResponse.next();
   }
 
   const canonicalUrl = new URL(env.SITE_URL);
-  let shouldRedirect = false;
   const updatedUrl = new URL(nextUrl.href);
+  let shouldRedirect = false;
 
-  const forwardedProto = request.headers.get('x-forwarded-proto');
-  if (forwardedProto && forwardedProto !== 'https') {
-    updatedUrl.protocol = 'https:';
+  // 🚫 Ne force HTTPS et le domaine qu'en production
+  if (env.NODE_ENV === 'production') {
+    const forwardedProto = request.headers.get('x-forwarded-proto');
+
+    if (forwardedProto && forwardedProto !== 'https') {
+      updatedUrl.protocol = 'https:';
+      shouldRedirect = true;
+    }
+
+    if (updatedUrl.host !== canonicalUrl.host) {
+      updatedUrl.host = canonicalUrl.host;
+      shouldRedirect = true;
+    }
+  }
+
+  // 🧹 Nettoie les slashs finaux
+  if (updatedUrl.pathname !== '/' && updatedUrl.pathname.endsWith('/')) {
+    updatedUrl.pathname = updatedUrl.pathname.replace(/\/+$/, '');
     shouldRedirect = true;
   }
 
-  if (updatedUrl.host !== canonicalUrl.host) {
-    updatedUrl.host = canonicalUrl.host;
-    shouldRedirect = true;
-  }
-
-  const pathname = updatedUrl.pathname;
-  if (pathname !== '/' && pathname.endsWith('/')) {
-    updatedUrl.pathname = pathname.replace(/\/+$/, '');
-    shouldRedirect = true;
-  }
-
+  // 🔠 Met le path en minuscule
   const lowerCasePath = updatedUrl.pathname.toLowerCase();
   if (updatedUrl.pathname !== lowerCasePath) {
     updatedUrl.pathname = lowerCasePath;
     shouldRedirect = true;
   }
 
+  // 🧹 Supprime les paramètres de tracking UTM
   for (const param of Array.from(updatedUrl.searchParams.keys())) {
     if (TRACKING_PARAMS.has(param.toLowerCase())) {
       updatedUrl.searchParams.delete(param);
@@ -58,10 +69,12 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // 🔁 Si une redirection est nécessaire
   if (shouldRedirect) {
     return NextResponse.redirect(updatedUrl, { status: 301 });
   }
 
+  // 🌍 Vérifie si le path contient déjà une locale
   const pathnameHasLocale = locales.some(
     (locale) => updatedUrl.pathname === `/${locale}` || updatedUrl.pathname.startsWith(`/${locale}/`)
   );
@@ -70,11 +83,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 🌐 Sinon, ajoute la locale par défaut
   const locale = defaultLocale;
   updatedUrl.pathname = `/${locale}${updatedUrl.pathname}`;
   return NextResponse.redirect(updatedUrl);
 }
 
+// ✅ Export unique du config (plus d'erreur “Cannot redeclare block-scoped variable”)
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.*).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.*).*)',
+  ],
 };
