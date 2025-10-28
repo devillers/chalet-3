@@ -39,12 +39,7 @@ export default function Header({ locale, translations }: HeaderProps) {
     { id: 'about', href: '/about', label: t('nav.about', 'About') },
     { id: 'portfolio', href: '/portfolio', label: t('nav.portfolio', 'Portfolio') },
     { id: 'faq', href: '/faq', label: t('nav.faq', 'FAQ') },
-    {
-      id: 'portfolio-secondary',
-      href: '/portfolio',
-      label: t('nav.portfolio', 'Portfolio'),
-    },
-    { id: 'contact', href: '/contact', label: t('nav.contact', 'Contact') },
+   { id: 'contact', href: '/contact', label: t('nav.contact', 'Contact') },
   ];
 
   const publicLinks: NavLink[] = [
@@ -152,7 +147,7 @@ export default function Header({ locale, translations }: HeaderProps) {
               href={localizedHref(link.href)}
               aria-label={link.ariaLabel ?? link.label}
               aria-current={isActive(link.href) ? 'page' : undefined}
-              className="text-sm font-medium text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="text-xs font-thin uppercase transition hover:text-amber-500"
             >
               {link.label}
             </Link>
