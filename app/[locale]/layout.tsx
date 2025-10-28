@@ -1,37 +1,40 @@
-// app/[locale]/layout.tsx
-
-import type { ReactNode } from 'react';
-import { notFound } from 'next/navigation';
-import { locales, Locale, getTranslations } from '@/lib/i18n';
+import '../globals.css';
+import type { Metadata } from 'next';
+import { getTranslations } from '@/lib/i18n';
+import { Locale } from '@/lib/i18n';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SessionProviderWrapper from '../../components/providers/SessionProviderWrapper.tsx'; // ✅ ajout
 
-export async function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
+export const dynamic = 'force-dynamic';
+
+interface RootLayoutProps {
+  children: React.ReactNode;
+  params: { locale: Locale };
 }
 
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: Promise<{ locale: string }> | { locale: string };
-}) {
-  const { locale: paramsLocale } = await Promise.resolve(params);
+export async function generateMetadata({ params }: RootLayoutProps): Promise<Metadata> {
+  const { locale } = params;
+  const t = await getTranslations(locale);
+  return {
+    title: t.meta.title,
+    description: t.meta.description,
+  };
+}
 
-  if (!locales.includes(paramsLocale as Locale)) {
-    notFound();
-  }
-
-  const locale = paramsLocale as Locale;
+export default async function LocaleLayout({ children, params }: RootLayoutProps) {
+  const { locale } = params;
   const translations = await getTranslations(locale);
 
   return (
     <html lang={locale}>
-      <body className="flex min-h-screen flex-col">
-        <Header locale={locale} translations={translations} />
-        <main className="flex-1">{children}</main>
-        <Footer locale={locale} translations={translations} />
+      <body>
+        {/* ✅ Wrapping Header + children in the SessionProvider */}
+        <SessionProviderWrapper>
+          <Header locale={locale} translations={translations} />
+          <main>{children}</main>
+          <Footer locale={locale} translations={translations} />
+        </SessionProviderWrapper>
       </body>
     </html>
   );
