@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import type { Locale } from '@/lib/i18n';
 
 const ROLE_CARDS: Array<{ id: SignUpInput['role']; title: string; description: string }> = [
   {
@@ -24,7 +25,14 @@ const ROLE_CARDS: Array<{ id: SignUpInput['role']; title: string; description: s
   },
 ];
 
-export default function SignUpForm() {
+interface SignUpFormProps {
+  locale?: Locale;
+}
+
+const withLocale = (locale: Locale | undefined, path: string) =>
+  locale ? `/${locale}${path}` : path;
+
+export default function SignUpForm({ locale }: SignUpFormProps) {
   const router = useRouter();
   const [role, setRole] = useState<SignUpInput['role']>('OWNER');
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +65,7 @@ export default function SignUpForm() {
       return;
     }
 
-    router.push(`/signin?role=${values.role}`);
+    router.push(`${withLocale(locale, '/signin')}?role=${values.role}`);
   });
 
   return (
@@ -94,7 +102,7 @@ export default function SignUpForm() {
             </div>
             <p className="text-sm text-muted-foreground">
               Déjà inscrit ?{' '}
-              <Link href="/signin" className="text-primary underline">
+              <Link href={withLocale(locale, '/signin')} className="text-primary underline">
                 Se connecter
               </Link>
             </p>
