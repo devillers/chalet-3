@@ -1,31 +1,49 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM"],
+    "target": "ES2021",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": false,
-    "skipLibCheck": true,
-    "strict": true,
+    "skipLibCheck": false,
+    "strict": false,
     "noUncheckedIndexedAccess": false,
     "exactOptionalPropertyTypes": false,
     "noImplicitAny": false,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["node"],
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./*"],
-      "scheduler/tracing": ["./types/vendor/scheduler-tracing"],
-      "@auth/core/adapters": ["./types/vendor/auth-core-adapters"],
-      "react/compiler-runtime": ["./types/vendor/react-compiler-runtime"]
+      "@/*": [
+        "./*"
+      ],
+      "scheduler/tracing": [
+        "./types/vendor/scheduler-tracing"
+      ],
+      "@auth/core/adapters": [
+        "./types/vendor/auth-core-adapters"
+      ],
+      "react/compiler-runtime": [
+        "./types/vendor/react-compiler-runtime"
+      ]
     },
-    "typeRoots": ["./types", "./node_modules/@types"]
+    "typeRoots": [
+      "./types",
+      "./node_modules/@types"
+    ]
   },
   "include": [
     "next-env.d.ts",
@@ -35,5 +53,7 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
