@@ -1,7 +1,7 @@
 
 // app/[locale]/portfolio/page.tsx
 
-import type { Metadata } from 'next';
+import type { Metadata, PageProps } from 'next';
 import Link from 'next/link';
 import { env } from '@/env';
 import { PropertyModel, type PropertyDocument } from '@/lib/db/models/property';
@@ -9,10 +9,9 @@ import { locales, type Locale } from '@/lib/i18n';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 
-interface PortfolioPageProps {
-  params: { locale: Locale };
-  searchParams?: Record<string, string | string[] | undefined>;
-}
+type PortfolioPageParams = { locale: Locale };
+
+type PortfolioPageProps = PageProps<PortfolioPageParams>;
 
 const PAGE_SIZE = 12;
 
@@ -21,12 +20,23 @@ const OG_LOCALES: Record<Locale, string> = {
   en: 'en_US',
 };
 
+const resolveSearchParams = async (
+  searchParams: PortfolioPageProps['searchParams'],
+): Promise<Record<string, string | string[] | undefined>> => {
+  const resolved = await searchParams;
+  return resolved ?? {};
+};
+
 const getFirstValue = (value: string | string[] | undefined): string | undefined =>
   Array.isArray(value) ? value[0] : value;
 
 export async function generateMetadata({ params, searchParams }: PortfolioPageProps): Promise<Metadata> {
+  if (!params) {
+    throw new Error('Locale parameter is required');
+  }
+
   const { locale } = params;
-  const resolvedSearchParams = searchParams ?? {};
+  const resolvedSearchParams = await resolveSearchParams(searchParams);
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
   const pageParam = Number(getFirstValue(resolvedSearchParams.page) ?? '1');
   const querySuffix = pageParam > 1 ? `?page=${pageParam}` : '';
@@ -69,8 +79,12 @@ export async function generateMetadata({ params, searchParams }: PortfolioPagePr
 }
 
 export default async function PortfolioPage({ params, searchParams }: PortfolioPageProps) {
+  if (!params) {
+    throw new Error('Locale parameter is required');
+  }
+
   const { locale } = params;
-  const resolvedSearchParams = searchParams ?? {};
+  const resolvedSearchParams = await resolveSearchParams(searchParams);
   const page = Number(getFirstValue(resolvedSearchParams.page) ?? '1');
   const skip = (page - 1) * PAGE_SIZE;
   const properties: PropertyDocument[] = await PropertyModel.find({ status: 'published' }, {
