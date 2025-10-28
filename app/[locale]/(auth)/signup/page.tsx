@@ -4,9 +4,11 @@ import SignUpForm from '@/app/(auth)/signup/sign-up-form';
 import type { Locale } from '@/lib/i18n';
 
 interface LocaleSignUpPageProps {
-  params: { locale: Locale };
+  params: Promise<{ locale: Locale }>;
 }
 
-export default function LocaleSignUpPage({ params }: LocaleSignUpPageProps) {
-  return <SignUpForm locale={params.locale} />;
+export default async function LocaleSignUpPage({ params }: LocaleSignUpPageProps) {
+  const resolvedParams = await params;
+
+  return <SignUpForm locale={resolvedParams.locale} />;
 }
