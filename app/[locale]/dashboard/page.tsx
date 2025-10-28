@@ -10,11 +10,11 @@ export const metadata: Metadata = {
 };
 
 interface DashboardLandingPageProps {
-  params: { locale: Locale } | Promise<{ locale: Locale }>;
+  params: Promise<{ locale: Locale }>;
 }
 
 export default async function DashboardLandingPage({ params }: DashboardLandingPageProps) {
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
   const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
 
   const session = await getServerSession(authOptions);

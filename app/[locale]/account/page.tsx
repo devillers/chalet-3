@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 interface AccountPageProps {
-  params: { locale: Locale } | Promise<{ locale: Locale }>;
+  params: Promise<{ locale: Locale }>;
 }
 
 const ROLE_LABELS: Record<'OWNER' | 'TENANT' | 'SUPERADMIN', string> = {
@@ -25,7 +25,7 @@ const ROLE_LABELS: Record<'OWNER' | 'TENANT' | 'SUPERADMIN', string> = {
 };
 
 export default async function AccountPage({ params }: AccountPageProps) {
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
   const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
 
   const session = await getServerSession(authOptions);

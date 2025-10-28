@@ -4,11 +4,11 @@ import SignInForm from '@/app/(auth)/signin/sign-in-form';
 import type { Locale } from '@/lib/i18n';
 
 interface LocaleSignInPageProps {
-  params: { locale: Locale } | Promise<{ locale: Locale }>;
+  params: Promise<{ locale: Locale }>;
 }
 
 export default async function LocaleSignInPage({ params }: LocaleSignInPageProps) {
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
 
   return <SignInForm locale={resolvedParams.locale} />;
 }

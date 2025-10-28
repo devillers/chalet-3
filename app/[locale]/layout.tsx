@@ -9,11 +9,11 @@ export const dynamic = 'force-dynamic';
 
 interface RootLayoutProps {
   children: React.ReactNode;
-  params: { locale: Locale } | Promise<{ locale: Locale }>;
+  params: Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: RootLayoutProps): Promise<Metadata> {
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
   const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
 
   const t = await getTranslations(locale);
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: RootLayoutProps): Promise<Met
 }
 
 export default async function LocaleLayout({ children, params }: RootLayoutProps) {
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
   const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
   const translations = await getTranslations(locale);
 

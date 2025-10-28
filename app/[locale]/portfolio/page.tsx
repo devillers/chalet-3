@@ -11,8 +11,8 @@ type PortfolioPageParams = { locale: Locale };
 type PortfolioSearchParams = Record<string, string | string[] | undefined>;
 
 interface PortfolioPageProps {
-  params?: PortfolioPageParams | Promise<PortfolioPageParams>;
-  searchParams?: PortfolioSearchParams | Promise<PortfolioSearchParams | undefined>;
+  params: Promise<PortfolioPageParams>;
+  searchParams?: Promise<PortfolioSearchParams | undefined>;
 }
 
 const PAGE_SIZE = 12;
@@ -25,7 +25,7 @@ const OG_LOCALES: Record<Locale, string> = {
 const resolveSearchParams = async (
   searchParams: PortfolioPageProps['searchParams'],
 ): Promise<Record<string, string | string[] | undefined>> => {
-  const resolved = await searchParams;
+  const resolved = await (searchParams ?? Promise.resolve<PortfolioSearchParams | undefined>(undefined));
   return resolved ?? {};
 };
 

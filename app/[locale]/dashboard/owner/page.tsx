@@ -13,11 +13,11 @@ export const metadata: Metadata = {
 };
 
 interface OwnerDashboardPageProps {
-  params: { locale: Locale } | Promise<{ locale: Locale }>;
+  params: Promise<{ locale: Locale }>;
 }
 
 export default async function OwnerDashboardPage({ params }: OwnerDashboardPageProps) {
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
   const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
 
   const session = await getServerSession(authOptions);
