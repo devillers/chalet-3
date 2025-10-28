@@ -1,3 +1,5 @@
+// lib/db/users.ts
+
 import bcrypt from 'bcryptjs';
 import { connectMongo } from './mongoose';
 import { UserModel, type UserDocument, type UserRole } from './models/user';
@@ -12,13 +14,14 @@ export async function createUser(data: {
 }): Promise<UserDocument> {
   await connectMongo();
   const passwordHash = await bcrypt.hash(data.password, 12);
+
   return UserModel.create({
     name: data.name,
     email: data.email.toLowerCase(),
     role: data.role,
     passwordHash,
-    onboardingCompleted: data.onboardingCompleted,
-    googleId: data.googleId,
+    onboardingCompleted: data.onboardingCompleted ?? false, // ✅ assure toujours un booléen
+    googleId: data.googleId ?? '', // ✅ assure toujours une string
   });
 }
 
@@ -44,7 +47,9 @@ export async function updateUser(
   return UserModel.findByIdAndUpdate(id, updates, { new: true });
 }
 
-export async function listUsers(filter?: Partial<Pick<UserDocument, 'role'>>): Promise<UserDocument[]> {
+export async function listUsers(
+  filter?: Partial<Pick<UserDocument, 'role'>>
+): Promise<UserDocument[]> {
   await connectMongo();
   return UserModel.find(filter);
 }
