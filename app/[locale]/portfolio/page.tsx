@@ -1,7 +1,4 @@
-
-// app/[locale]/portfolio/page.tsx
-
-import type { Metadata, PageProps } from 'next';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { env } from '@/env';
 import { PropertyModel, type PropertyDocument } from '@/lib/db/models/property';
@@ -11,7 +8,12 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@
 
 type PortfolioPageParams = { locale: Locale };
 
-type PortfolioPageProps = PageProps<PortfolioPageParams>;
+type PortfolioSearchParams = Record<string, string | string[] | undefined>;
+
+interface PortfolioPageProps {
+  params?: PortfolioPageParams | Promise<PortfolioPageParams>;
+  searchParams?: PortfolioSearchParams | Promise<PortfolioSearchParams | undefined>;
+}
 
 const PAGE_SIZE = 12;
 
@@ -31,11 +33,12 @@ const getFirstValue = (value: string | string[] | undefined): string | undefined
   Array.isArray(value) ? value[0] : value;
 
 export async function generateMetadata({ params, searchParams }: PortfolioPageProps): Promise<Metadata> {
-  if (!params) {
+  const resolvedParams = await params;
+  if (!resolvedParams) {
     throw new Error('Locale parameter is required');
   }
 
-  const { locale } = params;
+  const { locale } = resolvedParams;
   const resolvedSearchParams = await resolveSearchParams(searchParams);
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
   const pageParam = Number(getFirstValue(resolvedSearchParams.page) ?? '1');
@@ -79,11 +82,12 @@ export async function generateMetadata({ params, searchParams }: PortfolioPagePr
 }
 
 export default async function PortfolioPage({ params, searchParams }: PortfolioPageProps) {
-  if (!params) {
+  const resolvedParams = await params;
+  if (!resolvedParams) {
     throw new Error('Locale parameter is required');
   }
 
-  const { locale } = params;
+  const { locale } = resolvedParams;
   const resolvedSearchParams = await resolveSearchParams(searchParams);
   const page = Number(getFirstValue(resolvedSearchParams.page) ?? '1');
   const skip = (page - 1) * PAGE_SIZE;
