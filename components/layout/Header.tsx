@@ -34,14 +34,27 @@ export default function Header({ locale, translations }: HeaderProps) {
 
   const role = session.data?.user.role;
 
-  const publicLinks: NavLink[] = [
+  const baseLinks: NavLink[] = [
+    { id: 'services', href: '/services', label: t('nav.services', 'Services') },
+    { id: 'about', href: '/about', label: t('nav.about', 'About') },
     { id: 'portfolio', href: '/portfolio', label: t('nav.portfolio', 'Portfolio') },
+    { id: 'faq', href: '/faq', label: t('nav.faq', 'FAQ') },
+    {
+      id: 'portfolio-secondary',
+      href: '/portfolio',
+      label: t('nav.portfolio', 'Portfolio'),
+    },
+    { id: 'contact', href: '/contact', label: t('nav.contact', 'Contact') },
+  ];
+
+  const publicLinks: NavLink[] = [
+    ...baseLinks,
     { id: 'signin', href: '/signin', label: t('nav.signin', 'Se connecter'), auth: false },
     { id: 'signup', href: '/signup', label: t('nav.signup', 'Créer un compte'), auth: false },
   ];
 
   const ownerTenantLinks: NavLink[] = [
-    { id: 'portfolio', href: '/portfolio', label: t('nav.portfolio', 'Portfolio') },
+    ...baseLinks,
     {
       id: 'dashboard',
       href: role === 'TENANT' ? '/dashboard/tenant' : '/dashboard/owner',
@@ -59,7 +72,7 @@ export default function Header({ locale, translations }: HeaderProps) {
   ];
 
   const superadminLinks: NavLink[] = [
-    { id: 'portfolio', href: '/portfolio', label: t('nav.portfolio', 'Portfolio') },
+    ...baseLinks,
     {
       id: 'superadmin',
       href: '/superadmin',
