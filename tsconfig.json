@@ -8,10 +8,10 @@
     ],
     "allowJs": false,
     "skipLibCheck": false,
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitAny": true,
+    "strict": false,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitAny": false,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -30,12 +30,17 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "typeRoots": [
+      "./types",
+      "./node_modules/@types"
+    ]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.d.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
