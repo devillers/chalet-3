@@ -16,9 +16,13 @@ interface RootLayoutProps {
 export async function generateMetadata({ params }: RootLayoutProps): Promise<Metadata> {
   const { locale } = params;
   const t = await getTranslations(locale);
+  const meta = t.meta ?? t.site ?? {};
+
   return {
-    title: t.meta.title,
-    description: t.meta.description,
+    title: meta.title ?? 'Chalet Manager',
+    description:
+      meta.description ??
+      'Gestion de locations de prestige. Services professionnels pour propriétaires de chalets haut de gamme.',
   };
 }
 
