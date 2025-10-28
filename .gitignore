@@ -8,7 +8,10 @@ node_modules/
 # ======================================
 #  Build outputs
 # ======================================
-.next/
+.next/*
+!.next/types/
+.next/types/*
+!.next/types/routes.d.ts
 out/
 build/
 dist/
