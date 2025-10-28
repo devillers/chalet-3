@@ -29,6 +29,15 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "scheduler/tracing": [
+        "./types/vendor/scheduler-tracing"
+      ],
+      "@auth/core/adapters": [
+        "./types/vendor/auth-core-adapters"
+      ],
+      "react/compiler-runtime": [
+        "./types/vendor/react-compiler-runtime"
       ]
     },
     "typeRoots": [
