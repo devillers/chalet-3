@@ -1,7 +1,6 @@
 import '../globals.css';
 import type { Metadata } from 'next';
-import { getTranslations } from '@/lib/i18n';
-import { Locale } from '@/lib/i18n';
+import { defaultLocale, getTranslations, Locale } from '@/lib/i18n';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SessionProviderWrapper from '../../components/providers/SessionProviderWrapper.tsx'; // ✅ ajout
@@ -10,11 +9,13 @@ export const dynamic = 'force-dynamic';
 
 interface RootLayoutProps {
   children: React.ReactNode;
-  params: { locale: Locale };
+  params: { locale: Locale } | Promise<{ locale: Locale }>;
 }
 
 export async function generateMetadata({ params }: RootLayoutProps): Promise<Metadata> {
-  const { locale } = params;
+  const resolvedParams = await Promise.resolve(params);
+  const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
+
   const t = await getTranslations(locale);
   const meta = t.meta ?? t.site ?? {};
 
@@ -27,7 +28,8 @@ export async function generateMetadata({ params }: RootLayoutProps): Promise<Met
 }
 
 export default async function LocaleLayout({ children, params }: RootLayoutProps) {
-  const { locale } = params;
+  const resolvedParams = await Promise.resolve(params);
+  const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
   const translations = await getTranslations(locale);
 
   return (
