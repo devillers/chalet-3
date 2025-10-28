@@ -17,6 +17,9 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   NEXT_PUBLIC_IS_STAGING: z.enum(['true', 'false']).optional(),
+  ADMIN_SEED_EMAIL: z.string().email().optional(),
+  ADMIN_SEED_PASSWORD: z.string().min(8).optional(),
+  ADMIN_SEED_NAME: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse({
@@ -33,6 +36,9 @@ const parsed = envSchema.safeParse({
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   NEXT_PUBLIC_IS_STAGING: process.env.NEXT_PUBLIC_IS_STAGING,
+  ADMIN_SEED_EMAIL: process.env.ADMIN_SEED_EMAIL,
+  ADMIN_SEED_PASSWORD: process.env.ADMIN_SEED_PASSWORD,
+  ADMIN_SEED_NAME: process.env.ADMIN_SEED_NAME,
 });
 
 if (!parsed.success) {

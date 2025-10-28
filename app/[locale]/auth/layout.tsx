@@ -20,8 +20,8 @@ export default async function AuthLocaleLayout({
   const { locale } = await params;
 
   return (
-    <html lang={locale}>
-      <body className={inter.className}>{children}</body>
-    </html>
+    <div data-locale={locale} className={inter.className}>
+      {children}
+    </div>
   );
 }

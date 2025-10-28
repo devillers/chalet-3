@@ -21,34 +21,59 @@ const providers: NextAuthOptions['providers'] = [
         }
 
         const { email, password, role: requestedRole } = result.data;
+        const normalizedEmail = email.toLowerCase();
         const rate = checkRateLimit(email);
         if (!rate.allowed) {
           throw new Error(`Too many attempts. Retry after ${rate.retryAfter ?? 60}s.`);
         }
 
-        const user = await getUserByEmail(email);
-        if (!user) {
-          return null;
+        const user = await getUserByEmail(normalizedEmail);
+        if (user) {
+          const valid = await verifyPassword(password, user.passwordHash);
+          if (!valid) {
+            return null;
+          }
+
+          if (requestedRole && requestedRole !== user.role) {
+            throw new Error('ACCESS_RESTRICTED');
+          }
+
+          resetRateLimit(email);
+
+          return {
+            id: user._id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            onboardingCompleted: user.onboardingCompleted,
+          };
         }
 
-        const valid = await verifyPassword(password, user.passwordHash);
-        if (!valid) {
-          return null;
+        const seedEmail = env.ADMIN_SEED_EMAIL?.toLowerCase();
+        const seedPassword = env.ADMIN_SEED_PASSWORD;
+
+        if (
+          seedEmail &&
+          seedPassword &&
+          normalizedEmail === seedEmail &&
+          password === seedPassword
+        ) {
+          if (requestedRole && requestedRole !== 'SUPERADMIN') {
+            throw new Error('ACCESS_RESTRICTED');
+          }
+
+          resetRateLimit(email);
+
+          return {
+            id: 'seed-superadmin',
+            email: env.ADMIN_SEED_EMAIL,
+            name: env.ADMIN_SEED_NAME ?? 'Super Admin',
+            role: 'SUPERADMIN',
+            onboardingCompleted: true,
+          };
         }
 
-        if (requestedRole && requestedRole !== user.role) {
-          throw new Error('ACCESS_RESTRICTED');
-        }
-
-        resetRateLimit(email);
-
-        return {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          onboardingCompleted: user.onboardingCompleted,
-        };
+        return null;
       },
   }),
 ];
