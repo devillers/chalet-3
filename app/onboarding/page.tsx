@@ -11,9 +11,25 @@ export const metadata: Metadata = {
   description: "Complétez votre profil pour accéder à toutes les fonctionnalités.",
 };
 
+type OnboardingSearchParams = Record<string, string | string[] | undefined>;
+
 interface OnboardingPageProps {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<OnboardingSearchParams>;
 }
+
+const resolveSearchParams = async (
+  searchParams: OnboardingPageProps['searchParams'],
+): Promise<OnboardingSearchParams> => {
+  const resolved = await searchParams;
+  return resolved ?? {};
+};
+
+const isModalOpen = (modalParam: string | string[] | undefined): boolean => {
+  if (Array.isArray(modalParam)) {
+    return modalParam.includes('1');
+  }
+  return modalParam === '1';
+};
 
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const session = await getServerSession(authOptions);
@@ -27,7 +43,8 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
 
   const draft = await getOnboardingDraft(session.user.id);
 
-  const openModal = searchParams.modal === '1';
+  const resolvedSearchParams = await resolveSearchParams(searchParams);
+  const openModal = isModalOpen(resolvedSearchParams.modal);
 
   return (
     <Suspense fallback={<div className="p-8">Chargement...</div>}>
