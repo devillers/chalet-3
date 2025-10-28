@@ -2,6 +2,12 @@ import { getDatabase, EmailLog } from './sqlite.js';
 import { randomUUID } from 'crypto';
 import crypto from 'crypto';
 
+export interface EmailMeta {
+  ip?: string;
+  locale?: string;
+  userAgent?: string;
+}
+
 export interface CreateEmailLogData {
   to: string[];
   from: string;
@@ -12,11 +18,7 @@ export interface CreateEmailLogData {
   provider?: string;
   responseId?: string;
   error?: string;
-  meta?: {
-    ip?: string;
-    locale?: string;
-    userAgent?: string;
-  };
+  meta?: EmailMeta;
 }
 
 export function createEmailLog(data: CreateEmailLogData): EmailLog {
@@ -33,6 +35,15 @@ export function createEmailLog(data: CreateEmailLogData): EmailLog {
   const payload_hash = crypto.createHash('sha256').update(payload).digest('hex');
 
   const storeBody = process.env.MAIL_LOG_STORE_BODY === 'true';
+
+  const metaForDb =
+    data.meta != null
+      ? JSON.stringify(
+          Object.fromEntries(
+            Object.entries(data.meta).filter(([, value]) => value !== undefined)
+          )
+        )
+      : null;
 
   const stmt = db.prepare(`
     INSERT INTO email_logs (
@@ -52,7 +63,7 @@ export function createEmailLog(data: CreateEmailLogData): EmailLog {
     data.provider ?? 'smtp',
     data.responseId ?? null,
     data.error ?? null,
-    data.meta ? JSON.stringify(data.meta) : null,
+    metaForDb,
     payload_hash
   );
 
