@@ -27,8 +27,8 @@ export function createEmailLog(data: CreateEmailLogData): EmailLog {
     to: data.to,
     from: data.from,
     subject: data.subject,
-    html: data.html,
-    text: data.text,
+    html: data.html ?? '',
+    text: data.text ?? '',
   });
   const payload_hash = crypto.createHash('sha256').update(payload).digest('hex');
 
@@ -43,15 +43,15 @@ export function createEmailLog(data: CreateEmailLogData): EmailLog {
 
   stmt.run(
     id,
-    JSON.stringify(data.to),
-    data.from,
-    data.subject,
-    storeBody ? data.html || null : null,
-    storeBody ? data.text || null : null,
-    data.status || 'queued',
-    data.provider || 'smtp',
-    data.responseId || null,
-    data.error || null,
+    JSON.stringify(data.to ?? []),
+    data.from ?? '',
+    data.subject ?? '',
+    storeBody ? data.html ?? null : null,
+    storeBody ? data.text ?? null : null,
+    data.status ?? 'queued',
+    data.provider ?? 'smtp',
+    data.responseId ?? null,
+    data.error ?? null,
     data.meta ? JSON.stringify(data.meta) : null,
     payload_hash
   );
@@ -157,8 +157,8 @@ export function getEmailLogs(filters: GetEmailLogsFilters = {}): {
   const countStmt = db.prepare(`SELECT COUNT(*) as count FROM email_logs ${whereClause}`);
   const { count } = countStmt.get(...params) as { count: number };
 
-  const limit = filters.limit || 20;
-  const offset = filters.offset || 0;
+  const limit = filters.limit ?? 20;
+  const offset = filters.offset ?? 0;
 
   const stmt = db.prepare(`
     SELECT * FROM email_logs
@@ -177,12 +177,21 @@ export function maskEmail(email: string): string {
     return email;
   }
 
-  const [local, domain] = email.split('@');
+  const [localRaw, domainRaw] = email.split('@');
+  const local = localRaw ?? '';
+  const domain = domainRaw ?? '';
+
   if (!domain) return email;
 
   const maskedLocal = local.length > 2 ? local[0] + '****' : '****';
-  const [domainName, tld] = domain.split('.');
-  const maskedDomain = domainName.length > 2 ? domainName.substring(0, 2) + '****' : '****';
+
+  const domainParts = domain.split('.');
+  const domainName = domainParts[0] ?? '';
+  const tld = domainParts[1] ?? 'com';
+
+  const maskedDomain = domainName.length > 2
+    ? domainName.substring(0, 2) + '****'
+    : '****';
 
   return `${maskedLocal}@${maskedDomain}.${tld}`;
 }

@@ -3,6 +3,7 @@ import { MongoClient, type Collection, type Db, type Filter } from 'mongodb';
 import { env } from '@/env';
 
 export type IndexDirection = 1 | -1 | 'text';
+
 export interface SchemaIndex<T> {
   fields: Partial<Record<keyof T & string, IndexDirection>> & Record<string, IndexDirection>;
   options?: {
@@ -27,16 +28,19 @@ export interface SchemaOptions {
 
 export class Schema<T extends { _id: string }> {
   public readonly definition: SchemaDefinition<T>;
-  public readonly options: SchemaOptions | undefined;
+  public readonly options: SchemaOptions;
   private readonly schemaIndexes: SchemaIndex<T>[] = [];
 
   constructor(definition: SchemaDefinition<T>, options?: SchemaOptions) {
     this.definition = definition;
-    this.options = options;
+    this.options = options ?? {}; // ✅ toujours un objet
   }
 
   public index(fields: SchemaIndex<T>['fields'], options?: SchemaIndex<T>['options']): void {
-    this.schemaIndexes.push({ fields, options });
+    this.schemaIndexes.push({
+      fields,
+      options: options ?? {}, // ✅ évite undefined
+    });
   }
 
   public get indexes(): SchemaIndex<T>[] {
@@ -72,25 +76,21 @@ type MongoDocument<T extends LeanDocumentBase> = T & Record<string, unknown>;
 let client: MongoClient | null = null;
 let database: Db | null = null;
 
-const collectionCache = new Map<string, Promise<Collection<Record<string, unknown>>>>();
+const collectionCache = new Map<string, Promise<Collection<MongoDocument<any>>>>();
 
 function resolveDatabaseName(uri: string): string {
   try {
     const url = new URL(uri);
     const pathname = url.pathname.replace(/^\//, '');
-    if (pathname) {
-      return pathname;
-    }
+    if (pathname) return pathname;
   } catch {
-    // noop — fallback to default name below
+    // noop
   }
   return process.env.MONGODB_DB ?? 'chalet-manager';
 }
 
 async function getDatabase(): Promise<Db> {
-  if (database) {
-    return database;
-  }
+  if (database) return database;
 
   const uri = env.NODE_ENV === 'test' && env.MONGODB_URI_TEST ? env.MONGODB_URI_TEST : env.MONGODB_URI;
   client = new MongoClient(uri);
@@ -108,16 +108,22 @@ async function getCollection<T extends LeanDocumentBase>(
     promise = (async () => {
       const db = await getDatabase();
       const collection = db.collection<MongoDocument<T>>(name);
+
       if (schema.indexes.length > 0) {
         await Promise.all(
-          schema.indexes.map((idx) =>
-            collection.createIndex(idx.fields as Record<string, IndexDirection>, idx.options),
+          schema.indexes.map(async (idx) =>
+            collection.createIndex(
+              idx.fields as Record<string, IndexDirection>,
+              idx.options ?? {}, // ✅ évite undefined
+            ),
           ),
         );
       }
+
       return collection;
     })();
-    collectionCache.set(name, promise as Promise<Collection<Record<string, unknown>>>);
+
+    collectionCache.set(name, promise as Promise<Collection<MongoDocument<any>>>);
   }
 
   return promise as Promise<Collection<MongoDocument<T>>>;
@@ -132,36 +138,38 @@ function applyDefaults<T extends LeanDocumentBase>(
   document: Partial<MongoDocument<T>>,
 ): MongoDocument<T> {
   const withDefaults: Record<string, unknown> = { ...document };
-  for (const [key, value] of Object.entries(schema.definition)) {
-    if (!isPropertyDefinition<unknown>(value)) {
-      continue;
-    }
 
-    if (
-      typeof withDefaults[key as keyof T] === 'undefined' &&
-      typeof value.default !== 'undefined'
-    ) {
+  for (const [key, value] of Object.entries(schema.definition)) {
+    if (!isPropertyDefinition<unknown>(value)) continue;
+
+    const currentValue = withDefaults[key];
+    if (typeof currentValue === 'undefined' && typeof value.default !== 'undefined') {
       withDefaults[key] =
         typeof value.default === 'function'
           ? (value.default as () => unknown)()
           : value.default;
     }
   }
+
   return withDefaults as MongoDocument<T>;
 }
 
 export function model<T extends LeanDocumentBase>(name: string, schema: Schema<T>): Model<T> {
-  async function create(payload: Omit<T, '_id' | 'createdAt' | 'updatedAt'> & Partial<LeanDocumentBase>): Promise<T> {
+  async function create(
+    payload: Omit<T, '_id' | 'createdAt' | 'updatedAt'> & Partial<LeanDocumentBase>
+  ): Promise<T> {
     const collection = await getCollection(name, schema);
     const now = new Date();
     const defaultsApplied = applyDefaults(schema, payload as Partial<MongoDocument<T>>);
-    const document: MongoDocument<T> = {
+
+    const document = {
       ...defaultsApplied,
       _id: (payload._id ?? crypto.randomUUID()) as string,
       createdAt: payload.createdAt ?? now,
       updatedAt: payload.updatedAt ?? now,
-    };
-    await collection.insertOne(document);
+    } as MongoDocument<T>; // ✅ cast ici
+
+    await collection.insertOne(document as any);
     return document as T;
   }
 
@@ -170,15 +178,9 @@ export function model<T extends LeanDocumentBase>(name: string, schema: Schema<T
     const query = (filter ?? {}) as Filter<MongoDocument<T>>;
     let cursor = collection.find(query);
 
-    if (options?.sort) {
-      cursor = cursor.sort(options.sort as Record<string, 1 | -1>);
-    }
-    if (typeof options?.skip === 'number') {
-      cursor = cursor.skip(options.skip);
-    }
-    if (typeof options?.limit === 'number') {
-      cursor = cursor.limit(options.limit);
-    }
+    if (options?.sort) cursor = cursor.sort(options.sort);
+    if (typeof options?.skip === 'number') cursor = cursor.skip(options.skip);
+    if (typeof options?.limit === 'number') cursor = cursor.limit(options.limit);
 
     const documents = await cursor.toArray();
     return documents.map((doc) => doc as T);
@@ -194,9 +196,14 @@ export function model<T extends LeanDocumentBase>(name: string, schema: Schema<T
     return findOne({ _id: id } as Partial<T>);
   }
 
-  async function findByIdAndUpdate(id: string, update: Partial<T>, options?: { new?: boolean }): Promise<T | null> {
+  async function findByIdAndUpdate(
+    id: string,
+    update: Partial<T>,
+    options?: { new?: boolean }
+  ): Promise<T | null> {
     const collection = await getCollection(name, schema);
     const now = new Date();
+
     const setPayload: Record<string, unknown> = {
       ...(update as Record<string, unknown>),
       updatedAt: now,
@@ -204,17 +211,22 @@ export function model<T extends LeanDocumentBase>(name: string, schema: Schema<T
 
     const filterById = { _id: id } as Filter<MongoDocument<T>>;
 
-    const result = await collection.findOneAndUpdate(filterById, { $set: setPayload }, {
-      returnDocument: options?.new === false ? 'before' : 'after',
-    });
+    const result = await collection.findOneAndUpdate(
+      filterById,
+      { $set: setPayload } as any, // ✅ cast pour éviter incompatibilité UpdateFilter
+      {
+        returnDocument: options?.new === false ? 'before' : 'after',
+      }
+    );
 
-    return (result.value as T | null) ?? null;
+    const value = result?.value ?? null;
+    return (value as T | null) ?? null;
   }
 
   async function findByIdAndDelete(id: string): Promise<T | null> {
     const collection = await getCollection(name, schema);
     const result = await collection.findOneAndDelete({ _id: id } as Filter<MongoDocument<T>>);
-    return (result.value as T | null) ?? null;
+    return (result?.value as T | null) ?? null;
   }
 
   async function countDocuments(filter?: Partial<T>): Promise<number> {
