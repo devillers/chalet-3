@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import Link from 'next/link';
+import type { Locale } from '@/lib/i18n';
 
 const formSchema = signInSchema.pick({ email: true, password: true }).extend({
   role: z.enum(['OWNER', 'TENANT']),
@@ -20,7 +21,14 @@ const formSchema = signInSchema.pick({ email: true, password: true }).extend({
 
 export type SignInFormValues = z.infer<typeof formSchema>;
 
-export default function SignInForm() {
+interface SignInFormProps {
+  locale?: Locale;
+}
+
+const withLocale = (locale: Locale | undefined, path: string) =>
+  locale ? `/${locale}${path}` : path;
+
+export default function SignInForm({ locale }: SignInFormProps) {
   const router = useRouter();
   const params = useSearchParams();
   const callbackUrl = params?.get('callbackUrl');
@@ -38,7 +46,10 @@ export default function SignInForm() {
   const onSubmit = form.handleSubmit(async (data) => {
     setError(null);
     setIsSubmitting(true);
-    const defaultDestination = data.role === 'TENANT' ? '/dashboard/tenant' : '/dashboard/owner';
+    const defaultDestination = withLocale(
+      locale,
+      data.role === 'TENANT' ? '/dashboard/tenant' : '/dashboard/owner',
+    );
     const response = await signIn('credentials', {
       ...data,
       redirect: false,
@@ -137,7 +148,7 @@ export default function SignInForm() {
           </p>
           <p className="text-sm text-muted-foreground">
             Pas encore de compte ?{' '}
-            <Link href="/signup" className="text-primary underline">
+            <Link href={withLocale(locale, '/signup')} className="text-primary underline">
               Créer un compte
             </Link>
           </p>
