@@ -1,5 +1,14 @@
 import Link from 'next/link';
-import { Mountain, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import {
+  Mountain,
+  Mail,
+  Phone,
+  MapPin,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+} from 'lucide-react';
 import { pacifico } from '@/lib/fonts';
 
 interface FooterProps {
@@ -31,7 +40,6 @@ export default function Footer({ locale, translations }: FooterProps) {
       {/* Contenu principal du footer */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          
           {/* Colonne 1 : Infos entreprise & contact */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-6">
@@ -40,9 +48,7 @@ export default function Footer({ locale, translations }: FooterProps) {
             </div>
 
             {brand.description && (
-              <p className="text-neutral-600 mb-6 leading-relaxed">
-                {brand.description}
-              </p>
+              <p className="text-neutral-600 mb-6 leading-relaxed">{brand.description}</p>
             )}
 
             <div className="space-y-3">
@@ -51,7 +57,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                   <Mail className="h-5 w-5 text-amber-700 flex-shrink-0" aria-hidden="true" />
                   <a
                     href={`mailto:${contact.email}`}
-                    className="text-neutral-600 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                    className="text-neutral-600 hover:text-white transition-colors   rounded"
                   >
                     {contact.email}
                   </a>
@@ -63,7 +69,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                   <Phone className="h-5 w-5 text-amber-700 flex-shrink-0" aria-hidden="true" />
                   <a
                     href={`tel:${contact.phone.replace(/\s+/g, '')}`}
-                    className="text-neutral-600 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                    className="text-neutral-600 hover:text-white transition-colors   rounded"
                   >
                     {contact.phone}
                   </a>
@@ -72,7 +78,10 @@ export default function Footer({ locale, translations }: FooterProps) {
 
               {Array.isArray(contact.locationLines) && contact.locationLines.length > 0 && (
                 <div className="flex items-start space-x-3">
-                  <MapPin className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                  <MapPin
+                    className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5"
+                    aria-hidden="true"
+                  />
                   <span className="text-neutral-600">
                     {contact.locationLines.map((line: string, index: number) => (
                       <span key={index}>
@@ -96,7 +105,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-neutral-600 hover:text-white transition-colors duration-200 block focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                    className="text-neutral-600 hover:text-white transition-colors duration-200 block   rounded"
                   >
                     {item.name}
                   </Link>
@@ -115,7 +124,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-neutral-600 hover:text-white transition-colors duration-200 block focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                    className="text-neutral-600 hover:text-white transition-colors duration-200 block   rounded"
                   >
                     {item.name}
                   </Link>
@@ -137,9 +146,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                   <input
                     type="email"
                     placeholder={newsletter.placeholder}
-                    className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg 
-                               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent 
-                               text-white placeholder-neutral-500"
+                    className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg   text-white placeholder-neutral-500"
                   />
                   <button
                     type="submit"
@@ -168,7 +175,10 @@ export default function Footer({ locale, translations }: FooterProps) {
                       className="p-2 bg-neutral-800 rounded-lg hover:bg-amber-700 transition-colors duration-200 group"
                       aria-label={name}
                     >
-                      <IconComponent className="h-5 w-5 text-neutral-600 group-hover:text-white" aria-hidden="true" />
+                      <IconComponent
+                        className="h-5 w-5 text-neutral-600 group-hover:text-white"
+                        aria-hidden="true"
+                      />
                     </a>
                   ))}
                 </div>
@@ -191,7 +201,7 @@ export default function Footer({ locale, translations }: FooterProps) {
                   key={item.name}
                   href={item.href}
                   className={[
-                    'text-[11px] uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded',
+                    'text-[11px] uppercase hover:text-white transition-colors duration-200   rounded',
                     item.href === adminLoginLink.href ? 'text-amber-700' : 'text-neutral-600',
                   ].join(' ')}
                 >
@@ -199,16 +209,14 @@ export default function Footer({ locale, translations }: FooterProps) {
                 </Link>
               ))}
 
-
               {bottomLinks.length === 0 && (
                 <Link
                   href="/auth/login"
-                  className="text-[11px] text-amber-700 uppercase hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                  className="text-[11px] text-amber-700 uppercase hover:text-white transition-colors duration-200   rounded"
                 >
                   {locale === 'fr' ? 'Connexion Admin' : 'Admin Login'}
                 </Link>
               )}
-
             </div>
           </div>
         </div>
