@@ -34,10 +34,20 @@ export default function SuperAdminSignInForm() {
   const onSubmit = form.handleSubmit(async (values) => {
     setError(null);
     setIsSubmitting(true);
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+    let targetUrl = '/superadmin';
+
+    try {
+      targetUrl = new URL(targetUrl, origin).toString();
+    } catch {
+      targetUrl = new URL('/superadmin', origin).toString();
+    }
+
     const response = await signIn('credentials', {
       ...values,
       redirect: false,
-      callbackUrl: '/superadmin',
+      callbackUrl: targetUrl,
     });
     setIsSubmitting(false);
 
@@ -51,7 +61,14 @@ export default function SuperAdminSignInForm() {
     }
 
     if (response?.ok) {
-      router.push('/superadmin');
+      const destination = response.url ?? targetUrl;
+      try {
+        const parsed = new URL(destination, origin);
+        const relative = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        router.push(relative);
+      } catch {
+        router.push('/superadmin');
+      }
     }
   });
 
