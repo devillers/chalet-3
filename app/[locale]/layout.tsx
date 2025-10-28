@@ -2,7 +2,7 @@
 
 import '../globals.css';
 import type { Metadata } from 'next';
-import { defaultLocale, getTranslations, Locale } from '@/lib/i18n';
+import { defaultLocale, getTranslations, locales, Locale } from '@/lib/i18n';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SessionProviderWrapper from '../../components/providers/SessionProviderWrapper.tsx'; // ✅ ajout
@@ -11,12 +11,13 @@ export const dynamic = 'force-dynamic';
 
 interface RootLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ locale: Locale }>;
+  params: Promise<{ locale: string }>;
 }
 
 export async function generateMetadata({ params }: RootLayoutProps): Promise<Metadata> {
   const resolvedParams = await params;
-  const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
+  const rawLocale = resolvedParams?.locale;
+  const locale = locales.includes(rawLocale as Locale) ? (rawLocale as Locale) : defaultLocale;
 
   const t = await getTranslations(locale);
   const meta = t.meta ?? t.site ?? {};
@@ -31,7 +32,8 @@ export async function generateMetadata({ params }: RootLayoutProps): Promise<Met
 
 export default async function LocaleLayout({ children, params }: RootLayoutProps) {
   const resolvedParams = await params;
-  const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
+  const rawLocale = resolvedParams?.locale;
+  const locale = locales.includes(rawLocale as Locale) ? (rawLocale as Locale) : defaultLocale;
   const translations = await getTranslations(locale);
 
   return (
