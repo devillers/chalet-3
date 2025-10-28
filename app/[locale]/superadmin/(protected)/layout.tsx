@@ -6,14 +6,14 @@ import { defaultLocale, Locale } from '@/lib/i18n';
 
 interface LocaleSuperAdminProtectedLayoutProps {
   children: ReactNode;
-  params: { locale: Locale } | Promise<{ locale: Locale }>;
+  params: Promise<{ locale: Locale }>;
 }
 
 export default async function LocaleSuperAdminProtectedLayout({
   children,
   params,
 }: LocaleSuperAdminProtectedLayoutProps) {
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
   const locale = resolvedParams?.locale ?? defaultLocale;
 
   const session = await getServerSession(authOptions);
