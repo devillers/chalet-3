@@ -1,8 +1,8 @@
 import { env } from '@/env';
 
-export async function GET(_: Request, context: { params: { slug: string } }) {
+export async function GET(_: Request, { params }: { params: { slug: string } }) {
   const baseUrl = env.SITE_URL.replace(/\/$/, '');
-  const slug = context.params.slug;
+  const slug = params.slug;
   if (!slug.startsWith('portfolio-')) {
     return new Response('Not Found', { status: 404 });
   }
