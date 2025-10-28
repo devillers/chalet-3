@@ -1,3 +1,5 @@
+// filepath: app/[locale]/layout.tsx
+
 import '../globals.css';
 import type { Metadata } from 'next';
 import { defaultLocale, getTranslations, Locale } from '@/lib/i18n';

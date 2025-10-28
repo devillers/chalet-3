@@ -75,7 +75,6 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss": "3.3.3",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "5.6.3",
     "vaul": "^0.9.9",
     "zod": "^3.23.8"
   },
@@ -86,6 +85,7 @@
     "@types/nodemailer": "^6.4.16",
     "dompurify": "^3.3.0",
     "isomorphic-dompurify": "^2.30.1",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.4.5"
   }
 }
