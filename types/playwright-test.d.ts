@@ -1,7 +1,19 @@
 declare module '@playwright/test' {
-  export const test: any;
-  export const expect: any;
   export type Page = any;
-  export const devices: Record<string, unknown>;
+  export interface TestFixtures {
+    page: Page;
+    browserName?: string;
+    [key: string]: any;
+  }
+
+  export const test: {
+    (name: string, fn: (fixtures: TestFixtures) => any): void;
+    describe: (...args: any[]) => any;
+    beforeEach: (...args: any[]) => any;
+    afterEach: (...args: any[]) => any;
+  };
+
+  export const expect: any;
+  export const devices: Record<string, any>;
   export function defineConfig(config: unknown): unknown;
 }
