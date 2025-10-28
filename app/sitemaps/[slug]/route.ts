@@ -1,24 +1,37 @@
-import { env } from '@/env';
 
-export async function GET(_: Request, { params }: { params: { slug: string } }) {
-  const baseUrl = env.SITE_URL.replace(/\/$/, '');
-  const slug = params.slug;
-  if (!slug.startsWith('portfolio-')) {
-    return new Response('Not Found', { status: 404 });
-  }
-  const page = Number(slug.replace('portfolio-', '').replace('.xml', '')) || 1;
-  const urls: string[] = [];
-  const body = `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">` +
-    urls
-      .map((path) => `<url><loc>${baseUrl}${path}</loc><lastmod>${new Date().toISOString()}</lastmod></url>`)
-      .join('') +
-    '</urlset>';
-  return new Response(body, {
+
+
+// app/sitemaps/[slug]/route.ts
+
+export async function GET(
+  request: Request,
+  context: { params: { slug: string } }
+) {
+  const { slug } = context.params;
+
+  // Exemple de génération de sitemap dynamique
+  const urls = [
+    { loc: `https://chaletmanager.fr/${slug}/1`, lastmod: new Date().toISOString() },
+    { loc: `https://chaletmanager.fr/${slug}/2`, lastmod: new Date().toISOString() },
+  ];
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    ${urls
+      .map(
+        (u) => `
+      <url>
+        <loc>${u.loc}</loc>
+        <lastmod>${u.lastmod}</lastmod>
+      </url>`
+      )
+      .join('')}
+  </urlset>`;
+
+  return new Response(xml, {
     headers: {
-      'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'no-store',
-      'X-Sitemap-Page': String(page),
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
     },
   });
 }
