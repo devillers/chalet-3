@@ -27,15 +27,10 @@ export default async function LocaleLayout({ children, params }: RootLayoutProps
   const translations = await getTranslations(locale);
 
   return (
-    <html lang={locale}>
-      <body>
-        {/* ✅ Wrapping Header + children in the SessionProvider */}
-        <SessionProviderWrapper>
-          <Header locale={locale} translations={translations} />
-          <main>{children}</main>
-          <Footer locale={locale} translations={translations} />
-        </SessionProviderWrapper>
-      </body>
-    </html>
+    <SessionProviderWrapper>
+      <Header locale={locale} translations={translations} />
+      <main>{children}</main>
+      <Footer locale={locale} translations={translations} />
+    </SessionProviderWrapper>
   );
 }
