@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+import { MongoClient, type Collection, type Db, type Filter } from 'mongodb';
+import { env } from '@/env';
 
 export type IndexDirection = 1 | -1 | 'text';
 export interface SchemaIndex<T> {
@@ -42,21 +44,10 @@ export class Schema<T extends { _id: string }> {
   }
 }
 
-const collections = new Map<string, Map<string, unknown>>();
-
 export interface LeanDocumentBase {
   _id: string;
   createdAt?: Date;
   updatedAt?: Date;
-}
-
-function ensureCollection(name: string): Map<string, unknown> {
-  let collection = collections.get(name);
-  if (!collection) {
-    collection = new Map();
-    collections.set(name, collection);
-  }
-  return collection;
 }
 
 export interface QueryOptions {
@@ -76,120 +67,159 @@ export interface Model<T extends LeanDocumentBase> {
   countDocuments(filter?: Partial<T>): Promise<number>;
 }
 
-function matchesFilter<T extends LeanDocumentBase>(doc: T, filter: Partial<T> | undefined): boolean {
-  if (!filter) {
-    return true;
+type MongoDocument<T extends LeanDocumentBase> = T & Record<string, unknown>;
+
+let client: MongoClient | null = null;
+let database: Db | null = null;
+
+const collectionCache = new Map<string, Promise<Collection<Record<string, unknown>>>>();
+
+function resolveDatabaseName(uri: string): string {
+  try {
+    const url = new URL(uri);
+    const pathname = url.pathname.replace(/^\//, '');
+    if (pathname) {
+      return pathname;
+    }
+  } catch {
+    // noop — fallback to default name below
   }
-  return Object.entries(filter).every(([key, value]) => {
-    const docValue = (doc as Record<string, unknown>)[key];
-    if (value === undefined) {
-      return true;
-    }
-    if (value instanceof Date && docValue instanceof Date) {
-      return value.getTime() === docValue.getTime();
-    }
-    if (Array.isArray(value) && Array.isArray(docValue)) {
-      return value.every((entry) => docValue.includes(entry));
-    }
-    return value === docValue;
-  });
+  return process.env.MONGODB_DB ?? 'chalet-manager';
 }
 
-function sortDocuments<T extends LeanDocumentBase>(docs: T[], sort?: QueryOptions['sort']): T[] {
-  if (!sort) {
-    return docs;
+async function getDatabase(): Promise<Db> {
+  if (database) {
+    return database;
   }
-  const [key, direction] = Object.entries(sort)[0] ?? [];
-  if (!key || !direction) {
-    return docs;
+
+  const uri = env.NODE_ENV === 'test' && env.MONGODB_URI_TEST ? env.MONGODB_URI_TEST : env.MONGODB_URI;
+  client = new MongoClient(uri);
+  await client.connect();
+  database = client.db(resolveDatabaseName(uri));
+  return database;
+}
+
+async function getCollection<T extends LeanDocumentBase>(
+  name: string,
+  schema: Schema<T>,
+): Promise<Collection<MongoDocument<T>>> {
+  let promise = collectionCache.get(name);
+  if (!promise) {
+    promise = (async () => {
+      const db = await getDatabase();
+      const collection = db.collection<MongoDocument<T>>(name);
+      if (schema.indexes.length > 0) {
+        await Promise.all(
+          schema.indexes.map((idx) =>
+            collection.createIndex(idx.fields as Record<string, IndexDirection>, idx.options),
+          ),
+        );
+      }
+      return collection;
+    })();
+    collectionCache.set(name, promise as Promise<Collection<Record<string, unknown>>>);
   }
-  const sorted = [...docs].sort((a, b) => {
-    const aValue = (a as Record<string, unknown>)[key];
-    const bValue = (b as Record<string, unknown>)[key];
-    if (aValue === bValue) {
-      return 0;
+
+  return promise as Promise<Collection<MongoDocument<T>>>;
+}
+
+function isPropertyDefinition<T>(value: unknown): value is SchemaDefinitionProperty<T> {
+  return typeof value === 'object' && value !== null && 'type' in (value as Record<string, unknown>);
+}
+
+function applyDefaults<T extends LeanDocumentBase>(
+  schema: Schema<T>,
+  document: Partial<MongoDocument<T>>,
+): MongoDocument<T> {
+  const withDefaults: Record<string, unknown> = { ...document };
+  for (const [key, value] of Object.entries(schema.definition)) {
+    if (!isPropertyDefinition<unknown>(value)) {
+      continue;
     }
-    if (aValue === undefined) {
-      return direction === 1 ? -1 : 1;
+
+    if (
+      typeof withDefaults[key as keyof T] === 'undefined' &&
+      typeof value.default !== 'undefined'
+    ) {
+      withDefaults[key] =
+        typeof value.default === 'function'
+          ? (value.default as () => unknown)()
+          : value.default;
     }
-    if (bValue === undefined) {
-      return direction === 1 ? 1 : -1;
-    }
-    if (aValue instanceof Date && bValue instanceof Date) {
-      return direction === 1
-        ? aValue.getTime() - bValue.getTime()
-        : bValue.getTime() - aValue.getTime();
-    }
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return direction === 1 ? aValue - bValue : bValue - aValue;
-    }
-    return direction === 1
-      ? String(aValue).localeCompare(String(bValue))
-      : String(bValue).localeCompare(String(aValue));
-  });
-  return sorted;
+  }
+  return withDefaults as MongoDocument<T>;
 }
 
 export function model<T extends LeanDocumentBase>(name: string, schema: Schema<T>): Model<T> {
-  const collection = ensureCollection(name);
-
   async function create(payload: Omit<T, '_id' | 'createdAt' | 'updatedAt'> & Partial<LeanDocumentBase>): Promise<T> {
+    const collection = await getCollection(name, schema);
     const now = new Date();
-    const document: T = {
-      ...(payload as T),
+    const defaultsApplied = applyDefaults(schema, payload as Partial<MongoDocument<T>>);
+    const document: MongoDocument<T> = {
+      ...defaultsApplied,
       _id: (payload._id ?? crypto.randomUUID()) as string,
       createdAt: payload.createdAt ?? now,
       updatedAt: payload.updatedAt ?? now,
     };
-    collection.set(document._id, document);
-    return document;
+    await collection.insertOne(document);
+    return document as T;
   }
 
   async function find(filter?: Partial<T>, options?: QueryOptions): Promise<T[]> {
-    const docs = Array.from(collection.values()) as T[];
-    const filtered = docs.filter((doc) => matchesFilter(doc, filter));
-    const sorted = sortDocuments(filtered, options?.sort);
-    const start = options?.skip ?? 0;
-    const end = options?.limit ? start + options.limit : undefined;
-    return sorted.slice(start, end);
+    const collection = await getCollection(name, schema);
+    const query = (filter ?? {}) as Filter<MongoDocument<T>>;
+    let cursor = collection.find(query);
+
+    if (options?.sort) {
+      cursor = cursor.sort(options.sort as Record<string, 1 | -1>);
+    }
+    if (typeof options?.skip === 'number') {
+      cursor = cursor.skip(options.skip);
+    }
+    if (typeof options?.limit === 'number') {
+      cursor = cursor.limit(options.limit);
+    }
+
+    const documents = await cursor.toArray();
+    return documents.map((doc) => doc as T);
   }
 
   async function findOne(filter: Partial<T>): Promise<T | null> {
-    const docs = await find(filter, { limit: 1 });
-    return docs[0] ?? null;
+    const collection = await getCollection(name, schema);
+    const document = await collection.findOne(filter as Filter<MongoDocument<T>>);
+    return (document as T | null) ?? null;
   }
 
   async function findById(id: string): Promise<T | null> {
-    return (collection.get(id) as T | undefined) ?? null;
+    return findOne({ _id: id } as Partial<T>);
   }
 
   async function findByIdAndUpdate(id: string, update: Partial<T>, options?: { new?: boolean }): Promise<T | null> {
-    const existing = await findById(id);
-    if (!existing) {
-      return null;
-    }
+    const collection = await getCollection(name, schema);
     const now = new Date();
-    const updated: T = {
-      ...existing,
-      ...update,
+    const setPayload: Record<string, unknown> = {
+      ...(update as Record<string, unknown>),
       updatedAt: now,
     };
-    collection.set(id, updated);
-    return options?.new === false ? existing : updated;
+
+    const filterById = { _id: id } as Filter<MongoDocument<T>>;
+
+    const result = await collection.findOneAndUpdate(filterById, { $set: setPayload }, {
+      returnDocument: options?.new === false ? 'before' : 'after',
+    });
+
+    return (result.value as T | null) ?? null;
   }
 
   async function findByIdAndDelete(id: string): Promise<T | null> {
-    const existing = await findById(id);
-    if (!existing) {
-      return null;
-    }
-    collection.delete(id);
-    return existing;
+    const collection = await getCollection(name, schema);
+    const result = await collection.findOneAndDelete({ _id: id } as Filter<MongoDocument<T>>);
+    return (result.value as T | null) ?? null;
   }
 
   async function countDocuments(filter?: Partial<T>): Promise<number> {
-    const docs = await find(filter);
-    return docs.length;
+    const collection = await getCollection(name, schema);
+    return collection.countDocuments(filter as Filter<MongoDocument<T>> | undefined);
   }
 
   return {
@@ -204,11 +234,16 @@ export function model<T extends LeanDocumentBase>(name: string, schema: Schema<T
 }
 
 export async function connectMongo(): Promise<void> {
-  // In-memory implementation; real deployment should connect to MongoDB.
+  await getDatabase();
 }
 
 export async function disconnectMongo(): Promise<void> {
-  collections.clear();
+  collectionCache.clear();
+  if (client) {
+    await client.close();
+  }
+  client = null;
+  database = null;
 }
 
 export type InferSchemaType<S> = S extends Schema<infer T> ? T : never;

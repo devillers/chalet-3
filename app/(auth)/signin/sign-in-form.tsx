@@ -50,10 +50,20 @@ export default function SignInForm({ locale }: SignInFormProps) {
       locale,
       data.role === 'TENANT' ? '/dashboard/tenant' : '/dashboard/owner',
     );
+    const origin = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+    let targetUrl = callbackUrl ?? defaultDestination;
+
+    try {
+      // Normalise the callback URL so NextAuth always receives an absolute URL.
+      targetUrl = new URL(targetUrl, origin).toString();
+    } catch {
+      targetUrl = new URL(defaultDestination, origin).toString();
+    }
+
     const response = await signIn('credentials', {
       ...data,
       redirect: false,
-      callbackUrl: callbackUrl ?? defaultDestination,
+      callbackUrl: targetUrl,
       role: data.role,
     });
     setIsSubmitting(false);
@@ -68,7 +78,14 @@ export default function SignInForm({ locale }: SignInFormProps) {
     }
 
     if (response?.ok) {
-      router.push(response.url ?? defaultDestination);
+      const destination = response.url ?? targetUrl;
+      try {
+        const parsed = new URL(destination, origin);
+        const relativePath = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+        router.push(relativePath);
+      } catch {
+        router.push(defaultDestination);
+      }
     }
   });
 
