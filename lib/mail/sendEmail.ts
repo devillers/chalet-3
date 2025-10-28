@@ -1,4 +1,4 @@
-import { getDatabase, EmailLog } from './sqlite';
+import { getDatabase, EmailLog } from './sqlite.js';
 import { randomUUID } from 'crypto';
 import crypto from 'crypto';
 
