@@ -48,7 +48,7 @@ export default function SignInForm({ locale }: SignInFormProps) {
     setIsSubmitting(true);
     const defaultDestination = withLocale(
       locale,
-      data.role === 'TENANT' ? '/dashboard/tenant' : '/dashboard/owner',
+      '/',
     );
     const origin = typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
     let targetUrl = callbackUrl ?? defaultDestination;

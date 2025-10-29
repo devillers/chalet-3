@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { defaultLocale, locales, type Locale } from '@/lib/i18n';
 
 const schema = signInSchema.extend({
   role: signInSchema.shape.role.default('SUPERADMIN'),
@@ -26,6 +27,17 @@ export default function SuperAdminSignInForm() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const resolveLocale = (): Locale => {
+    if (typeof window === 'undefined') {
+      return defaultLocale;
+    }
+    const [ , firstSegment ] = window.location.pathname.split('/');
+    if (firstSegment && locales.includes(firstSegment as Locale)) {
+      return firstSegment as Locale;
+    }
+    return defaultLocale;
+  };
+
   const form = useForm<SuperAdminSignInValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '', role: 'SUPERADMIN' },
@@ -36,12 +48,14 @@ export default function SuperAdminSignInForm() {
     setIsSubmitting(true);
     const origin =
       typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-    let targetUrl = '/superadmin';
+    const locale = resolveLocale();
+    const defaultTarget = `/${locale}`;
+    let targetUrl = defaultTarget;
 
     try {
       targetUrl = new URL(targetUrl, origin).toString();
     } catch {
-      targetUrl = new URL('/superadmin', origin).toString();
+      targetUrl = new URL(defaultTarget, origin).toString();
     }
 
     const response = await signIn('credentials', {

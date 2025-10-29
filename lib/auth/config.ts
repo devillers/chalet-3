@@ -137,6 +137,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 60 * 60 * 24 * 30,
   },
   secret: env.NEXTAUTH_SECRET,
+  debug: env.NODE_ENV === 'development',
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
