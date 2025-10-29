@@ -7,6 +7,7 @@ import { signInSchema } from '@/lib/validators/sign-in';
 import { env } from '@/env';
 import { checkRateLimit, resetRateLimit } from './rateLimit';
 import { getUserByEmail, verifyPassword, updateUser } from '../db/users';
+import { defaultLocale, getLocaleFromPathname } from '../i18n';
 
 const providers: NextAuthOptions['providers'] = [
   CredentialsProvider({
@@ -172,8 +173,19 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async redirect({ url }) {
-      return url;
+    async redirect({ url, baseUrl }) {
+      try {
+        const base = new URL(baseUrl);
+        const target = new URL(url, base);
+        const locale = getLocaleFromPathname(target.pathname) ?? defaultLocale;
+        base.pathname = `/${locale}`;
+        base.search = '';
+        base.hash = '';
+        return base.toString();
+      } catch (error) {
+        console.error('[auth] Failed to compute redirect URL', error);
+        return `${baseUrl.replace(/\/+$/, '')}/${defaultLocale}`;
+      }
     },
   },
 };

@@ -117,6 +117,11 @@ export async function middleware(request: NextRequest) {
   const locale = localeSegment ?? defaultLocale;
   const normalizedPath = getPathWithoutLocale(pathname) || '/';
 
+  if (normalizedPath.startsWith('/dashboard')) {
+    const redirectUrl = buildRedirectUrl(request, locale, '/');
+    return NextResponse.redirect(redirectUrl);
+  }
+
   if (matches(normalizedPath, PUBLIC_ROUTES)) {
     return NextResponse.next();
   }
