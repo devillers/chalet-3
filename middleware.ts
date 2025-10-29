@@ -125,10 +125,18 @@ export async function middleware(request: NextRequest) {
 
   if (matches(normalizedPath, SUPERADMIN_ROUTES)) {
     if (!token) {
+      console.log('[middleware] superadmin route -> no token', {
+        pathname: pathname,
+      });
       const callbackUrl = `${updatedUrl.pathname}${updatedUrl.search}`;
       const redirectUrl = buildRedirectUrl(request, locale, '/superadmin/signin', { callbackUrl });
       return NextResponse.redirect(redirectUrl);
     }
+
+    console.log('[middleware] superadmin route -> token', {
+      role: token.role,
+      pathname: pathname,
+    });
 
     if (token.role !== 'SUPERADMIN') {
       const redirectUrl = buildRedirectUrl(request, locale, '/access-denied', { reason: 'superadmin_only' });

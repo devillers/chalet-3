@@ -37,6 +37,11 @@ const providers: NextAuthOptions['providers'] = [
         }
 
         if (user) {
+          console.log('[auth] credentials authorize -> db user', {
+            id: user._id,
+            email: user.email,
+            role: user.role,
+          });
           const valid = await verifyPassword(password, user.passwordHash);
           if (!valid) {
             return null;
@@ -48,6 +53,11 @@ const providers: NextAuthOptions['providers'] = [
 
           resetRateLimit(email);
 
+          console.log('[auth] credentials authorize -> db user success', {
+            id: user._id,
+            email: user.email,
+            role: user.role,
+          });
           return {
             id: user._id,
             email: user.email,
@@ -66,12 +76,18 @@ const providers: NextAuthOptions['providers'] = [
           normalizedEmail === seedEmail &&
           password === seedPassword
         ) {
+          console.log('[auth] credentials authorize -> seed user', {
+            email: env.ADMIN_SEED_EMAIL,
+          });
           if (requestedRole && requestedRole !== 'SUPERADMIN') {
             throw new Error('ACCESS_RESTRICTED');
           }
 
           resetRateLimit(email);
 
+          console.log('[auth] credentials authorize -> seed user success', {
+            email: env.ADMIN_SEED_EMAIL,
+          });
           return {
             id: 'seed-superadmin',
             email: env.ADMIN_SEED_EMAIL,
