@@ -43,15 +43,31 @@ const envSchema = z
         'CLOUDINARY_API_SECRET',
       ];
 
-      requiredKeys.forEach((key) => {
-        if (!process.env[key]) {
+      const missingKeys = requiredKeys.filter((key) => !process.env[key]);
+      if (missingKeys.length === 0) {
+        return;
+      }
+
+      const shouldBlockBuild =
+        process.env.VERCEL === '1' && process.env.VERCEL_ENV === 'production';
+
+      if (shouldBlockBuild) {
+        missingKeys.forEach((key) => {
           ctx.addIssue({
             path: [key],
             code: z.ZodIssueCode.custom,
             message: 'Required in production environment',
           });
-        }
-      });
+        });
+        return;
+      }
+
+      console.warn(
+        `⚠️  Missing production environment variables: ${missingKeys.join(', ')}`,
+      );
+      console.warn(
+        '    Using fallback defaults for local production builds. Set VERCEL=1 and VERCEL_ENV=production to enforce strict validation.',
+      );
     }
   });
 
