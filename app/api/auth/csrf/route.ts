@@ -1,5 +1,5 @@
-import { buildCsrfResponse } from '@/lib/auth/csrf';
+import { setCsrfCookie } from '@/lib/auth/csrf';
 
 export function GET() {
-  return buildCsrfResponse();
+  return setCsrfCookie();
 }
