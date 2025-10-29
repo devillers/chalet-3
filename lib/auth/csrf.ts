@@ -1,6 +1,6 @@
 // lib/auth/csrf.ts
 import crypto from 'crypto';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { env } from '@/env';
 
@@ -52,15 +52,39 @@ export const setCsrfCookie = (): NextResponse => {
   return response;
 };
 
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
+
 /**
- * Validate CSRF token from request cookies/headers
+ * Validate CSRF token by comparing the hashed cookie value and the raw header token
+ */
+export const validateRequestCsrfToken = (
+  request: Request,
+  cookieStore: CookieStore,
+): boolean => {
+  const cookieValue = cookieStore.get(CSRF_COOKIE_NAME)?.value;
+  const headerValue = request.headers.get(CSRF_HEADER_NAME);
+
+  if (!cookieValue || !headerValue) {
+    return false;
+  }
+
+  const hashedHeaderToken = hashToken(headerValue);
+  return timingSafeCompare(cookieValue, hashedHeaderToken);
+};
+
+/**
+ * Validate CSRF token from the current request context (no arguments required)
  */
 export const validateCsrfToken = async (): Promise<boolean> => {
-  const cookieStore = await cookies(); // 👈 obligatoire maintenant
-  const cookieValue = cookieStore.get(CSRF_COOKIE_NAME)?.value;
-  const headerValue = cookieStore.get(CSRF_HEADER_NAME)?.value;
+  const cookieStore = await cookies();
+  const headerStore = await headers();
 
-  if (!cookieValue || !headerValue) return false;
+  const cookieValue = cookieStore.get(CSRF_COOKIE_NAME)?.value;
+  const headerValue = headerStore.get(CSRF_HEADER_NAME) ?? undefined;
+
+  if (!cookieValue || !headerValue) {
+    return false;
+  }
 
   const hashedHeaderToken = hashToken(headerValue);
   return timingSafeCompare(cookieValue, hashedHeaderToken);
