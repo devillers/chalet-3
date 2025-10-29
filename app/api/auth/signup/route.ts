@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!validateRequestCsrfToken(request, cookies())) {
+  const cookieStore = await cookies();
+  if (!validateRequestCsrfToken(request, cookieStore)) {
     return NextResponse.json({ message: 'Jeton CSRF manquant ou invalide.' }, { status: 403 });
   }
 
