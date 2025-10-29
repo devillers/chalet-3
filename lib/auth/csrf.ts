@@ -1,7 +1,8 @@
 import crypto from 'crypto';
-import type { Cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { env } from '@/env';
+
+type CookieStore = Awaited<ReturnType<typeof import('next/headers')['cookies']>>;
 
 const CSRF_COOKIE_NAME = 'cm_csrf';
 const CSRF_HEADER_NAME = 'x-csrf-token';
@@ -43,7 +44,10 @@ export const buildCsrfResponse = () => {
   return response;
 };
 
-export const validateRequestCsrfToken = (request: Request, cookieStore: Cookies): boolean => {
+export const validateRequestCsrfToken = (
+  request: Request,
+  cookieStore: CookieStore,
+): boolean => {
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
   if (!headerToken) {
     return false;
