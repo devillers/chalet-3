@@ -32,7 +32,15 @@ export const generateCsrfToken = (): { token: string; cookieValue: string } => {
 
 export const setCsrfCookie = (): NextResponse => {
   const { token, cookieValue } = generateCsrfToken();
-  const response = NextResponse.next();
+  const response = NextResponse.json(
+    { csrfToken: token },
+    {
+      headers: {
+        // Preserve the header consumers might rely on to read the token
+        [CSRF_HEADER_NAME]: token,
+      },
+    }
+  );
 
   response.cookies.set(CSRF_COOKIE_NAME, cookieValue, {
     httpOnly: true,
@@ -41,8 +49,6 @@ export const setCsrfCookie = (): NextResponse => {
     path: '/',
     maxAge: CSRF_MAX_AGE,
   });
-
-  response.headers.set(CSRF_HEADER_NAME, token);
   return response;
 };
 
