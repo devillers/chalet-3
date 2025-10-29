@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
+import { env } from '@/env';
 import { Locale } from '../i18n';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://chaletmanager.fr';
+const SITE_URL = env.SITE_URL.replace(/\/$/, '');
 
 interface PageMetadata {
   title: string;

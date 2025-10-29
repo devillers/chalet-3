@@ -12,6 +12,10 @@ const defaults = {
   CLOUDINARY_API_SECRET: 'test-api-secret',
 } as const;
 
+const vercelUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, '')}`
+  : undefined;
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -43,7 +47,17 @@ const envSchema = z
         'CLOUDINARY_API_SECRET',
       ];
 
-      const missingKeys = requiredKeys.filter((key) => !process.env[key]);
+      const missingKeys = requiredKeys.filter((key) => {
+        if (process.env[key]) {
+          return false;
+        }
+
+        if (key === 'SITE_URL' && vercelUrl) {
+          return false;
+        }
+
+        return true;
+      });
       if (missingKeys.length === 0) {
         return;
       }
@@ -71,11 +85,14 @@ const envSchema = z
     }
   });
 
+const resolvedSiteUrl = process.env.SITE_URL ?? vercelUrl ?? defaults.SITE_URL;
+const resolvedNextAuthUrl = process.env.NEXTAUTH_URL ?? vercelUrl ?? resolvedSiteUrl;
+
 const parsed = envSchema.safeParse({
   NODE_ENV: process.env.NODE_ENV,
-  SITE_URL: process.env.SITE_URL,
+  SITE_URL: resolvedSiteUrl,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  NEXTAUTH_URL: resolvedNextAuthUrl,
   MONGODB_URI: process.env.MONGODB_URI,
   MONGODB_URI_TEST: process.env.MONGODB_URI_TEST,
   MONGODB_DB: process.env.MONGODB_DB,

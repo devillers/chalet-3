@@ -1,16 +1,26 @@
+const vercelUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, '')}`
+  : undefined;
+
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.SITE_URL ||
+  vercelUrl ||
+  'https://chaletmanager.fr';
+
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://chaletmanager.fr',
+  siteUrl,
   generateRobotsTxt: true,
   generateIndexSitemap: false,
   exclude: ['/api/*'],
   alternateRefs: [
     {
-      href: process.env.NEXT_PUBLIC_SITE_URL || 'https://chaletmanager.fr',
+      href: siteUrl,
       hreflang: 'fr',
     },
     {
-      href: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://chaletmanager.fr'}/en`,
+      href: `${siteUrl}/en`,
       hreflang: 'en',
     },
   ],
