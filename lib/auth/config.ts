@@ -8,34 +8,36 @@ import { getUserByEmail, verifyPassword, updateUser } from '../db/users';
 import { defaultLocale, getLocaleFromPathname } from '../i18n';
 
 const IS_DEV = env.NODE_ENV !== 'production';
+const NEXTAUTH_BASE_URL = env.NEXTAUTH_URL ?? env.SITE_URL;
+const USE_SECURE_COOKIES = NEXTAUTH_BASE_URL.startsWith('https://');
 
 export const authOptions: NextAuthOptions = {
   // 👇 Cookies sûrs en prod, mais NON secure en dev (localhost http)
   cookies: {
     sessionToken: {
-      name: IS_DEV ? 'next-auth.session-token' : '__Secure-next-auth.session-token',
+      name: USE_SECURE_COOKIES ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: !IS_DEV,
+        secure: USE_SECURE_COOKIES,
       },
     },
     callbackUrl: {
-      name: IS_DEV ? 'next-auth.callback-url' : '__Secure-next-auth.callback-url',
+      name: USE_SECURE_COOKIES ? '__Secure-next-auth.callback-url' : 'next-auth.callback-url',
       options: {
         sameSite: 'lax',
         path: '/',
-        secure: !IS_DEV,
+        secure: USE_SECURE_COOKIES,
       },
     },
     csrfToken: {
-      name: IS_DEV ? 'next-auth.csrf-token' : '__Host-next-auth.csrf-token',
+      name: USE_SECURE_COOKIES ? '__Host-next-auth.csrf-token' : 'next-auth.csrf-token',
       options: {
         httpOnly: false,
         sameSite: 'lax',
         path: '/',
-        secure: !IS_DEV,
+        secure: USE_SECURE_COOKIES,
       },
     },
   },
