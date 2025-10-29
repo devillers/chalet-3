@@ -44,7 +44,7 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
     let isMounted = true;
     const loadToken = async () => {
       try {
-        const response = await fetch('/api/auth/csrf', { method: 'GET' });
+        const response = await fetch('/api/security/csrf', { method: 'GET' });
         if (!response.ok) {
           throw new Error('CSRF request failed');
         }
