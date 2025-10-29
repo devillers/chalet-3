@@ -1,7 +1,10 @@
 // app/sitemaps/[slug]/route.ts
 
-export async function GET(request: Request, context: any) {
-  const { slug } = context.params;
+export async function GET(
+  request: Request,
+  { params }: { params: { slug: string } }
+) {
+  const { slug } = params;
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
