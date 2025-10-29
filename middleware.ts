@@ -31,6 +31,11 @@ export function middleware(request: NextRequest) {
 
   const canonicalUrl = new URL(env.SITE_URL);
   const updatedUrl = new URL(nextUrl.href);
+  const requestHost = request.headers.get('host');
+  const canonicalHost =
+    canonicalUrl.hostname === 'localhost' || canonicalUrl.hostname === '127.0.0.1'
+      ? requestHost ?? canonicalUrl.host
+      : canonicalUrl.host;
   let shouldRedirect = false;
 
   // 🚫 Ne force HTTPS et le domaine qu'en production
@@ -42,8 +47,8 @@ export function middleware(request: NextRequest) {
       shouldRedirect = true;
     }
 
-    if (updatedUrl.host !== canonicalUrl.host) {
-      updatedUrl.host = canonicalUrl.host;
+    if (canonicalHost && updatedUrl.host !== canonicalHost) {
+      updatedUrl.host = canonicalHost;
       shouldRedirect = true;
     }
   }
