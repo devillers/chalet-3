@@ -36,6 +36,13 @@ const providers: NextAuthOptions['providers'] = [
           console.error('[auth] Failed to fetch user during sign-in', error);
         }
 
+        console.log('[auth] credentials authorize start', {
+          normalizedEmail,
+          hasDbUser: Boolean(user),
+          hasSeedEmail: Boolean(env.ADMIN_SEED_EMAIL),
+          requestedRole: requestedRole ?? '(none)',
+        });
+
         if (user) {
           console.log('[auth] credentials authorize -> db user', {
             id: user._id,
