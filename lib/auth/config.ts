@@ -1,191 +1,206 @@
-// filepath: lib/auth/config.ts
-
+// lib/auth/config.ts
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
-import { signInSchema } from '@/lib/validators/sign-in';
 import { env } from '@/env';
 import { checkRateLimit, resetRateLimit } from './rateLimit';
 import { getUserByEmail, verifyPassword, updateUser } from '../db/users';
 import { defaultLocale, getLocaleFromPathname } from '../i18n';
 
-const providers: NextAuthOptions['providers'] = [
-  CredentialsProvider({
+const IS_DEV = env.NODE_ENV !== 'production';
+
+export const authOptions: NextAuthOptions = {
+  // 👇 Cookies sûrs en prod, mais NON secure en dev (localhost http)
+  cookies: {
+    sessionToken: {
+      name: IS_DEV ? 'next-auth.session-token' : '__Secure-next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: !IS_DEV,
+      },
+    },
+    callbackUrl: {
+      name: IS_DEV ? 'next-auth.callback-url' : '__Secure-next-auth.callback-url',
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: !IS_DEV,
+      },
+    },
+    csrfToken: {
+      name: IS_DEV ? 'next-auth.csrf-token' : '__Host-next-auth.csrf-token',
+      options: {
+        httpOnly: false,
+        sameSite: 'lax',
+        path: '/',
+        secure: !IS_DEV,
+      },
+    },
+  },
+
+  providers: [
+    CredentialsProvider({
       id: 'credentials',
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Mot de passe', type: 'password' },
+        role: { label: 'Role', type: 'text' },
       },
       async authorize(credentials) {
-        const result = signInSchema.safeParse(credentials);
-        if (!result.success) {
+        const email = credentials?.email?.toLowerCase().trim() || '';
+        const password = credentials?.password || '';
+        const requestedRole = (credentials?.role || '').toString().toUpperCase() as
+          | 'OWNER' | 'TENANT' | 'SUPERADMIN' | '';
+
+        console.log('[authorize:start]', { email, requestedRole });
+
+        if (!email || !password) return null;
+
+        const rate = checkRateLimit(email);
+        if (!rate.allowed) {
+          console.warn('[authorize] rate-limited', rate);
           return null;
         }
 
-        const { email, password, role: requestedRole } = result.data;
-        const normalizedEmail = email.toLowerCase();
-        const rate = checkRateLimit(email);
-        if (!rate.allowed) {
-          throw new Error(`Too many attempts. Retry after ${rate.retryAfter ?? 60}s.`);
-        }
-
-        let user = null;
-        try {
-          user = await getUserByEmail(normalizedEmail);
-        } catch (error) {
-          console.error('[auth] Failed to fetch user during sign-in', error);
-        }
-
-        console.log('[auth] credentials authorize start', {
-          normalizedEmail,
-          hasDbUser: Boolean(user),
-          hasSeedEmail: Boolean(env.ADMIN_SEED_EMAIL),
-          requestedRole: requestedRole ?? '(none)',
-        });
-
-        if (user) {
-          console.log('[auth] credentials authorize -> db user', {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-          });
-          const valid = await verifyPassword(password, user.passwordHash);
-          if (!valid) {
+        // Seed superadmin
+        const seedEmail = env.ADMIN_SEED_EMAIL?.toLowerCase();
+        if (seedEmail && email === seedEmail) {
+          if (password !== env.ADMIN_SEED_PASSWORD) {
+            console.warn('[authorize][seed] wrong password');
             return null;
           }
-
-          if (requestedRole && requestedRole !== user.role) {
-            throw new Error('ACCESS_RESTRICTED');
-          }
-
-          resetRateLimit(email);
-
-          console.log('[auth] credentials authorize -> db user success', {
-            id: user._id,
-            email: user.email,
-            role: user.role,
-          });
-          return {
-            id: user._id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            onboardingCompleted: user.onboardingCompleted,
-          };
-        }
-
-        const seedEmail = env.ADMIN_SEED_EMAIL?.toLowerCase();
-        const seedPassword = env.ADMIN_SEED_PASSWORD;
-
-        if (
-          seedEmail &&
-          seedPassword &&
-          normalizedEmail === seedEmail &&
-          password === seedPassword
-        ) {
-          console.log('[auth] credentials authorize -> seed user', {
-            email: env.ADMIN_SEED_EMAIL,
-          });
           if (requestedRole && requestedRole !== 'SUPERADMIN') {
-            throw new Error('ACCESS_RESTRICTED');
+            console.warn('[authorize][seed] role mismatch (ignored)', { requestedRole });
           }
-
           resetRateLimit(email);
-
-          console.log('[auth] credentials authorize -> seed user success', {
-            email: env.ADMIN_SEED_EMAIL,
-          });
+          console.log('[authorize][seed] success');
           return {
             id: 'seed-superadmin',
-            email: env.ADMIN_SEED_EMAIL,
+            email: env.ADMIN_SEED_EMAIL!,
             name: env.ADMIN_SEED_NAME ?? 'Super Admin',
-            role: 'SUPERADMIN',
+            role: 'SUPERADMIN' as const,
             onboardingCompleted: true,
           };
         }
 
-        return null;
-      },
-  }),
-];
+        // DB user
+        const user = await getUserByEmail(email).catch((e) => {
+          console.error('[authorize][db] error', e);
+          return null;
+        });
 
-if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
-  providers.push(
-    GoogleProvider({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-      async profile(profile) {
+        if (!user) {
+          console.warn('[authorize] no user found');
+          return null;
+        }
+
+        const ok = await verifyPassword(password, user.passwordHash);
+        if (!ok) {
+          console.warn('[authorize][db] invalid password');
+          return null;
+        }
+
+        const storedRole = (user.role || '').toUpperCase() as 'OWNER' | 'TENANT' | 'SUPERADMIN';
+        if (requestedRole && requestedRole !== storedRole) {
+          console.warn('[authorize][db] role mismatch (ignored)', { requestedRole, storedRole });
+        }
+
+        resetRateLimit(email);
+        console.log('[authorize][db] success');
         return {
-          id: profile.sub,
-          email: profile.email ?? '',
-          name: profile.name ?? profile.email ?? 'Utilisateur',
-          role: 'TENANT' as const,
-          onboardingCompleted: false,
+          id: String(user._id),
+          email: user.email.toLowerCase(),
+          name: user.name,
+          role: storedRole,
+          onboardingCompleted: !!user.onboardingCompleted,
         };
       },
-    })
-  );
-}
+    }),
 
-export const authOptions: NextAuthOptions = {
-  providers,
-  pages: {
-    signIn: '/signin',
-  },
-  session: {
-    strategy: 'jwt',
-    maxAge: 60 * 60 * 24 * 30,
-  },
+    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+            async profile(profile) {
+              return {
+                id: profile.sub,
+                email: (profile.email ?? '').toLowerCase(),
+                name: profile.name ?? profile.email ?? 'Utilisateur',
+                role: 'TENANT' as const,
+                onboardingCompleted: false,
+              };
+            },
+          }),
+        ]
+      : []),
+  ],
+
+  pages: { signIn: '/signin' },
+
+  session: { strategy: 'jwt', maxAge: 60 * 60 * 24 * 30 },
+
   secret: env.NEXTAUTH_SECRET,
-  debug: env.NODE_ENV === 'development',
+  debug: IS_DEV,
+
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = (user as { id: string }).id;
-        token.role = (user as { role: 'OWNER' | 'TENANT' | 'SUPERADMIN' }).role;
-        token.onboardingCompleted = (user as { onboardingCompleted?: boolean }).onboardingCompleted;
+        (token as any).id = (user as any).id;
+        (token as any).role = (user as any).role;
+        (token as any).onboardingCompleted = (user as any).onboardingCompleted;
       }
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = String(token.id);
-        session.user.role = (token.role ?? 'TENANT') as 'OWNER' | 'TENANT' | 'SUPERADMIN';
-        session.user.onboardingCompleted = token.onboardingCompleted;
+        (session.user as any).id = String((token as any).id);
+        (session.user as any).role = (token as any).role;
+        (session.user as any).onboardingCompleted = (token as any).onboardingCompleted;
       }
       return session;
     },
-    async signIn({ user, account }) {
-      if (account?.provider === 'google') {
-        if (!user.email) {
-          return false;
-        }
 
+    async signIn({ user, account }) {
+      if (account?.provider === 'google' && user?.email) {
         try {
-          const existing = await getUserByEmail(user.email);
+          const existing = await getUserByEmail(user.email.toLowerCase());
           if (!existing) {
-            await updateUser(user.id, { onboardingCompleted: false });
+            await updateUser(String(user.id), { onboardingCompleted: false });
           }
-        } catch (error) {
-          console.error('[auth] Failed to sync Google user', error);
+        } catch (e) {
+          console.error('[auth] sync google error', e);
         }
       }
       return true;
     },
+
+    // ✅ Toujours respecter la destination si même origine
     async redirect({ url, baseUrl }) {
       try {
         const base = new URL(baseUrl);
         const target = new URL(url, base);
+
+        if (target.origin === base.origin) {
+          return target.toString(); // respecte callbackUrl (/fr/dashboard/owner|tenant)
+        }
+
+        // fallback: home localisée
         const locale = getLocaleFromPathname(target.pathname) ?? defaultLocale;
         base.pathname = `/${locale}`;
         base.search = '';
         base.hash = '';
         return base.toString();
-      } catch (error) {
-        console.error('[auth] Failed to compute redirect URL', error);
-        return `${baseUrl.replace(/\/+$/, '')}/${defaultLocale}`;
+      } catch (e) {
+        console.error('[auth] redirect error', e);
+        return baseUrl;
       }
     },
   },
 };
+
+console.log('[authOptions] loaded');

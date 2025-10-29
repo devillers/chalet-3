@@ -1,45 +1,47 @@
+// app/api/auth/signup/route.ts
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { signUpSchema } from '@/lib/validators/sign-up';
-import { createUser, getUserByEmail } from '@/lib/db/users';
-import { checkRateLimit, resetRateLimit } from '@/lib/auth/rateLimit';
+import { z } from 'zod';
 import { validateRequestCsrfToken } from '@/lib/auth/csrf';
+import { createUser, getUserByEmail, type UserRole } from '@/lib/db/users';
+
+const signUpSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+  confirmPassword: z.string().min(8),
+  role: z.enum(['OWNER', 'TENANT']),
+});
 
 export async function POST(request: Request) {
-  const identifier =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    request.headers.get('x-real-ip') ??
-    'signup-global';
-  const rateLimitKey = `signup:${identifier}`;
-  const rateStatus = checkRateLimit(rateLimitKey);
-  if (!rateStatus.allowed) {
-    return NextResponse.json(
-      { message: `Trop de tentatives. Réessayez dans ${rateStatus.retryAfter ?? 60}s.` },
-      { status: 429 },
-    );
+  const cookieStore = (await import('next/headers')).cookies();
+  const ok = validateRequestCsrfToken(request, await cookieStore);
+  if (!ok) return NextResponse.json({ message: 'CSRF invalide.' }, { status: 403 });
+
+  let parsed: z.infer<typeof signUpSchema>;
+  try {
+    parsed = signUpSchema.parse(await request.json());
+  } catch {
+    return NextResponse.json({ message: 'Requête invalide.' }, { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  if (!validateRequestCsrfToken(request, cookieStore)) {
-    return NextResponse.json({ message: 'Jeton CSRF manquant ou invalide.' }, { status: 403 });
+  if (parsed.password !== parsed.confirmPassword) {
+    return NextResponse.json({ message: 'Les mots de passe ne correspondent pas.' }, { status: 400 });
   }
 
-  const payload = await request.json();
-  const parsed = signUpSchema.safeParse(payload);
+  const existing = await getUserByEmail(parsed.email.toLowerCase());
+  if (existing) return NextResponse.json({ message: 'Un compte existe déjà avec cet email.' }, { status: 409 });
 
-  if (!parsed.success) {
-    return NextResponse.json({ message: 'Données invalides', issues: parsed.error.issues }, { status: 400 });
+  try {
+    const user = await createUser({
+      name: parsed.name,
+      email: parsed.email,
+      password: parsed.password,
+      role: parsed.role as UserRole,
+      onboardingCompleted: true, // ✅ pour autoriser l’accès direct au dashboard
+    });
+    return NextResponse.json({ id: user._id, email: user.email, role: user.role }, { status: 201 });
+  } catch (e) {
+    console.error('[signup] failed', e);
+    return NextResponse.json({ message: 'Création impossible.' }, { status: 500 });
   }
-
-  const { email, password, name, role } = parsed.data;
-
-  const existing = await getUserByEmail(email);
-  if (existing) {
-    return NextResponse.json({ message: 'Un compte existe déjà avec cet email.' }, { status: 409 });
-  }
-
-  await createUser({ name, email, password, role });
-  resetRateLimit(rateLimitKey);
-
-  return NextResponse.json({ message: 'Compte créé' }, { status: 201 });
 }

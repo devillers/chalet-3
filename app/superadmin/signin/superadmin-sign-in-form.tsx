@@ -1,8 +1,9 @@
+// app/superadmin/signin/superadmin-sign-in-form.tsx
 'use client';
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signInSchema } from '@/lib/validators/sign-in';
@@ -12,9 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { defaultLocale, locales, type Locale } from '@/lib/i18n';
 
-const schema = signInSchema.extend({
-  role: signInSchema.shape.role.default('SUPERADMIN'),
-}).pick({ email: true, password: true }).extend({ role: signInSchema.shape.role });
+const schema = signInSchema
+  .extend({ role: signInSchema.shape.role.default('SUPERADMIN') })
+  .pick({ email: true, password: true })
+  .extend({ role: signInSchema.shape.role });
 
 type SuperAdminSignInValues = {
   email: string;
@@ -24,17 +26,14 @@ type SuperAdminSignInValues = {
 
 export default function SuperAdminSignInForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resolveLocale = (): Locale => {
-    if (typeof window === 'undefined') {
-      return defaultLocale;
-    }
-    const [ , firstSegment ] = window.location.pathname.split('/');
-    if (firstSegment && locales.includes(firstSegment as Locale)) {
-      return firstSegment as Locale;
-    }
+    if (typeof window === 'undefined') return defaultLocale;
+    const [, first] = window.location.pathname.split('/');
+    if (first && locales.includes(first as Locale)) return first as Locale;
     return defaultLocale;
   };
 
@@ -46,10 +45,15 @@ export default function SuperAdminSignInForm() {
   const onSubmit = form.handleSubmit(async (values) => {
     setError(null);
     setIsSubmitting(true);
+
     const origin =
-      typeof window !== 'undefined' ? window.location.origin : process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+      typeof window !== 'undefined'
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
     const locale = resolveLocale();
-    const defaultTarget = `/${locale}`;
+
+    // Après login superadmin, aller directement sur le portail superadmin
+    const defaultTarget = `/${locale}/superadmin`;
     let targetUrl = defaultTarget;
 
     try {
@@ -63,28 +67,29 @@ export default function SuperAdminSignInForm() {
       redirect: false,
       callbackUrl: targetUrl,
     });
+
     setIsSubmitting(false);
 
     if (response?.error) {
-      if (response.error === 'ACCESS_RESTRICTED') {
-        setError('Accès réservé aux SuperAdmins.');
-        return;
-      }
-      setError('Connexion impossible. Veuillez vérifier vos identifiants.');
+      setError(
+        response.error === 'CredentialsSignin'
+          ? 'Identifiants invalides ou rôle incorrect.'
+          : 'Connexion impossible. Veuillez vérifier vos identifiants.'
+      );
       return;
     }
 
-    if (response?.ok) {
-      const destination = response.url ?? targetUrl;
-      try {
-        const parsed = new URL(destination, origin);
-        const relative = `${parsed.pathname}${parsed.search}${parsed.hash}`;
-        router.push(relative);
-      } catch {
-        router.push('/superadmin');
-      }
+    const destination = response?.url ?? targetUrl;
+    try {
+      const parsed = new URL(destination, origin);
+      const relative = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+      router.push(relative);
+    } catch {
+      router.push(`/${locale}/superadmin`);
     }
   });
+
+  const nextAuthError = params?.get('error');
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16">
@@ -124,7 +129,16 @@ export default function SuperAdminSignInForm() {
                   </FormItem>
                 )}
               />
-              {error ? <p className="text-sm text-red-400">{error}</p> : null}
+
+              {(error || nextAuthError) ? (
+                <p className="text-sm text-red-400">
+                  {error ??
+                    (nextAuthError === 'CredentialsSignin'
+                      ? 'Identifiants invalides ou rôle incorrect.'
+                      : 'Connexion impossible.')}
+                </p>
+              ) : null}
+
               <input type="hidden" value="SUPERADMIN" {...form.register('role')} />
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? 'Connexion...' : 'Se connecter'}

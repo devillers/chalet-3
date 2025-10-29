@@ -1,55 +1,64 @@
 // lib/db/users.ts
-
 import bcrypt from 'bcryptjs';
-import { connectMongo } from './mongoose';
-import { UserModel, type UserDocument, type UserRole } from './models/user';
+import type { LeanDocumentBase } from './mongoose';
+import { Schema, model } from './mongoose';
 
-export async function createUser(data: {
+export type UserRole = 'OWNER' | 'TENANT' | 'SUPERADMIN';
+
+export interface IUser extends LeanDocumentBase {
   name: string;
   email: string;
-  password: string;
-  role: Exclude<UserRole, 'SUPERADMIN'> | 'SUPERADMIN';
-  onboardingCompleted?: boolean;
-  googleId?: string;
-}): Promise<UserDocument> {
-  await connectMongo();
-  const passwordHash = await bcrypt.hash(data.password, 12);
+  passwordHash: string;
+  role: UserRole;
+  onboardingCompleted: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
-  return UserModel.create({
-    name: data.name,
-    email: data.email.toLowerCase(),
-    role: data.role,
+const UserSchema = new Schema<IUser>(
+  {
+    _id: { type: String }, // généré par le wrapper (crypto.randomUUID)
+    name: { type: String, default: '' },
+    email: { type: String, required: true },
+    passwordHash: { type: String, required: true },
+    role: { type: String, required: true },
+    onboardingCompleted: { type: Boolean, default: false },
+    createdAt: { type: Date },
+    updatedAt: { type: Date },
+  },
+  { timestamps: true }
+);
+
+// Index unique email (ton wrapper crée les indexes au premier accès)
+UserSchema.index({ email: 1 }, { unique: true });
+
+const User = model<IUser>('users', UserSchema);
+
+export async function getUserByEmail(email: string): Promise<IUser | null> {
+  return User.findOne({ email: email.toLowerCase() });
+}
+
+export async function createUser(input: {
+  name?: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  onboardingCompleted?: boolean;
+}): Promise<IUser> {
+  const passwordHash = await bcrypt.hash(input.password, 10);
+  return User.create({
+    name: input.name ?? '',
+    email: input.email.toLowerCase(),
     passwordHash,
-    onboardingCompleted: data.onboardingCompleted ?? false, // ✅ assure toujours un booléen
-    googleId: data.googleId ?? '', // ✅ assure toujours une string
+    role: input.role,
+    onboardingCompleted: !!input.onboardingCompleted,
   });
 }
 
-export async function getUserById(id: string): Promise<UserDocument | null> {
-  await connectMongo();
-  return UserModel.findById(id);
+export async function updateUser(id: string, update: Partial<IUser>): Promise<void> {
+  await User.findByIdAndUpdate(id, update, { new: true });
 }
 
-export async function getUserByEmail(email: string): Promise<UserDocument | null> {
-  await connectMongo();
-  return UserModel.findOne({ email: email.toLowerCase() });
-}
-
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
-}
-
-export async function updateUser(
-  id: string,
-  updates: Partial<Pick<UserDocument, 'name' | 'onboardingCompleted' | 'passwordHash' | 'role'>>
-): Promise<UserDocument | null> {
-  await connectMongo();
-  return UserModel.findByIdAndUpdate(id, updates, { new: true });
-}
-
-export async function listUsers(
-  filter?: Partial<Pick<UserDocument, 'role'>>
-): Promise<UserDocument[]> {
-  await connectMongo();
-  return UserModel.find(filter);
+export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(plain, hash);
 }
