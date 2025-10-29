@@ -27,7 +27,13 @@ const providers: NextAuthOptions['providers'] = [
           throw new Error(`Too many attempts. Retry after ${rate.retryAfter ?? 60}s.`);
         }
 
-        const user = await getUserByEmail(normalizedEmail);
+        let user = null;
+        try {
+          user = await getUserByEmail(normalizedEmail);
+        } catch (error) {
+          console.error('[auth] Failed to fetch user during sign-in', error);
+        }
+
         if (user) {
           const valid = await verifyPassword(password, user.passwordHash);
           if (!valid) {
@@ -128,9 +134,14 @@ export const authOptions: NextAuthOptions = {
         if (!user.email) {
           return false;
         }
-        const existing = await getUserByEmail(user.email);
-        if (!existing) {
-          await updateUser(user.id, { onboardingCompleted: false });
+
+        try {
+          const existing = await getUserByEmail(user.email);
+          if (!existing) {
+            await updateUser(user.id, { onboardingCompleted: false });
+          }
+        } catch (error) {
+          console.error('[auth] Failed to sync Google user', error);
         }
       }
       return true;
