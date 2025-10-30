@@ -32,6 +32,13 @@ const isModalOpen = (modalParam: string | string[] | undefined): boolean => {
   return modalParam === '1';
 };
 
+const allowCompletedAccess = (modeParam: string | string[] | undefined): boolean => {
+  if (Array.isArray(modeParam)) {
+    return modeParam.includes('edit');
+  }
+  return modeParam === 'edit';
+};
+
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -42,15 +49,17 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
     redirect('/superadmin');
   }
 
-  if (session.user.onboardingCompleted) {
+  const resolvedSearchParams = await resolveSearchParams(searchParams);
+  const canBypassCompletionCheck = allowCompletedAccess(resolvedSearchParams.mode);
+
+  if (session.user.onboardingCompleted && !canBypassCompletionCheck) {
     const destination = `/${defaultLocale}/dashboard/${role === 'OWNER' ? 'owner' : 'tenant'}`;
     redirect(destination);
   }
 
   const draft = await getOnboardingDraft(session.user.id);
 
-  const resolvedSearchParams = await resolveSearchParams(searchParams);
-  const openModal = isModalOpen(resolvedSearchParams.modal);
+  const openModal = canBypassCompletionCheck || isModalOpen(resolvedSearchParams.modal);
 
   return (
     <Suspense fallback={<div className="p-8">Chargement...</div>}>

@@ -42,6 +42,11 @@ export default async function OwnerDashboardPage({ params }: OwnerDashboardPageP
           Retrouvez ici l’ensemble de vos indicateurs clés, vos demandes entrantes et les actions à planifier pour vos
           propriétés.
         </p>
+        <div className="flex flex-wrap gap-3 pt-4">
+          <Button asChild>
+            <Link href="/onboarding?mode=edit&modal=1">Mettre à jour mon onboarding</Link>
+          </Button>
+        </div>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-3">
