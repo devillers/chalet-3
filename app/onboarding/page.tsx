@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { authOptions } from '@/lib/auth/config';
 import OnboardingClient from './onboarding-client';
 import { getOnboardingDraft } from '@/lib/db/onboarding';
+import { defaultLocale } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: 'Onboarding — Chalet Manager',
@@ -39,6 +40,11 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   const role = session.user.role;
   if (role === 'SUPERADMIN') {
     redirect('/superadmin');
+  }
+
+  if (session.user.onboardingCompleted) {
+    const destination = `/${defaultLocale}/dashboard/${role === 'OWNER' ? 'owner' : 'tenant'}`;
+    redirect(destination);
   }
 
   const draft = await getOnboardingDraft(session.user.id);
