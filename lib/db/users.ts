@@ -90,6 +90,36 @@ export async function upsertOwnerProfile(
   );
 }
 
+export async function upsertTenantProfile(
+  userId: string,
+  profile: { firstName: string; lastName: string; phone?: string },
+): Promise<UserDocument | null> {
+  await connectMongo();
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    console.error('Impossible de synchroniser le profil locataire : utilisateur introuvable.', {
+      userId,
+    });
+    return null;
+  }
+
+  const trimmedName = `${profile.firstName} ${profile.lastName}`.trim();
+
+  return UserModel.findByIdAndUpdate(
+    userId,
+    {
+      name: trimmedName.length > 0 ? trimmedName : user.name,
+      profile: {
+        ...user.profile,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        phone: profile.phone,
+      },
+    },
+    { new: true },
+  );
+}
+
 export async function listUsers(
   filter?: Partial<Pick<UserDocument, 'role'>>
 ): Promise<UserDocument[]> {

@@ -226,6 +226,10 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
 
     const payload = { ...currentValues, review: { status: 'published' as const } };
 
+    console.log('Bouton "Publier" cliqué : enregistrement des données en base de données.', {
+      payloadKeys: Object.keys(payload ?? {}),
+    });
+
     try {
       console.debug('Tentative de publication de l\'onboarding propriétaire.', {
         payloadKeys: Object.keys(payload ?? {}),

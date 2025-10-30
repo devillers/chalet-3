@@ -2,8 +2,14 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { completeOnboarding, upsertOnboardingDraft } from '@/lib/db/onboarding';
-import { upsertOwnerProfile } from '@/lib/db/users';
-import { ownerOnboardingSchema, tenantOnboardingSchema, type OwnerOnboardingInput } from '@/lib/validators/onboarding';
+import { upsertOwnerProfile, upsertTenantProfile } from '@/lib/db/users';
+import { upsertTenantPreferences } from '@/lib/db/tenant-preferences';
+import {
+  ownerOnboardingSchema,
+  tenantOnboardingSchema,
+  type OwnerOnboardingInput,
+  type TenantOnboardingInput,
+} from '@/lib/validators/onboarding';
 import { defaultLocale } from '@/lib/i18n';
 import { PropertyModel } from '@/lib/db/models/property';
 
@@ -186,6 +192,17 @@ export async function POST(request: Request) {
       slug: propertyDocument.slug,
     };
     redirectTo = `/${defaultLocale}/portfolio/${propertyDocument.slug}`;
+  } else {
+    const tenantData = parsed.data as TenantOnboardingInput;
+
+    await upsertTenantProfile(session.user.id, tenantData.profile);
+
+    await upsertTenantPreferences(session.user.id, {
+      city: tenantData.search.city,
+      capacityMin: tenantData.search.capacity,
+      budgetMax: tenantData.preferences?.budget,
+      amenities: tenantData.preferences?.amenities ?? [],
+    });
   }
 
   await completeOnboarding(session.user.id);
