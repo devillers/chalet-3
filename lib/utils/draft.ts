@@ -45,7 +45,7 @@ export const sanitizeDraft = (value: unknown): unknown => {
   return value;
 };
 
-export const mergeDraftInto = <T>(target: T, source: DeepPartial<T>): T => {
+export const mergeDraftInto = <T extends Record<string, unknown>>(target: T, source: DeepPartial<T>): T => {
   if (!isPlainObject(source)) {
     return target;
   }
@@ -55,20 +55,23 @@ export const mergeDraftInto = <T>(target: T, source: DeepPartial<T>): T => {
       continue;
     }
 
-    const targetValue = (target as Record<string, unknown>)[key];
+    const targetValue = target[key];
 
     if (Array.isArray(value)) {
-      (target as Record<string, unknown>)[key] = value as unknown as T[keyof T];
+      target[key] = value as unknown as T[keyof T];
       continue;
     }
 
     if (isPlainObject(value)) {
-      const nextTarget = isPlainObject(targetValue) ? { ...targetValue } : {};
-      (target as Record<string, unknown>)[key] = mergeDraftInto(nextTarget, value) as unknown as T[keyof T];
+      const nextTarget: Record<string, unknown> = isPlainObject(targetValue) ? { ...targetValue } : {};
+      target[key] = mergeDraftInto<Record<string, unknown>>(
+        nextTarget,
+        value as DeepPartial<Record<string, unknown>>
+      ) as unknown as T[keyof T];
       continue;
     }
 
-    (target as Record<string, unknown>)[key] = value as unknown as T[keyof T];
+    target[key] = value as unknown as T[keyof T];
   }
 
   return target;
