@@ -41,6 +41,11 @@ export default async function TenantDashboardPage({ params }: TenantDashboardPag
         <p className="text-muted-foreground">
           Suivez vos séjours à venir, préparez votre arrivée et échangez facilement avec nos équipes dédiées.
         </p>
+        <div className="flex flex-wrap gap-3 pt-4">
+          <Button asChild>
+            <Link href="/onboarding?mode=edit&modal=1">Actualiser mon onboarding</Link>
+          </Button>
+        </div>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-3">
