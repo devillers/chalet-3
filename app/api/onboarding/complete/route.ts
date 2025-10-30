@@ -4,6 +4,25 @@ import { authOptions } from '@/lib/auth/config';
 import { completeOnboarding, upsertOnboardingDraft } from '@/lib/db/onboarding';
 import { ownerOnboardingSchema, tenantOnboardingSchema } from '@/lib/validators/onboarding';
 import { defaultLocale } from '@/lib/i18n';
+import { PropertyModel } from '@/lib/db/models/property';
+
+function slugify(input: string): string {
+  return input
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+    .replace(/--+/g, '-');
+}
+
+async function ensureUniqueSlug(base: string): Promise<string> {
+  const slug = slugify(base);
+  const existing = await PropertyModel.findOne({ slug });
+  if (!existing) return slug;
+  const candidate = `${slug}-${Date.now().toString(36)}`;
+  return candidate;
+}
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -57,6 +76,68 @@ export async function POST(request: Request) {
     userId: session.user.id,
     draftId: draft?._id?.toString?.(),
   });
+  // If owner: create or update a Property based on onboarding data
+  if (role === 'OWNER') {
+    const ownerData = parsed.data;
+    const prop = ownerData.property!;
+    const photos = ownerData.photos ?? [];
+    const season = ownerData.season;
+
+    const slug = await ensureUniqueSlug(prop.title);
+    const hero = photos.find((p) => p.isHero) ?? photos[0];
+
+    const images = photos.map((p) => ({
+      publicId: p.publicId,
+      url: p.url,
+      width: p.width ?? 0,
+      height: p.height ?? 0,
+      format: p.format ?? 'auto',
+      bytes: p.bytes ?? 0,
+      alt: p.alt,
+      isHero: Boolean(p.isHero),
+    }));
+
+    const existing = await PropertyModel.findOne({ slug });
+    if (existing) {
+      await PropertyModel.findByIdAndUpdate(
+        existing._id,
+        {
+          title: prop.title,
+          slug,
+          status: 'published',
+          publishedAt: existing.publishedAt ?? new Date(),
+          ownerId: session.user.id,
+          regNumber: prop.regNumber ?? existing.regNumber,
+          capacity: prop.capacity ?? existing.capacity,
+          images,
+          heroImageId: hero?.publicId ?? existing.heroImageId,
+          seasonalPeriod: season ? { start: new Date(season.start), end: new Date(season.end) } : existing.seasonalPeriod,
+          address: {
+            ...(existing.address ?? {}),
+            city: prop.city,
+          },
+        },
+        { new: true },
+      );
+    } else {
+      await PropertyModel.create({
+        title: prop.title,
+        slug,
+        previousSlugs: [],
+        status: 'published',
+        publishedAt: new Date(),
+        ownerId: session.user.id,
+        regNumber: prop.regNumber ?? '',
+        capacity: prop.capacity,
+        images,
+        address: { city: prop.city },
+        externalCalendars: [],
+        blocks: [],
+        heroImageId: hero?.publicId,
+      });
+    }
+  }
+
   await completeOnboarding(session.user.id);
   console.info('Onboarding finalisé et brouillon nettoyé.', {
     userId: session.user.id,

@@ -469,7 +469,14 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
               <FormItem>
                 <FormLabel>Prénom</FormLabel>
                 <FormControl>
-                  <Input placeholder="Jean" {...field} />
+                  <Input
+                    placeholder="Jean"
+                    required
+                    minLength={1}
+                    autoComplete="given-name"
+                    aria-invalid={!!form.formState.errors.profile?.firstName}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -482,7 +489,14 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
               <FormItem>
                 <FormLabel>Nom</FormLabel>
                 <FormControl>
-                  <Input placeholder="Dupont" {...field} />
+                  <Input
+                    placeholder="Dupont"
+                    required
+                    minLength={1}
+                    autoComplete="family-name"
+                    aria-invalid={!!form.formState.errors.profile?.lastName}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -495,7 +509,13 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
               <FormItem className="sm:col-span-2">
                 <FormLabel>Téléphone</FormLabel>
                 <FormControl>
-                  <Input placeholder="+33 6 12 34 56 78" {...field} />
+                  <Input
+                    placeholder="+33 6 12 34 56 78"
+                    inputMode="tel"
+                    minLength={6}
+                    aria-invalid={!!form.formState.errors.profile?.phone}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -513,7 +533,13 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
               <FormItem>
                 <FormLabel>Nom du logement</FormLabel>
                 <FormControl>
-                  <Input placeholder="Chalet Alpin" {...field} />
+                  <Input
+                    placeholder="Chalet Alpin"
+                    required
+                    minLength={3}
+                    aria-invalid={!!form.formState.errors.property?.title}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -527,7 +553,13 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
                 <FormItem>
                   <FormLabel>Ville</FormLabel>
                   <FormControl>
-                    <Input placeholder="Chamonix" {...field} />
+                  <Input
+                    placeholder="Chamonix"
+                    required
+                    minLength={2}
+                    aria-invalid={!!form.formState.errors.property?.city}
+                    {...field}
+                  />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -540,7 +572,15 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
                 <FormItem>
                   <FormLabel>Capacité</FormLabel>
                   <FormControl>
-                    <Input type="number" min={1} {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
+                    <Input
+                      type="number"
+                      required
+                      min={1}
+                      step={1}
+                      aria-invalid={!!form.formState.errors.property?.capacity}
+                      {...field}
+                      onChange={(event) => field.onChange(Number(event.target.value))}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -632,7 +672,14 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
               <FormItem>
                 <FormLabel>Tarif nuitée (€)</FormLabel>
                 <FormControl>
-                  <Input type="number" min={0} step="1" {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
+                  <Input
+                    type="number"
+                    min={0}
+                    step="1"
+                    aria-invalid={!!form.formState.errors.pricing?.nightly}
+                    {...field}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

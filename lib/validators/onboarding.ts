@@ -1,21 +1,23 @@
 import { z } from 'zod';
 
 const baseProfileSchema = z.object({
-  firstName: z.string().min(1, 'Prénom requis'),
-  lastName: z.string().min(1, 'Nom requis'),
-  phone: z.string().min(6).optional(),
+  firstName: z.string().trim().min(1, 'Prénom requis'),
+  lastName: z.string().trim().min(1, 'Nom requis'),
+  // Accept empty string as undefined, but validate if present
+  phone: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.string().trim().min(6, 'Téléphone invalide').optional(),
+  ),
 });
 
 export const ownerOnboardingSchema = z.object({
   profile: baseProfileSchema,
-  property: z
-    .object({
-      title: z.string().min(3),
-      city: z.string().min(2),
-      capacity: z.number().min(1),
-      regNumber: z.string().optional(),
-    })
-    .optional(),
+  property: z.object({
+    title: z.string().trim().min(3, 'Nom du logement trop court'),
+    city: z.string().trim().min(2, 'Ville trop courte'),
+    capacity: z.number().min(1, 'Capacité minimale 1'),
+    regNumber: z.string().trim().optional(),
+  }), // required
   photos: z
     .array(
       z.object({
@@ -27,7 +29,7 @@ export const ownerOnboardingSchema = z.object({
         height: z.number().min(0).optional(),
         format: z.string().optional(),
         bytes: z.number().min(0).optional(),
-      })
+      }),
     )
     .optional(),
   season: z
@@ -53,7 +55,7 @@ export const ownerOnboardingSchema = z.object({
 
 export const tenantOnboardingSchema = z.object({
   profile: baseProfileSchema,
-  search: z.object({ city: z.string().min(2), capacity: z.number().min(1) }).optional(),
+  search: z.object({ city: z.string().trim().min(2, 'Ville trop courte'), capacity: z.number().min(1, 'Capacité minimale 1') }),
   documents: z.array(z.object({ name: z.string(), url: z.string().url() })).optional(),
   preferences: z
     .object({
