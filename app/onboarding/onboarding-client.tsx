@@ -211,17 +211,29 @@ function OwnerOnboarding({ openModal, draft, onOpenChange }: OwnerProps) {
     const payload = { ...form.getValues(), review: { status: 'published' as const } };
 
     try {
+      console.debug('Tentative de publication de l\'onboarding propriétaire.', {
+        payloadKeys: Object.keys(payload ?? {}),
+      });
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
       const data = (await response.json().catch(() => null)) as { redirectTo?: string; message?: string } | null;
       if (!response.ok) {
+        console.error('La publication du brouillon a échoué.', {
+          status: response.status,
+          statusText: response.statusText,
+          body: data,
+        });
         setError(data?.message ?? 'Impossible de finaliser la publication.');
         return;
       }
 
+      console.debug('Publication du brouillon réussie.', {
+        redirectTo: data?.redirectTo,
+      });
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
     } catch (error_) {
@@ -330,17 +342,29 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
     const payload = { ...form.getValues(), review: { status: 'ready' as const } };
 
     try {
+      console.debug("Tentative de finalisation de l'onboarding locataire.", {
+        payloadKeys: Object.keys(payload ?? {}),
+      });
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
       const data = (await response.json().catch(() => null)) as { redirectTo?: string; message?: string } | null;
       if (!response.ok) {
+        console.error("La finalisation de l'onboarding locataire a échoué.", {
+          status: response.status,
+          statusText: response.statusText,
+          body: data,
+        });
         setError(data?.message ?? "Impossible de finaliser l'onboarding.");
         return;
       }
 
+      console.debug("Onboarding locataire finalisé avec succès.", {
+        redirectTo: data?.redirectTo,
+      });
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/tenant`;
       router.push(destination);
     } catch (error_) {
@@ -868,17 +892,26 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
     lastSerializedDraft.current = serialized;
 
     const timeout = setTimeout(() => {
+      console.debug('Déclenchement de la sauvegarde automatique du brouillon.', {
+        role,
+        payloadKeys: Object.keys(parsed.data ?? {}),
+      });
       void fetch('/api/onboarding/draft', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: serialized,
       })
         .then((response) => {
           if (!response.ok) {
-            console.error('Échec de la sauvegarde automatique du brouillon');
+            console.error('Échec de la sauvegarde automatique du brouillon', {
+              status: response.status,
+              statusText: response.statusText,
+            });
             lastSerializedDraft.current = null;
             return;
           }
+          console.debug('Sauvegarde automatique du brouillon réussie.');
           onSaved?.(new Date());
         })
         .catch((error) => {
