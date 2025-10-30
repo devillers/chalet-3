@@ -67,6 +67,11 @@ export interface Model<T extends LeanDocumentBase> {
   findOne(filter: Partial<T>): Promise<T | null>;
   findById(id: string): Promise<T | null>;
   findByIdAndUpdate(id: string, update: Partial<T>, options?: { new?: boolean }): Promise<T | null>;
+  findOneAndUpdate(
+    filter: Partial<T>,
+    update: Partial<T>,
+    options?: { new?: boolean; upsert?: boolean },
+  ): Promise<T | null>;
   findByIdAndDelete(id: string): Promise<T | null>;
   countDocuments(filter?: Partial<T>): Promise<number>;
 }
@@ -223,6 +228,45 @@ export function model<T extends LeanDocumentBase>(name: string, schema: Schema<T
     return (value as T | null) ?? null;
   }
 
+  async function findOneAndUpdate(
+    filter: Partial<T>,
+    update: Partial<T>,
+    options?: { new?: boolean; upsert?: boolean }
+  ): Promise<T | null> {
+    const collection = await getCollection(name, schema);
+    const now = new Date();
+
+    const { _id: providedId, createdAt: providedCreatedAt, ...rest } = update as Record<string, unknown>;
+
+    const setPayload: Record<string, unknown> = {
+      ...rest,
+      updatedAt: now,
+    };
+
+    const updateDocument: Record<string, unknown> = {
+      $set: setPayload,
+    };
+
+    if (options?.upsert) {
+      updateDocument.$setOnInsert = {
+        _id: (providedId as string | undefined) ?? crypto.randomUUID(),
+        createdAt: (providedCreatedAt as Date | undefined) ?? now,
+      };
+    }
+
+    const result = await collection.findOneAndUpdate(
+      filter as Filter<MongoDocument<T>>,
+      updateDocument as any,
+      {
+        returnDocument: options?.new === false ? 'before' : 'after',
+        upsert: options?.upsert ?? false,
+      }
+    );
+
+    const value = result?.value ?? null;
+    return (value as T | null) ?? null;
+  }
+
   async function findByIdAndDelete(id: string): Promise<T | null> {
     const collection = await getCollection(name, schema);
     const result = await collection.findOneAndDelete({ _id: id } as Filter<MongoDocument<T>>);
@@ -240,6 +284,7 @@ export function model<T extends LeanDocumentBase>(name: string, schema: Schema<T
     findOne,
     findById,
     findByIdAndUpdate,
+    findOneAndUpdate,
     findByIdAndDelete,
     countDocuments,
   };
