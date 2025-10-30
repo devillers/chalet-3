@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, type UseFormReturn, type UseFormWatch } from 'react-hook-form';
+import { useForm, type FieldPath, type UseFormReturn, type UseFormWatch } from 'react-hook-form';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -29,28 +29,92 @@ interface OnboardingClientProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-interface StepConfig {
+interface StepConfigBase {
   id: string;
   label: string;
   description: string;
 }
 
-const OWNER_STEPS: StepConfig[] = [
-  { id: 'profile', label: 'Profil', description: 'Vos informations personnelles' },
-  { id: 'property', label: 'Logement', description: 'Créez le brouillon du logement' },
-  { id: 'photos', label: 'Photos', description: 'Téléverser vos images via Cloudinary' },
-  { id: 'season', label: 'Saisonnalité', description: 'Configurez les périodes disponibles' },
-  { id: 'pricing', label: 'Tarifs', description: 'Définissez vos prix et frais' },
-  { id: 'compliance', label: 'Conformité', description: 'Informations légales' },
-  { id: 'review', label: 'Revue', description: 'Publier ou sauvegarder en brouillon' },
+interface StepConfig<TFieldValues> extends StepConfigBase {
+  fields: FieldPath<TFieldValues>[];
+}
+
+const OWNER_STEPS: StepConfig<OwnerOnboardingInput>[] = [
+  {
+    id: 'profile',
+    label: 'Profil',
+    description: 'Vos informations personnelles',
+    fields: ['profile.firstName', 'profile.lastName', 'profile.phone'],
+  },
+  {
+    id: 'property',
+    label: 'Logement',
+    description: 'Créez le brouillon du logement',
+    fields: ['property.title', 'property.city', 'property.capacity', 'property.regNumber'],
+  },
+  {
+    id: 'photos',
+    label: 'Photos',
+    description: 'Téléverser vos images via Cloudinary',
+    fields: ['photos'],
+  },
+  {
+    id: 'season',
+    label: 'Saisonnalité',
+    description: 'Configurez les périodes disponibles',
+    fields: ['season.start', 'season.end'],
+  },
+  {
+    id: 'pricing',
+    label: 'Tarifs',
+    description: 'Définissez vos prix et frais',
+    fields: ['pricing.nightly', 'pricing.cleaningFee'],
+  },
+  {
+    id: 'compliance',
+    label: 'Conformité',
+    description: 'Informations légales',
+    fields: ['compliance.hasInsurance', 'compliance.acceptsTerms'],
+  },
+  {
+    id: 'review',
+    label: 'Revue',
+    description: 'Publier ou sauvegarder en brouillon',
+    fields: [],
+  },
 ];
 
-const TENANT_STEPS: StepConfig[] = [
-  { id: 'profile', label: 'Profil', description: 'Informations personnelles' },
-  { id: 'search', label: 'Recherche', description: 'Ville cible et critères' },
-  { id: 'documents', label: 'Documents', description: 'Téléversez vos justificatifs' },
-  { id: 'preferences', label: 'Préférences', description: 'Personnalisez votre expérience' },
-  { id: 'review', label: 'Résumé', description: 'Vérifiez et finalisez' },
+const TENANT_STEPS: StepConfig<TenantOnboardingInput>[] = [
+  {
+    id: 'profile',
+    label: 'Profil',
+    description: 'Informations personnelles',
+    fields: ['profile.firstName', 'profile.lastName', 'profile.phone'],
+  },
+  {
+    id: 'search',
+    label: 'Recherche',
+    description: 'Ville cible et critères',
+    fields: ['search.city', 'search.capacity'],
+  },
+  {
+    id: 'documents',
+    label: 'Documents',
+    description: 'Téléversez vos justificatifs',
+    fields: ['documents'],
+  },
+  {
+    id: 'preferences',
+    label: 'Préférences',
+    description: 'Personnalisez votre expérience',
+    fields: ['preferences.amenities', 'preferences.budget'],
+  },
+  {
+    id: 'review',
+    label: 'Résumé',
+    description: 'Vérifiez et finalisez',
+    fields: [],
+  },
 ];
 
 const createOwnerDefaultValues = (): OwnerOnboardingInput => ({
@@ -124,7 +188,8 @@ function OwnerOnboarding({ openModal, draft, onOpenChange }: OwnerProps) {
   const step = OWNER_STEPS[currentStep];
 
   const next = async () => {
-    const valid = await form.trigger();
+    const fieldsToValidate = step.fields;
+    const valid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true;
     if (!valid) {
       return;
     }
@@ -242,7 +307,8 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   const step = TENANT_STEPS[currentStep];
 
   const next = async () => {
-    const valid = await form.trigger();
+    const fieldsToValidate = step.fields;
+    const valid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true;
     if (!valid) {
       return;
     }
@@ -331,7 +397,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
 }
 
 interface StepperProps {
-  steps: StepConfig[];
+  steps: StepConfigBase[];
   currentStep: number;
 }
 
