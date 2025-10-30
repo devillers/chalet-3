@@ -1,16 +1,12 @@
+import { connectMongo } from './mongoose';
+import { OnboardingDraftModel, type OnboardingDraftDocument } from './models/onboarding-draft';
 import { updateUser } from './users';
 
-export interface OnboardingDraft {
-  userId: string;
-  role: 'OWNER' | 'TENANT';
-  data: Record<string, unknown>;
-  updatedAt: Date;
-}
-
-const drafts = new Map<string, OnboardingDraft>();
+export type OnboardingDraft = OnboardingDraftDocument;
 
 export async function getOnboardingDraft(userId: string): Promise<OnboardingDraft | null> {
-  return drafts.get(userId) ?? null;
+  await connectMongo();
+  return OnboardingDraftModel.findOne({ userId });
 }
 
 export async function upsertOnboardingDraft(
@@ -18,16 +14,33 @@ export async function upsertOnboardingDraft(
   role: 'OWNER' | 'TENANT',
   data: Record<string, unknown>,
 ): Promise<OnboardingDraft> {
-  const draft: OnboardingDraft = { userId, role, data, updatedAt: new Date() };
-  drafts.set(userId, draft);
-  return draft;
+  await connectMongo();
+
+  const existingDraft = await OnboardingDraftModel.findOne({ userId });
+  if (existingDraft) {
+    const updated = await OnboardingDraftModel.findByIdAndUpdate(
+      existingDraft._id,
+      { role, data },
+      { new: true },
+    );
+    if (updated) {
+      return updated;
+    }
+  }
+
+  return OnboardingDraftModel.create({ userId, role, data });
 }
 
 export async function clearOnboardingDraft(userId: string): Promise<void> {
-  drafts.delete(userId);
+  await connectMongo();
+  const draft = await OnboardingDraftModel.findOne({ userId });
+  if (draft) {
+    await OnboardingDraftModel.findByIdAndDelete(draft._id);
+  }
 }
 
 export async function completeOnboarding(userId: string): Promise<void> {
   await updateUser(userId, { onboardingCompleted: true });
-  drafts.delete(userId);
+  await clearOnboardingDraft(userId);
 }
+
