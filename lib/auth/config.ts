@@ -46,6 +46,9 @@ const providers: NextAuthOptions['providers'] = [
             name: user.name,
             role: user.role,
             onboardingCompleted: user.onboardingCompleted,
+            primaryPropertyId: user.primaryPropertyId,
+            ownedPropertyIds: user.ownedPropertyIds,
+            profile: user.profile,
           };
         }
 
@@ -70,6 +73,9 @@ const providers: NextAuthOptions['providers'] = [
             name: env.ADMIN_SEED_NAME ?? 'Super Admin',
             role: 'SUPERADMIN',
             onboardingCompleted: true,
+            primaryPropertyId: undefined,
+            ownedPropertyIds: [],
+            profile: undefined,
           };
         }
 
@@ -112,6 +118,9 @@ export const authOptions: NextAuthOptions = {
         token.id = (user as { id: string }).id;
         token.role = (user as { role: 'OWNER' | 'TENANT' | 'SUPERADMIN' }).role;
         token.onboardingCompleted = (user as { onboardingCompleted?: boolean }).onboardingCompleted;
+        token.primaryPropertyId = (user as { primaryPropertyId?: string }).primaryPropertyId;
+        token.ownedPropertyIds = (user as { ownedPropertyIds?: string[] }).ownedPropertyIds;
+        token.profile = (user as { profile?: { firstName: string; lastName: string; phone?: string } }).profile;
       }
       return token;
     },
@@ -120,6 +129,11 @@ export const authOptions: NextAuthOptions = {
         session.user.id = String(token.id);
         session.user.role = (token.role ?? 'TENANT') as 'OWNER' | 'TENANT' | 'SUPERADMIN';
         session.user.onboardingCompleted = token.onboardingCompleted;
+        session.user.primaryPropertyId = token.primaryPropertyId;
+        session.user.ownedPropertyIds = token.ownedPropertyIds as string[] | undefined;
+        session.user.profile = token.profile as
+          | { firstName: string; lastName: string; phone?: string }
+          | undefined;
       }
       return session;
     },

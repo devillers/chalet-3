@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { completeOnboarding, upsertOnboardingDraft } from '@/lib/db/onboarding';
+import { upsertOwnerProfile } from '@/lib/db/users';
 import { ownerOnboardingSchema, tenantOnboardingSchema, type OwnerOnboardingInput } from '@/lib/validators/onboarding';
 import { defaultLocale } from '@/lib/i18n';
 import { PropertyModel } from '@/lib/db/models/property';
@@ -16,12 +17,14 @@ function slugify(input: string): string {
     .replace(/--+/g, '-');
 }
 
-async function ensureUniqueSlug(base: string): Promise<string> {
-  const slug = slugify(base);
+async function ensureUniqueSlug(title: string, currentId?: string): Promise<string> {
+  const slug = slugify(title);
   const existing = await PropertyModel.findOne({ slug });
   if (!existing) return slug;
-  const candidate = `${slug}-${Date.now().toString(36)}`;
-  return candidate;
+  if (currentId && existing._id === currentId) {
+    return slug;
+  }
+  return `${slug}-${Date.now().toString(36)}`;
 }
 
 export async function POST(request: Request) {
@@ -77,13 +80,24 @@ export async function POST(request: Request) {
     draftId: draft?._id?.toString?.(),
   });
   // If owner: create or update a Property based on onboarding data
+  let redirectTo = `/${defaultLocale}/dashboard/${role === 'OWNER' ? 'owner' : 'tenant'}`;
+  let propertySummary: { id: string; slug: string } | null = null;
+
   if (role === 'OWNER') {
     const ownerData = parsed.data as OwnerOnboardingInput;
     const prop = ownerData.property!;
     const photos = ownerData.photos ?? [];
     const season = ownerData.season;
 
-    const slug = await ensureUniqueSlug(prop.title);
+    if (photos.length === 0) {
+      console.warn("Publication du logement refusée : aucune photo fournie.", {
+        userId: session.user.id,
+      });
+      return NextResponse.json({ message: 'Ajoutez au moins une photo avant de publier.' }, { status: 400 });
+    }
+
+    const existing = await PropertyModel.findOne({ ownerId: session.user.id });
+    const slug = await ensureUniqueSlug(prop.title, existing?._id);
     const hero = photos.find((p) => p.isHero) ?? photos[0];
 
     const images = photos.map((p) => ({
@@ -97,45 +111,81 @@ export async function POST(request: Request) {
       isHero: Boolean(p.isHero),
     }));
 
-    const existing = await PropertyModel.findOne({ slug });
-    if (existing) {
-      await PropertyModel.findByIdAndUpdate(
-        existing._id,
-        {
+    const pricing = ownerData.pricing
+      ? { nightly: ownerData.pricing.nightly, cleaningFee: ownerData.pricing.cleaningFee }
+      : undefined;
+    const compliance = ownerData.compliance
+      ? { hasInsurance: ownerData.compliance.hasInsurance, acceptsTerms: ownerData.compliance.acceptsTerms }
+      : undefined;
+
+    const previousSlugs = existing
+      ? Array.from(
+          new Set([
+            ...(existing.previousSlugs ?? []),
+            ...(existing.slug !== slug ? [existing.slug] : []),
+          ]),
+        )
+      : [];
+
+    const propertyDocument = existing
+      ? await PropertyModel.findByIdAndUpdate(
+          existing._id,
+          {
+            title: prop.title,
+            slug,
+            previousSlugs,
+            status: 'published',
+            publishedAt: existing.publishedAt ?? new Date(),
+            ownerId: session.user.id,
+            regNumber: prop.regNumber ?? existing.regNumber,
+            capacity: prop.capacity ?? existing.capacity,
+            images,
+            heroImageId: hero?.publicId ?? existing.heroImageId,
+            seasonalPeriod: season
+              ? { start: new Date(season.start), end: new Date(season.end) }
+              : existing.seasonalPeriod,
+            address: {
+              ...(existing.address ?? {}),
+              city: prop.city,
+            },
+            pricing: pricing ?? existing.pricing,
+            compliance: compliance ?? existing.compliance,
+          },
+          { new: true },
+        )
+      : await PropertyModel.create({
           title: prop.title,
           slug,
+          previousSlugs,
           status: 'published',
-          publishedAt: existing.publishedAt ?? new Date(),
+          publishedAt: new Date(),
           ownerId: session.user.id,
-          regNumber: prop.regNumber ?? existing.regNumber,
-          capacity: prop.capacity ?? existing.capacity,
+          regNumber: prop.regNumber ?? '',
+          capacity: prop.capacity,
           images,
-          heroImageId: hero?.publicId ?? existing.heroImageId,
-          seasonalPeriod: season ? { start: new Date(season.start), end: new Date(season.end) } : existing.seasonalPeriod,
-          address: {
-            ...(existing.address ?? {}),
-            city: prop.city,
-          },
-        },
-        { new: true },
-      );
-    } else {
-      await PropertyModel.create({
-        title: prop.title,
-        slug,
-        previousSlugs: [],
-        status: 'published',
-        publishedAt: new Date(),
-        ownerId: session.user.id,
-        regNumber: prop.regNumber ?? '',
-        capacity: prop.capacity,
-        images,
-        address: { city: prop.city },
-        externalCalendars: [],
-        blocks: [],
-        heroImageId: hero?.publicId,
+          address: { city: prop.city },
+          externalCalendars: [],
+          blocks: [],
+          heroImageId: hero?.publicId,
+          seasonalPeriod: season ? { start: new Date(season.start), end: new Date(season.end) } : undefined,
+          pricing,
+          compliance,
+        });
+
+    if (!propertyDocument) {
+      console.error('Création ou mise à jour de la propriété échouée.', {
+        userId: session.user.id,
       });
+      return NextResponse.json({ message: 'Impossible de sauvegarder la propriété.' }, { status: 500 });
     }
+
+    await upsertOwnerProfile(session.user.id, ownerData.profile, propertyDocument._id);
+
+    propertySummary = {
+      id: propertyDocument._id,
+      slug: propertyDocument.slug,
+    };
+    redirectTo = `/${defaultLocale}/portfolio/${propertyDocument.slug}`;
   }
 
   await completeOnboarding(session.user.id);
@@ -143,7 +193,8 @@ export async function POST(request: Request) {
     userId: session.user.id,
   });
 
-  const redirectTo = `/${defaultLocale}/dashboard/${role === 'OWNER' ? 'owner' : 'tenant'}`;
-
-  return NextResponse.json({ draft, redirectTo, onboardingCompleted: true }, { status: 200 });
+  return NextResponse.json(
+    { draft, redirectTo, onboardingCompleted: true, property: propertySummary },
+    { status: 200 },
+  );
 }
