@@ -62,3 +62,9 @@ export const tenantOnboardingSchema = z.object({
 
 export type OwnerOnboardingInput = z.infer<typeof ownerOnboardingSchema>;
 export type TenantOnboardingInput = z.infer<typeof tenantOnboardingSchema>;
+
+export const ownerOnboardingDraftSchema = ownerOnboardingSchema.deepPartial();
+export const tenantOnboardingDraftSchema = tenantOnboardingSchema.deepPartial();
+
+export type OwnerOnboardingDraftInput = z.infer<typeof ownerOnboardingDraftSchema>;
+export type TenantOnboardingDraftInput = z.infer<typeof tenantOnboardingDraftSchema>;
