@@ -100,7 +100,14 @@ async function getDatabase(): Promise<Db> {
   const uri = env.NODE_ENV === 'test' && env.MONGODB_URI_TEST ? env.MONGODB_URI_TEST : env.MONGODB_URI;
   client = new MongoClient(uri);
   await client.connect();
-  database = client.db(resolveDatabaseName(uri));
+  const dbName = resolveDatabaseName(uri);
+  database = client.db(dbName);
+  try {
+    // Lightweight connect log to help verify DB selection in dev
+    console.info('[db] Connected to MongoDB database', { dbName });
+  } catch {
+    // noop
+  }
   return database;
 }
 

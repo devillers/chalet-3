@@ -32,11 +32,22 @@ export async function upsertOnboardingDraft(
     console.debug('Création d\'un nouveau brouillon.', { userId, role });
   }
 
-  const draft = await OnboardingDraftModel.findOneAndUpdate(
-    { userId },
-    { userId, role, data },
-    { new: true, upsert: true },
-  );
+  let draft: OnboardingDraft | null = null;
+  if (existingDraft) {
+    // Our lightweight model exposes findByIdAndUpdate, not findOneAndUpdate
+    draft = await OnboardingDraftModel.findByIdAndUpdate(
+      existingDraft._id,
+      { role, data },
+      { new: true },
+    );
+
+    if (!draft) {
+      // Fallback: re-read by userId in case of race conditions
+      draft = await OnboardingDraftModel.findOne({ userId });
+    }
+  } else {
+    draft = await OnboardingDraftModel.create({ userId, role, data });
+  }
 
   if (!draft) {
     throw new Error('Échec de l\'enregistrement du brouillon d\'onboarding.');
@@ -67,4 +78,3 @@ export async function completeOnboarding(userId: string): Promise<void> {
   await updateUser(userId, { onboardingCompleted: true });
   await clearOnboardingDraft(userId);
 }
-
