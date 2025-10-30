@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/config';
 import { completeOnboarding, upsertOnboardingDraft } from '@/lib/db/onboarding';
-import { ownerOnboardingSchema, tenantOnboardingSchema } from '@/lib/validators/onboarding';
+import { ownerOnboardingSchema, tenantOnboardingSchema, type OwnerOnboardingInput } from '@/lib/validators/onboarding';
 import { defaultLocale } from '@/lib/i18n';
 import { PropertyModel } from '@/lib/db/models/property';
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   });
   // If owner: create or update a Property based on onboarding data
   if (role === 'OWNER') {
-    const ownerData = parsed.data;
+    const ownerData = parsed.data as OwnerOnboardingInput;
     const prop = ownerData.property!;
     const photos = ownerData.photos ?? [];
     const season = ownerData.season;
