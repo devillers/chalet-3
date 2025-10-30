@@ -8,6 +8,9 @@ declare module 'next-auth' {
       id: string;
       role: AppRole;
       onboardingCompleted?: boolean;
+      primaryPropertyId?: string;
+      ownedPropertyIds?: string[];
+      profile?: { firstName: string; lastName: string; phone?: string };
     };
   }
 
@@ -17,6 +20,9 @@ declare module 'next-auth' {
     name: string;
     role: AppRole;
     onboardingCompleted?: boolean;
+    primaryPropertyId?: string;
+    ownedPropertyIds?: string[];
+    profile?: { firstName: string; lastName: string; phone?: string };
   }
 }
 
@@ -27,5 +33,8 @@ declare module 'next-auth/jwt' {
     id: string;
     role: AppRole;
     onboardingCompleted?: boolean;
+    primaryPropertyId?: string;
+    ownedPropertyIds?: string[];
+    profile?: { firstName: string; lastName: string; phone?: string };
   }
 }

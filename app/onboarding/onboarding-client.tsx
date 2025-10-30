@@ -217,7 +217,14 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
       return;
     }
 
-    const payload = { ...form.getValues(), review: { status: 'published' as const } };
+    const currentValues = form.getValues();
+    if (!currentValues.photos || currentValues.photos.length === 0) {
+      setSaving(false);
+      setError('Ajoutez au moins une photo avant de publier.');
+      return;
+    }
+
+    const payload = { ...currentValues, review: { status: 'published' as const } };
 
     try {
       console.debug('Tentative de publication de l\'onboarding propriétaire.', {
@@ -229,7 +236,9 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         credentials: 'include',
         body: JSON.stringify(payload),
       });
-      const data = (await response.json().catch(() => null)) as { redirectTo?: string; message?: string } | null;
+      const data = (await response
+        .json()
+        .catch(() => null)) as { redirectTo?: string; message?: string; property?: { slug: string } } | null;
       if (!response.ok) {
         console.error('La publication du brouillon a échoué.', {
           status: response.status,
@@ -243,6 +252,8 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
       console.debug('Publication du brouillon réussie.', {
         redirectTo: data?.redirectTo,
       });
+      setIsOpen(false);
+      onOpenChange?.(false);
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
     } catch (error_) {
@@ -374,6 +385,8 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
       console.debug("Onboarding locataire finalisé avec succès.", {
         redirectTo: data?.redirectTo,
       });
+      setIsOpen(false);
+      onOpenChange?.(false);
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/tenant`;
       router.push(destination);
     } catch (error_) {

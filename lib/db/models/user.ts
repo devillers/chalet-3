@@ -9,6 +9,13 @@ export interface UserDocument extends LeanDocumentBase {
   role: UserRole;
   passwordHash: string;
   onboardingCompleted?: boolean;
+  profile?: {
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  };
+  ownedPropertyIds: string[];
+  primaryPropertyId?: string;
   googleId?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -21,6 +28,9 @@ const definition: SchemaDefinition<UserDocument> = {
   role: { type: 'string', required: true },
   passwordHash: { type: 'string', required: true },
   onboardingCompleted: { type: 'boolean' },
+  profile: { type: 'object' },
+  ownedPropertyIds: { type: 'array', default: () => [] as string[] },
+  primaryPropertyId: { type: 'string' },
   googleId: { type: 'string' },
   createdAt: { type: 'date' },
   updatedAt: { type: 'date' },

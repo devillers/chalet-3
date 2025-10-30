@@ -60,6 +60,8 @@ export interface PropertyDocument extends LeanDocumentBase {
   externalCalendars: ExternalCalendar[];
   blocks: CalendarBlock[];
   heroImageId?: string;
+  pricing?: { nightly: number; cleaningFee?: number };
+  compliance?: { hasInsurance?: boolean; acceptsTerms?: boolean };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -81,6 +83,8 @@ const definition: SchemaDefinition<PropertyDocument> = {
   externalCalendars: { type: 'array', default: () => [] as ExternalCalendar[] },
   blocks: { type: 'array', default: () => [] as CalendarBlock[] },
   heroImageId: { type: 'string' },
+  pricing: { type: 'object' },
+  compliance: { type: 'object' },
   createdAt: { type: 'date' },
   updatedAt: { type: 'date' },
 };
