@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type UseFormReturn, type UseFormWatch } from 'react-hook-form';
@@ -13,11 +13,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { defaultLocale } from '@/lib/i18n';
 import {
+  ownerOnboardingDraftSchema,
   ownerOnboardingSchema,
+  tenantOnboardingDraftSchema,
   tenantOnboardingSchema,
   type OwnerOnboardingInput,
   type TenantOnboardingInput,
 } from '@/lib/validators/onboarding';
+import { isPlainObject, mergeDraftInto, sanitizeDraft } from '@/lib/utils/draft';
 
 interface OnboardingClientProps {
   role: 'OWNER' | 'TENANT';
@@ -50,6 +53,42 @@ const TENANT_STEPS: StepConfig[] = [
   { id: 'review', label: 'Résumé', description: 'Vérifiez et finalisez' },
 ];
 
+const createOwnerDefaultValues = (): OwnerOnboardingInput => ({
+  profile: { firstName: '', lastName: '', phone: '' },
+  property: { title: '', city: '', capacity: 1, regNumber: '' },
+  photos: [],
+  season: { start: '', end: '' },
+  pricing: { nightly: 0, cleaningFee: 0 },
+  compliance: { acceptsTerms: false, hasInsurance: false },
+  review: { status: 'draft' },
+});
+
+const createTenantDefaultValues = (): TenantOnboardingInput => ({
+  profile: { firstName: '', lastName: '', phone: '' },
+  search: { city: '', capacity: 1 },
+  documents: [],
+  preferences: { amenities: [], budget: 0 },
+  review: { status: 'draft' },
+});
+
+const resolveOwnerDefaultValues = (draft: Record<string, unknown> | null): OwnerOnboardingInput => {
+  const base = createOwnerDefaultValues();
+  const parsedDraft = ownerOnboardingDraftSchema.safeParse(draft ?? {});
+  if (!parsedDraft.success) {
+    return base;
+  }
+  return mergeDraftInto(base, parsedDraft.data);
+};
+
+const resolveTenantDefaultValues = (draft: Record<string, unknown> | null): TenantOnboardingInput => {
+  const base = createTenantDefaultValues();
+  const parsedDraft = tenantOnboardingDraftSchema.safeParse(draft ?? {});
+  if (!parsedDraft.success) {
+    return base;
+  }
+  return mergeDraftInto(base, parsedDraft.data);
+};
+
 export default function OnboardingClient({ role, openModal, draft, onOpenChange }: OnboardingClientProps) {
   if (role === 'OWNER') {
     return <OwnerOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} />;
@@ -65,20 +104,9 @@ interface OwnerProps {
 
 function OwnerOnboarding({ openModal, draft, onOpenChange }: OwnerProps) {
   const router = useRouter();
-  const parsedDraft = ownerOnboardingSchema.safeParse(draft ?? {});
   const form = useForm<OwnerOnboardingInput>({
     resolver: zodResolver(ownerOnboardingSchema),
-    defaultValues: parsedDraft.success
-      ? parsedDraft.data
-      : {
-          profile: { firstName: '', lastName: '', phone: '' },
-          property: { title: '', city: '', capacity: 1, regNumber: '' },
-          photos: [],
-          season: { start: '', end: '' },
-          pricing: { nightly: 0, cleaningFee: 0 },
-          compliance: { acceptsTerms: false, hasInsurance: false },
-          review: { status: 'draft' },
-        },
+    defaultValues: resolveOwnerDefaultValues(draft),
   });
   const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
@@ -194,18 +222,9 @@ interface TenantProps {
 
 function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   const router = useRouter();
-  const parsedDraft = tenantOnboardingSchema.safeParse(draft ?? {});
   const form = useForm<TenantOnboardingInput>({
     resolver: zodResolver(tenantOnboardingSchema),
-    defaultValues: parsedDraft.success
-      ? parsedDraft.data
-      : {
-          profile: { firstName: '', lastName: '', phone: '' },
-          search: { city: '', capacity: 1 },
-          documents: [],
-          preferences: { amenities: [], budget: 0 },
-          review: { status: 'draft' },
-        },
+    defaultValues: resolveTenantDefaultValues(draft),
   });
   const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
@@ -770,9 +789,10 @@ function TenantStepRenderer({ form, stepId }: TenantStepRendererProps) {
 function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
   watch: UseFormWatch<T>,
   role: 'OWNER' | 'TENANT',
-  onSaved?: (date: Date) => void
+  onSaved?: (date: Date) => void,
 ) {
   const [draft, setDraft] = useState<T | null>(null);
+  const lastSerializedDraft = useRef<string | null>(null);
 
   useEffect(() => {
     const subscription = watch((value) => {
@@ -785,21 +805,38 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
     if (!draft) {
       return;
     }
+
+    const schema = role === 'OWNER' ? ownerOnboardingDraftSchema : tenantOnboardingDraftSchema;
+    const sanitized = sanitizeDraft(draft);
+    const payload = isPlainObject(sanitized) ? sanitized : {};
+    const parsed = schema.safeParse(payload);
+    if (!parsed.success) {
+      return;
+    }
+
+    const serialized = JSON.stringify(parsed.data);
+    if (lastSerializedDraft.current === serialized) {
+      return;
+    }
+    lastSerializedDraft.current = serialized;
+
     const timeout = setTimeout(() => {
       void fetch('/api/onboarding/draft', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(draft),
+        body: serialized,
       })
         .then((response) => {
           if (!response.ok) {
             console.error('Échec de la sauvegarde automatique du brouillon');
+            lastSerializedDraft.current = null;
             return;
           }
           onSaved?.(new Date());
         })
         .catch((error) => {
           console.error('Erreur lors de la sauvegarde automatique', error);
+          lastSerializedDraft.current = null;
         });
     }, 800);
     return () => clearTimeout(timeout);
