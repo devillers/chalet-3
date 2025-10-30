@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createHash } from 'node:crypto';
 import { requireSession } from '@/lib/api/response';
-import { env } from '@/env';
+import { cloudinaryConfig, env } from '@/env';
 
 interface SignaturePayload {
   folder: string;
@@ -13,6 +13,21 @@ export async function POST(request: Request) {
   const { response, session } = await requireSession();
   if (response || !session) {
     return response ?? NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!cloudinaryConfig.isConfigured) {
+    console.error('Cloudinary upload attempted without full configuration.', {
+      missingKeys: cloudinaryConfig.missingKeys,
+    });
+
+    return NextResponse.json(
+      {
+        message:
+          "La configuration Cloudinary est incomplète. Vérifiez les variables d'environnement suivantes : CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY et CLOUDINARY_API_SECRET.",
+        missingKeys: cloudinaryConfig.missingKeys,
+      },
+      { status: 503 },
+    );
   }
 
   const body = (await request.json().catch(() => ({}))) as Partial<{ folder: string; publicId: string }>;

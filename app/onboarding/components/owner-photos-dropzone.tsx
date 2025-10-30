@@ -38,6 +38,32 @@ interface CloudinaryUploadResponse {
   original_filename?: string;
 }
 
+const extractErrorMessage = async (response: Response): Promise<string | null> => {
+  try {
+    const json = await response.clone().json();
+    if (json && typeof json === 'object' && 'message' in json && typeof json.message === 'string') {
+      const trimmed = json.message.trim();
+      if (trimmed.length > 0) {
+        return trimmed;
+      }
+    }
+  } catch (jsonError) {
+    console.debug('Impossible de lire le corps JSON de la réponse.', jsonError);
+  }
+
+  try {
+    const text = await response.clone().text();
+    const trimmed = text.trim();
+    if (trimmed.length > 0) {
+      return trimmed;
+    }
+  } catch (textError) {
+    console.debug('Impossible de lire le corps texte de la réponse.', textError);
+  }
+
+  return null;
+};
+
 export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDropzoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -89,11 +115,16 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
           });
 
           if (!signatureResponse.ok) {
+            const signatureErrorMessage =
+              (await extractErrorMessage(signatureResponse)) ||
+              'Impossible de récupérer la signature Cloudinary.';
+
             console.error('Échec de la récupération de la signature Cloudinary.', {
               status: signatureResponse.status,
               statusText: signatureResponse.statusText,
             });
-            throw new Error('Impossible de récupérer la signature Cloudinary.');
+
+            throw new Error(signatureErrorMessage);
           }
 
           const signature: CloudinarySignatureResponse = await signatureResponse.json();
@@ -127,19 +158,15 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
           });
 
           if (!uploadResponse.ok) {
-            let errorText: string | undefined;
-            try {
-              errorText = await uploadResponse.text();
-            } catch (responseReadError) {
-              console.error('Impossible de lire la réponse Cloudinary.', responseReadError);
-            }
+            const uploadErrorMessage =
+              (await extractErrorMessage(uploadResponse)) || 'Le téléversement vers Cloudinary a échoué.';
 
             console.error('Le téléversement vers Cloudinary a échoué.', {
               status: uploadResponse.status,
               statusText: uploadResponse.statusText,
-              body: errorText,
             });
-            throw new Error('Le téléversement vers Cloudinary a échoué.');
+
+            throw new Error(uploadErrorMessage);
           }
 
           const payload: CloudinaryUploadResponse = await uploadResponse.json();
@@ -173,7 +200,11 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
         }
       } catch (uploadError) {
         console.error(uploadError);
-        setError('Une erreur est survenue pendant le téléversement. Veuillez réessayer.');
+        const message =
+          uploadError instanceof Error && typeof uploadError.message === 'string'
+            ? uploadError.message
+            : 'Une erreur est survenue pendant le téléversement. Veuillez réessayer.';
+        setError(message);
       } finally {
         setIsUploading(false);
       }
