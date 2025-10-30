@@ -4,7 +4,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: [],
+    domains: ['res.cloudinary.com'],
     formats: ['image/avif', 'image/webp'],
   },
   async headers() {
