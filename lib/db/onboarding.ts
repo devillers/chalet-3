@@ -40,10 +40,43 @@ export async function upsertOnboardingDraft(
       });
       return updated;
     }
+
+    console.warn('Échec de la mise à jour du brouillon existant, nouvelle tentative via userId.', {
+      userId,
+      draftId: existingDraft._id.toString(),
+    });
+
+    const fallback = await OnboardingDraftModel.findOne({ userId });
+    if (fallback) {
+      console.debug('Brouillon récupéré après tentative de mise à jour infructueuse.', {
+        userId,
+        draftId: fallback._id.toString(),
+      });
+      return fallback;
+    }
   }
 
   console.debug('Création d\'un nouveau brouillon.', { userId, role });
-  return OnboardingDraftModel.create({ userId, role, data });
+  try {
+    return await OnboardingDraftModel.create({ userId, role, data });
+  } catch (error) {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: number }).code === 11000) {
+      console.warn('Conflit de clé unique lors de la création du brouillon, récupération du document existant.', {
+        userId,
+        role,
+      });
+      const existing = await OnboardingDraftModel.findOne({ userId });
+      if (existing) {
+        console.debug('Brouillon existant renvoyé après conflit de clé unique.', {
+          userId,
+          draftId: existing._id.toString(),
+        });
+        return existing;
+      }
+    }
+
+    throw error;
+  }
 }
 
 export async function clearOnboardingDraft(userId: string): Promise<void> {
