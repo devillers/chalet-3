@@ -3,6 +3,20 @@
 
 import { z } from 'zod';
 
+const sanitizeCloudinaryCloudName = (value: string): string => {
+  const trimmed = value.trim();
+
+  if (trimmed.length === 0) {
+    return trimmed;
+  }
+
+  if (trimmed !== value) {
+    console.warn('⚠️  CLOUDINARY_CLOUD_NAME contains leading/trailing whitespace.');
+  }
+
+  return trimmed;
+};
+
 const defaults = {
   SITE_URL: 'http://localhost:3000',
   NEXTAUTH_SECRET: 'testtesttesttesttesttesttesttest',
@@ -37,7 +51,10 @@ const envSchema = z
     MONGODB_URI: z.string().url().default(defaults.MONGODB_URI),
     MONGODB_URI_TEST: z.string().url().optional(),
     MONGODB_DB: z.string().optional(),
-    CLOUDINARY_CLOUD_NAME: z.string().default(defaults.CLOUDINARY_CLOUD_NAME),
+    CLOUDINARY_CLOUD_NAME: z
+      .string()
+      .default(defaults.CLOUDINARY_CLOUD_NAME)
+      .transform((value) => sanitizeCloudinaryCloudName(value)),
     CLOUDINARY_API_KEY: z.string().default(defaults.CLOUDINARY_API_KEY),
     CLOUDINARY_API_SECRET: z.string().default(defaults.CLOUDINARY_API_SECRET),
     CLOUDINARY_TEST_FOLDER: z.string().optional(),
