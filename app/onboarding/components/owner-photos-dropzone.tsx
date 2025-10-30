@@ -89,10 +89,20 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
           });
 
           if (!signatureResponse.ok) {
+            console.error('Échec de la récupération de la signature Cloudinary.', {
+              status: signatureResponse.status,
+              statusText: signatureResponse.statusText,
+            });
             throw new Error('Impossible de récupérer la signature Cloudinary.');
           }
 
           const signature: CloudinarySignatureResponse = await signatureResponse.json();
+
+          console.debug('Signature Cloudinary récupérée avec succès.', {
+            cloudName: signature.cloudName,
+            folder: signature.folder,
+            timestamp: signature.timestamp,
+          });
 
           const formData = new FormData();
           formData.append('file', file);
@@ -104,16 +114,42 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
           }
 
           const uploadEndpoint = `https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`;
+          console.debug('Téléversement de fichier vers Cloudinary.', {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            uploadEndpoint,
+          });
+
           const uploadResponse = await fetch(uploadEndpoint, {
             method: 'POST',
             body: formData,
           });
 
           if (!uploadResponse.ok) {
+            let errorText: string | undefined;
+            try {
+              errorText = await uploadResponse.text();
+            } catch (responseReadError) {
+              console.error('Impossible de lire la réponse Cloudinary.', responseReadError);
+            }
+
+            console.error('Le téléversement vers Cloudinary a échoué.', {
+              status: uploadResponse.status,
+              statusText: uploadResponse.statusText,
+              body: errorText,
+            });
             throw new Error('Le téléversement vers Cloudinary a échoué.');
           }
 
           const payload: CloudinaryUploadResponse = await uploadResponse.json();
+          console.debug('Réponse Cloudinary reçue.', {
+            publicId: payload.public_id,
+            width: payload.width,
+            height: payload.height,
+            format: payload.format,
+            bytes: payload.bytes,
+          });
           const secureUrl = payload.secure_url ?? payload.url;
           if (!secureUrl) {
             throw new Error('Cloudinary n\'a pas renvoyé d\'URL sécurisée.');
