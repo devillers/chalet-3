@@ -6,7 +6,7 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.SITE_URL ||
   vercelUrl ||
-  'https://chaletmanager.fr';
+  'https://chalet-manager.fr';
 
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {

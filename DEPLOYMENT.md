@@ -34,7 +34,7 @@
    In Vercel dashboard, add these environment variables:
 
    ```
-   NEXT_PUBLIC_SITE_URL=https://chaletmanager.fr
+   NEXT_PUBLIC_SITE_URL=https://chalet-manager.fr
    SMTP_HOST=smtp.example.com
    SMTP_PORT=587
    SMTP_USER=your-email@example.com
@@ -49,8 +49,8 @@
 ### Custom Domain Setup
 
 1. In Vercel dashboard, go to Project Settings → Domains
-2. Add your custom domain: `chaletmanager.fr`
-3. Add `www.chaletmanager.fr` (optional)
+2. Add your custom domain: `chalet-manager.fr`
+3. Add `www.chalet-manager.fr` (optional)
 4. Update DNS records as instructed by Vercel
 5. Wait for DNS propagation (can take up to 48 hours)
 
@@ -62,7 +62,7 @@
    - Check mobile responsiveness
 
 2. **SEO Verification**
-   - Submit sitemap to Google Search Console: `https://chaletmanager.fr/sitemap.xml`
+   - Submit sitemap to Google Search Console: `https://chalet-manager.fr/sitemap.xml`
    - Submit to Bing Webmaster Tools
    - Verify Open Graph tags with [OpenGraph.xyz](https://www.opengraph.xyz/)
 
@@ -95,7 +95,7 @@
 
 3. **Set environment variables**
    ```bash
-   export NEXT_PUBLIC_SITE_URL=https://chaletmanager.fr
+   export NEXT_PUBLIC_SITE_URL=https://chalet-manager.fr
    export SMTP_HOST=smtp.example.com
    export SMTP_PORT=587
    export SMTP_USER=your-email@example.com
@@ -119,7 +119,7 @@
    ```nginx
    server {
        listen 80;
-       server_name chaletmanager.fr;
+      server_name chalet-manager.fr;
 
        location / {
            proxy_pass http://localhost:3000;
@@ -134,17 +134,17 @@
 
 7. **Set up SSL with Let's Encrypt**
    ```bash
-   sudo certbot --nginx -d chaletmanager.fr -d www.chaletmanager.fr
+   sudo certbot --nginx -d chalet-manager.fr -d www.chalet-manager.fr
    ```
 
 ## Environment Variables Reference
 
 | Variable | Description | Required | Example |
 |----------|-------------|----------|---------|
-| `NEXT_PUBLIC_SITE_URL` | Production URL | Yes | `https://chaletmanager.fr` |
+| `NEXT_PUBLIC_SITE_URL` | Production URL | Yes | `https://chalet-manager.fr` |
 | `SMTP_HOST` | SMTP server hostname | Yes | `smtp.gmail.com` |
 | `SMTP_PORT` | SMTP server port | Yes | `587` |
-| `SMTP_USER` | SMTP username/email | Yes | `contact@chaletmanager.fr` |
+| `SMTP_USER` | SMTP username/email | Yes | `contact@chalet-manager.fr` |
 | `SMTP_PASS` | SMTP password | Yes | `your-password` |
 | `NEXT_PUBLIC_ENABLE_ANALYTICS` | Enable analytics | No | `false` |
 

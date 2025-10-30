@@ -77,7 +77,7 @@
       "description": "Professional chalet management services for discerning mountain property owners. We operate, grow, and maintain your investment."
     },
     "contact": {
-      "email": "contact@chaletmanager.fr",
+      "email": "contact@chalet-manager.fr",
       "phone": "+33 6 07 85 90 58",
       "locationLines": [
         "Chamonix-Mont-Blanc",
@@ -221,7 +221,7 @@
     "info": {
       "title": "Contact Information",
       "address": "The Alps, France",
-      "email": "contact@chaletmanager.fr",
+      "email": "contact@chalet-manager.fr",
       "phone": "+33 4 50 XX XX XX"
     }
   },
@@ -360,7 +360,7 @@
     },
     "rights": {
       "title": "Your Rights",
-      "content": "You have the right to access, rectify, delete, and object to the processing of your data. To exercise these rights, contact us at: privacy@chaletmanager.fr"
+      "content": "You have the right to access, rectify, delete, and object to the processing of your data. To exercise these rights, contact us at: privacy@chalet-manager.fr"
     }
   },
   "errors": {

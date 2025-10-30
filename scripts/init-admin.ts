@@ -3,7 +3,7 @@ import { createUser, getUserByEmail, updateUser } from '../lib/db/users';
 
 async function initAdmin() {
   try {
-    const adminEmail = (process.env.ADMIN_SEED_EMAIL ?? 'admin@chaletmanager.fr').toLowerCase();
+    const adminEmail = (process.env.ADMIN_SEED_EMAIL ?? 'admin@chalet-manager.fr').toLowerCase();
     const adminPassword = process.env.ADMIN_SEED_PASSWORD ?? 'admin123';
     const adminName = process.env.ADMIN_SEED_NAME ?? 'Administrateur';
 

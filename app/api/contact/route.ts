@@ -98,8 +98,8 @@ ${
     `;
 
     const result = await sendEmail({
-      to: process.env.SMTP_USER || 'contact@chaletmanager.fr',
-      from: process.env.SMTP_USER || 'noreply@chaletmanager.fr',
+      to: process.env.SMTP_USER || 'contact@chalet-manager.fr',
+      from: process.env.SMTP_USER || 'noreply@chalet-manager.fr',
       replyTo: email,
       subject: `Contact Form: ${name}`,
       html: htmlContent,

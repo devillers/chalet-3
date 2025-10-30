@@ -40,7 +40,7 @@ export default function AccessDeniedClient() {
   const message = (reason && REASON_MESSAGES[reason]) ?? defaultMessage;
 
   const signInHref = locale ? `/${locale}/signin` : '/signin';
-  const supportHref = 'mailto:support@chaletmanager.com';
+  const supportHref = 'mailto:support@chalet-manager.com';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-16">

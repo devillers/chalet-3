@@ -88,7 +88,7 @@ export default function LoginClient() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@chaletmanager.fr"
+                  placeholder="admin@chalet-manager.fr"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required

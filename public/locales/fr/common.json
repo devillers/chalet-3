@@ -78,7 +78,7 @@
       "description": "Services professionnels de gestion de chalets pour propriétaires de montagne haut de gamme. Nous gérons, développons et entretenons votre investissement."
     },
     "contact": {
-      "email": "contact@chaletmanager.fr",
+      "email": "contact@chalet-manager.fr",
       "phone": "+33 6 07 85 90 58",
       "locationLines": [
         "Chamonix-Mont-Blanc",
@@ -223,7 +223,7 @@
     "info": {
       "title": "Informations de Contact",
       "address": "Les Alpes, France",
-      "email": "contact@chaletmanager.fr",
+      "email": "contact@chalet-manager.fr",
       "phone": "+33 6 07 85 90 58"
     }
   },
@@ -362,7 +362,7 @@
     },
     "rights": {
       "title": "Vos Droits",
-      "content": "Vous disposez d'un droit d'accès, de rectification, de suppression et d'opposition au traitement de vos données. Pour exercer ces droits, contactez-nous à : privacy@chaletmanager.fr"
+      "content": "Vous disposez d'un droit d'accès, de rectification, de suppression et d'opposition au traitement de vos données. Pour exercer ces droits, contactez-nous à : privacy@chalet-manager.fr"
     }
   },
   "errors": {

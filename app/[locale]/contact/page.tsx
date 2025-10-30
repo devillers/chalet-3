@@ -77,11 +77,11 @@ export default async function ContactPage({ params }: PageProps) {
           mainEntity: {
             '@type': 'Organization',
             name: 'Chalet Manager',
-            url: 'https://chaletmanager.fr',
+            url: 'https://chalet-manager.fr',
             contactPoint: {
               '@type': 'ContactPoint',
               contactType: 'customer support',
-              email: 'contact@chaletmanager.fr',
+              email: 'contact@chalet-manager.fr',
               telephone: t.contact?.info?.phone || '',
               availableLanguage: ['fr', 'en'],
             },

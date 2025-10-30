@@ -223,7 +223,7 @@ All deployment instructions provided in `DEPLOYMENT.md`.
 ## 📝 Environment Variables Required
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://chaletmanager.fr
+NEXT_PUBLIC_SITE_URL=https://chalet-manager.fr
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=your-email@example.com

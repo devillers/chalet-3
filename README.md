@@ -50,7 +50,7 @@ cp .env.example .env
 
 3. Configure your environment variables in `.env`:
 ```env
-NEXT_PUBLIC_SITE_URL=https://chaletmanager.fr
+NEXT_PUBLIC_SITE_URL=https://chalet-manager.fr
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=your-email@example.com
@@ -332,7 +332,7 @@ Run Lighthouse in Chrome DevTools to verify:
 ## Support
 
 For issues or questions:
-- Email: contact@chaletmanager.fr
+- Email: contact@chalet-manager.fr
 - Create an issue in the repository
 
 ## License

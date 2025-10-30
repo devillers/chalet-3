@@ -49,7 +49,7 @@ export async function sendEmail(payload: EmailPayload): Promise<{
     const validated = emailPayloadSchema.parse(payload);
 
     const toAddresses = Array.isArray(validated.to) ? validated.to : [validated.to];
-    const fromAddress = validated.from || process.env.SMTP_USER || 'noreply@chaletmanager.fr';
+    const fromAddress = validated.from || process.env.SMTP_USER || 'noreply@chalet-manager.fr';
 
     const log = createEmailLog({
       to: toAddresses,

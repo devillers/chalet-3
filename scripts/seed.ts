@@ -130,7 +130,7 @@ async function main(): Promise<void> {
     console.info(`🚀 Starting seed (env file: ${ENV_PATH})…`);
     await connectMongo();
 
-    const superAdminEmail = env.ADMIN_SEED_EMAIL ?? 'admin@chaletmanager.fr';
+    const superAdminEmail = env.ADMIN_SEED_EMAIL ?? 'admin@chalet-manager.fr';
     const superAdminPassword = env.ADMIN_SEED_PASSWORD ?? 'ChangeMe123!';
 
     const superAdmin = await upsertUser({
