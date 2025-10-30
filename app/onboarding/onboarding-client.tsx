@@ -28,6 +28,7 @@ interface OnboardingClientProps {
   openModal: boolean;
   draft: Record<string, unknown> | null;
   onOpenChange?: (open: boolean) => void;
+  prefill?: Record<string, unknown>;
 }
 
 interface StepConfigBase {
@@ -136,13 +137,20 @@ const createTenantDefaultValues = (): TenantOnboardingInput => ({
   review: { status: 'draft' },
 });
 
-const resolveOwnerDefaultValues = (draft: Record<string, unknown> | null): OwnerOnboardingInput => {
+const resolveOwnerDefaultValues = (
+  draft: Record<string, unknown> | null,
+  prefill?: Record<string, unknown>,
+): OwnerOnboardingInput => {
   const base = createOwnerDefaultValues();
+  // Apply prefill first (so draft can still override)
+  const parsedPrefill = ownerOnboardingDraftSchema.safeParse(prefill ?? {});
+  const withPrefill = parsedPrefill.success ? mergeDraftInto({ ...base }, parsedPrefill.data) : base;
+
   const parsedDraft = ownerOnboardingDraftSchema.safeParse(draft ?? {});
   if (!parsedDraft.success) {
-    return base;
+    return withPrefill;
   }
-  return mergeDraftInto(base, parsedDraft.data);
+  return mergeDraftInto(withPrefill, parsedDraft.data);
 };
 
 const resolveTenantDefaultValues = (draft: Record<string, unknown> | null): TenantOnboardingInput => {
@@ -154,9 +162,9 @@ const resolveTenantDefaultValues = (draft: Record<string, unknown> | null): Tena
   return mergeDraftInto(base, parsedDraft.data);
 };
 
-export default function OnboardingClient({ role, openModal, draft, onOpenChange }: OnboardingClientProps) {
+export default function OnboardingClient({ role, openModal, draft, onOpenChange, prefill }: OnboardingClientProps) {
   if (role === 'OWNER') {
-    return <OwnerOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} />;
+    return <OwnerOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} prefill={prefill} />;
   }
   return <TenantOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} />;
 }
@@ -165,13 +173,14 @@ interface OwnerProps {
   openModal: boolean;
   draft: Record<string, unknown> | null;
   onOpenChange?: (open: boolean) => void;
+  prefill?: Record<string, unknown>;
 }
 
-function OwnerOnboarding({ openModal, draft, onOpenChange }: OwnerProps) {
+function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps) {
   const router = useRouter();
   const form = useForm<OwnerOnboardingInput>({
     resolver: zodResolver(ownerOnboardingSchema),
-    defaultValues: resolveOwnerDefaultValues(draft),
+    defaultValues: resolveOwnerDefaultValues(draft, prefill),
   });
   const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);

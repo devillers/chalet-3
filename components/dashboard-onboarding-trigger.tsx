@@ -12,6 +12,7 @@ interface DashboardOnboardingTriggerProps {
   defaultOpen?: boolean;
   buttonVariant?: ButtonProps['variant'];
   buttonSize?: ButtonProps['size'];
+  prefill?: Record<string, unknown> | null;
 }
 
 export default function DashboardOnboardingTrigger({
@@ -21,6 +22,7 @@ export default function DashboardOnboardingTrigger({
   defaultOpen = false,
   buttonVariant,
   buttonSize,
+  prefill,
 }: DashboardOnboardingTriggerProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -37,7 +39,7 @@ export default function DashboardOnboardingTrigger({
       <Button type="button" variant={buttonVariant} size={buttonSize} onClick={handleOpen}>
         {label}
       </Button>
-      <OnboardingClient role={role} openModal={isOpen} draft={draft} onOpenChange={setIsOpen} />
+      <OnboardingClient role={role} openModal={isOpen} draft={draft} onOpenChange={setIsOpen} prefill={prefill ?? undefined} />
     </>
   );
 }

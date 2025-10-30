@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { authOptions } from '@/lib/auth/config';
 import { getOnboardingDraft } from '@/lib/db/onboarding';
+import { getUserById } from '@/lib/db/users';
 import { defaultLocale, Locale } from '@/lib/i18n';
 
 export const metadata: Metadata = {
@@ -58,6 +59,16 @@ export default async function OwnerDashboardPage({ params, searchParams }: Owner
 
   const displayName = session.user.name ?? 'Propriétaire';
   const draft = session.user.id ? await getOnboardingDraft(session.user.id) : null;
+  const dbUser = session.user.id ? await getUserById(session.user.id) : null;
+  const [firstName, ...rest] = (dbUser?.name ?? '').trim().split(/\s+/);
+  const lastName = rest.join(' ').trim();
+  const prefill: Record<string, unknown> | null = {
+    profile: {
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+      // phone is not stored on user, leave undefined
+    },
+  };
   const shouldForceOpen = !session.user.onboardingCompleted;
   const allowEdit = allowCompletedAccess(resolvedSearchParams.mode);
   const openFromQuery = isModalOpen(resolvedSearchParams.modal);
@@ -78,6 +89,7 @@ export default async function OwnerDashboardPage({ params, searchParams }: Owner
             draft={draft?.data ?? null}
             label="Mettre à jour mon onboarding"
             defaultOpen={shouldOpenModal}
+            prefill={prefill}
           />
         </div>
       </header>
