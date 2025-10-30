@@ -48,6 +48,10 @@ export async function POST(request: Request) {
 
   const signature = signCloudinaryPayload(payload);
 
+  console.info('Signature Cloudinary générée pour le téléversement.', {
+    userId: session.user.id,
+    folder,
+  });
   return NextResponse.json({
     cloudName: env.CLOUDINARY_CLOUD_NAME,
     apiKey: env.CLOUDINARY_API_KEY,
