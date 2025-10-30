@@ -23,6 +23,10 @@ export const ownerOnboardingSchema = z.object({
         url: z.string().url(),
         alt: z.string().optional(),
         isHero: z.boolean(),
+        width: z.number().min(0).optional(),
+        height: z.number().min(0).optional(),
+        format: z.string().optional(),
+        bytes: z.number().min(0).optional(),
       })
     )
     .optional(),
