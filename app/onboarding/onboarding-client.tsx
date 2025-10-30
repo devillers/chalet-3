@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { defaultLocale } from '@/lib/i18n';
 import {
   ownerOnboardingDraftSchema,
@@ -21,6 +21,7 @@ import {
   type TenantOnboardingInput,
 } from '@/lib/validators/onboarding';
 import { isPlainObject, mergeDraftInto, sanitizeDraft } from '@/lib/utils/draft';
+import { OwnerPhotosDropzone } from './components/owner-photos-dropzone';
 
 interface OnboardingClientProps {
   role: 'OWNER' | 'TENANT';
@@ -545,39 +546,19 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
       return (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Les téléchargements s&apos;effectuent via Cloudinary (signature sécurisée). Ajoutez au moins une image héros.
+            Téléversez vos images directement sur Cloudinary. Ajoutez au moins une image héros pour mettre en valeur le logement.
           </p>
           <FormField
             control={form.control}
             name="photos"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>URLs des photos (séparées par des retours à la ligne)</FormLabel>
+                <FormLabel>Photos du logement</FormLabel>
                 <FormControl>
-                  <Textarea
-                    placeholder="https://res.cloudinary.com/..."
-                    value={(field.value ?? [])
-                      .map((photo) => (typeof photo === 'string' ? photo : photo.url ?? ''))
-                      .filter(Boolean)
-                      .join('\n')}
-                    onChange={(event) => {
-                      const urls = event.target.value
-                        .split('\n')
-                        .map((url) => url.trim())
-                        .filter(Boolean);
-                      field.onChange(
-                        urls.map((url, index) => ({
-                          publicId: `draft-${index}`,
-                          url,
-                          alt: `Photo ${index + 1}`,
-                          isHero: index === 0,
-                          width: 0,
-                          height: 0,
-                          format: 'jpg',
-                          bytes: 0,
-                        }))
-                      );
-                    }}
+                  <OwnerPhotosDropzone
+                    value={field.value ?? []}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
                   />
                 </FormControl>
                 <FormMessage />

@@ -10,6 +10,7 @@ const defaults = {
   CLOUDINARY_CLOUD_NAME: 'test-cloud',
   CLOUDINARY_API_KEY: 'test-api-key',
   CLOUDINARY_API_SECRET: 'test-api-secret',
+  CLOUDINARY_ONBOARDING_FOLDER: 'chalet-manager/onboarding',
 } as const;
 
 const vercelUrl = process.env.VERCEL_URL
@@ -29,6 +30,9 @@ const envSchema = z
     CLOUDINARY_API_KEY: z.string().default(defaults.CLOUDINARY_API_KEY),
     CLOUDINARY_API_SECRET: z.string().default(defaults.CLOUDINARY_API_SECRET),
     CLOUDINARY_TEST_FOLDER: z.string().optional(),
+    CLOUDINARY_ONBOARDING_FOLDER: z
+      .string()
+      .default(defaults.CLOUDINARY_ONBOARDING_FOLDER),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     NEXT_PUBLIC_IS_STAGING: z.enum(['true', 'false']).optional(),
@@ -100,6 +104,7 @@ const parsed = envSchema.safeParse({
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
   CLOUDINARY_TEST_FOLDER: process.env.CLOUDINARY_TEST_FOLDER,
+  CLOUDINARY_ONBOARDING_FOLDER: process.env.CLOUDINARY_ONBOARDING_FOLDER,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   NEXT_PUBLIC_IS_STAGING: process.env.NEXT_PUBLIC_IS_STAGING,
