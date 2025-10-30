@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -37,6 +37,38 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
   const [role, setRole] = useState<SignUpInput['role']>('OWNER');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [csrfToken, setCsrfToken] = useState<string | null>(null);
+  const [isLoadingCsrf, setIsLoadingCsrf] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadToken = async () => {
+      try {
+        const response = await fetch('/api/security/csrf', { method: 'GET' });
+        if (!response.ok) {
+          throw new Error('CSRF request failed');
+        }
+        const data = (await response.json()) as { token?: string };
+        if (isMounted) {
+          setCsrfToken(data.token ?? null);
+        }
+      } catch {
+        if (isMounted) {
+          setError('Erreur de sécurité. Veuillez rafraîchir la page et réessayer.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingCsrf(false);
+        }
+      }
+    };
+
+    void loadToken();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const form = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
@@ -52,9 +84,14 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
   const onSubmit = form.handleSubmit(async (values) => {
     setError(null);
     setIsSubmitting(true);
+    if (!csrfToken) {
+      setError('Le formulaire n’est pas encore prêt. Veuillez patienter.');
+      return;
+    }
+
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
       body: JSON.stringify(values),
     });
     setIsSubmitting(false);
@@ -164,7 +201,11 @@ export default function SignUpForm({ locale }: SignUpFormProps) {
                 />
                 <input type="hidden" value={role} {...form.register('role')} />
                 {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting || isLoadingCsrf || !csrfToken}
+                >
                   {isSubmitting ? 'Création...' : 'Créer mon compte'}
                 </Button>
               </form>

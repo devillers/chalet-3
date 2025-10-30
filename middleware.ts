@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { locales, defaultLocale } from './lib/i18n';
+import { getToken } from 'next-auth/jwt';
+import { locales, defaultLocale, type Locale, getPathWithoutLocale } from './lib/i18n';
 import { env } from './env';
 
 const TRACKING_PARAMS = new Set([
@@ -17,10 +18,42 @@ const TRACKING_PARAMS = new Set([
   'ttclid',
 ]);
 
-export function middleware(request: NextRequest) {
+const PUBLIC_ROUTES = [/^\/$/, /^\/signin$/, /^\/signup$/, /^\/access-denied$/, /^\/superadmin\/signin$/];
+const SUPERADMIN_ROUTES = [/^\/superadmin(\/|$)/];
+const PROTECTED_ROUTES = [/^\/dashboard(\/|$)/, /^\/account(\/|$)/, /^\/onboarding(\/|$)/];
+const OWNER_ONLY_ROUTES = [/^\/dashboard\/owner(\/|$)/];
+const TENANT_ONLY_ROUTES = [/^\/dashboard\/tenant(\/|$)/];
+
+const matches = (path: string, patterns: RegExp[]) => patterns.some((pattern) => pattern.test(path));
+
+const buildRedirectUrl = (request: NextRequest, locale: Locale, pathname: string, searchParams?: Record<string, string>) => {
+  const url = new URL(request.url);
+  url.pathname = `/${locale}${pathname}`.replace(/\/+/g, '/');
+  url.search = '';
+  if (searchParams) {
+    for (const [key, value] of Object.entries(searchParams)) {
+      if (value) {
+        url.searchParams.set(key, value);
+      }
+    }
+  }
+  return url;
+};
+
+const removeTrackingParams = (url: URL) => {
+  let mutated = false;
+  for (const param of Array.from(url.searchParams.keys())) {
+    if (TRACKING_PARAMS.has(param.toLowerCase())) {
+      url.searchParams.delete(param);
+      mutated = true;
+    }
+  }
+  return mutated;
+};
+
+export async function middleware(request: NextRequest) {
   const { nextUrl } = request;
 
-  // ✅ Ignore les routes API, les assets statiques, etc.
   if (
     nextUrl.pathname.startsWith('/api/') ||
     nextUrl.pathname.startsWith('/_next/') ||
@@ -29,8 +62,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const canonicalUrl = new URL(env.SITE_URL);
   const updatedUrl = new URL(nextUrl.href);
+  const canonicalUrl = new URL(env.SITE_URL);
   const requestHost = request.headers.get('host');
   const canonicalHost =
     canonicalUrl.hostname === 'localhost' || canonicalUrl.hostname === '127.0.0.1'
@@ -38,10 +71,8 @@ export function middleware(request: NextRequest) {
       : canonicalUrl.host;
   let shouldRedirect = false;
 
-  // 🚫 Ne force HTTPS et le domaine qu'en production
   if (env.NODE_ENV === 'production') {
     const forwardedProto = request.headers.get('x-forwarded-proto');
-
     if (forwardedProto && forwardedProto !== 'https') {
       updatedUrl.protocol = 'https:';
       shouldRedirect = true;
@@ -53,48 +84,101 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 🧹 Nettoie les slashs finaux
   if (updatedUrl.pathname !== '/' && updatedUrl.pathname.endsWith('/')) {
     updatedUrl.pathname = updatedUrl.pathname.replace(/\/+$/, '');
     shouldRedirect = true;
   }
 
-  // 🔠 Met le path en minuscule
   const lowerCasePath = updatedUrl.pathname.toLowerCase();
   if (updatedUrl.pathname !== lowerCasePath) {
     updatedUrl.pathname = lowerCasePath;
     shouldRedirect = true;
   }
 
-  // 🧹 Supprime les paramètres de tracking UTM
-  for (const param of Array.from(updatedUrl.searchParams.keys())) {
-    if (TRACKING_PARAMS.has(param.toLowerCase())) {
-      updatedUrl.searchParams.delete(param);
-      shouldRedirect = true;
-    }
+  if (removeTrackingParams(updatedUrl)) {
+    shouldRedirect = true;
   }
 
-  // 🔁 Si une redirection est nécessaire
+  const pathname = updatedUrl.pathname;
+  const localeSegment = pathname.split('/')[1] as Locale | undefined;
+  const hasLocale = localeSegment && locales.includes(localeSegment);
+
+  if (!hasLocale) {
+    const redirectUrl = new URL(updatedUrl.href);
+    redirectUrl.pathname = `/${defaultLocale}${pathname}`.replace(/\/+/g, '/');
+    redirectUrl.search = updatedUrl.search;
+    return NextResponse.redirect(redirectUrl, { status: shouldRedirect ? 301 : 307 });
+  }
+
   if (shouldRedirect) {
     return NextResponse.redirect(updatedUrl, { status: 301 });
   }
 
-  // 🌍 Vérifie si le path contient déjà une locale
-  const pathnameHasLocale = locales.some(
-    (locale) => updatedUrl.pathname === `/${locale}` || updatedUrl.pathname.startsWith(`/${locale}/`)
-  );
+  const locale = localeSegment ?? defaultLocale;
+  const normalizedPath = getPathWithoutLocale(pathname) || '/';
 
-  if (pathnameHasLocale) {
+  if (matches(normalizedPath, PUBLIC_ROUTES)) {
     return NextResponse.next();
   }
 
-  // 🌐 Sinon, ajoute la locale par défaut
-  const locale = defaultLocale;
-  updatedUrl.pathname = `/${locale}${updatedUrl.pathname}`;
-  return NextResponse.redirect(updatedUrl);
+  const token = await getToken({ req: request, secret: env.NEXTAUTH_SECRET });
+
+  if (matches(normalizedPath, SUPERADMIN_ROUTES)) {
+    if (!token) {
+      const callbackUrl = `${updatedUrl.pathname}${updatedUrl.search}`;
+      const redirectUrl = buildRedirectUrl(request, locale, '/superadmin/signin', { callbackUrl });
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    if (token.role !== 'SUPERADMIN') {
+      const redirectUrl = buildRedirectUrl(request, locale, '/access-denied', { reason: 'superadmin_only' });
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    return NextResponse.next();
+  }
+
+  if (!matches(normalizedPath, PROTECTED_ROUTES)) {
+    return NextResponse.next();
+  }
+
+  if (!token) {
+    const callbackUrl = `${updatedUrl.pathname}${updatedUrl.search}`;
+    const redirectUrl = buildRedirectUrl(request, locale, '/signin', { callbackUrl });
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (token.role === 'SUPERADMIN') {
+    const redirectUrl = buildRedirectUrl(request, locale, '/access-denied', { reason: 'superadmin_only' });
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  const onboardingCompleted = Boolean(token.onboardingCompleted);
+  if (!onboardingCompleted && !normalizedPath.startsWith('/onboarding')) {
+    const callbackUrl = `${updatedUrl.pathname}${updatedUrl.search}`;
+    const redirectUrl = buildRedirectUrl(request, locale, '/onboarding', { callbackUrl });
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (onboardingCompleted && normalizedPath.startsWith('/onboarding')) {
+    const destination = token.role === 'OWNER' ? '/dashboard/owner' : '/dashboard/tenant';
+    const redirectUrl = buildRedirectUrl(request, locale, destination);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (matches(normalizedPath, OWNER_ONLY_ROUTES) && token.role !== 'OWNER') {
+    const redirectUrl = buildRedirectUrl(request, locale, '/access-denied', { reason: 'owner_only' });
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (matches(normalizedPath, TENANT_ONLY_ROUTES) && token.role !== 'TENANT') {
+    const redirectUrl = buildRedirectUrl(request, locale, '/access-denied', { reason: 'tenant_only' });
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  return NextResponse.next();
 }
 
-// ✅ Export unique du config (plus d'erreur “Cannot redeclare block-scoped variable”)
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.*).*)',
