@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type UseFormReturn, type UseFormWatch } from 'react-hook-form';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import { defaultLocale } from '@/lib/i18n';
 import {
   ownerOnboardingSchema,
   tenantOnboardingSchema,
@@ -60,6 +62,7 @@ interface OwnerProps {
 }
 
 function OwnerOnboarding({ openModal, draft }: OwnerProps) {
+  const router = useRouter();
   const parsedDraft = ownerOnboardingSchema.safeParse(draft ?? {});
   const form = useForm<OwnerOnboardingInput>({
     resolver: zodResolver(ownerOnboardingSchema),
@@ -79,12 +82,14 @@ function OwnerOnboarding({ openModal, draft }: OwnerProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsOpen(openModal);
   }, [openModal]);
 
-  useAutoSave(form.watch, 'OWNER', (date) => setLastSaved(date));
+  const handleAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
+  useAutoSave(form.watch, 'OWNER', handleAutoSaved);
 
   const step = OWNER_STEPS[currentStep];
 
@@ -100,14 +105,35 @@ function OwnerOnboarding({ openModal, draft }: OwnerProps) {
 
   const handlePublish = async () => {
     setSaving(true);
-    await form.trigger();
-    await fetch('/api/onboarding/draft', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form.getValues(), review: { status: 'published' as const } }),
-    });
-    setLastSaved(new Date());
-    setSaving(false);
+    setError(null);
+    const isValid = await form.trigger();
+    if (!isValid) {
+      setSaving(false);
+      return;
+    }
+
+    const payload = { ...form.getValues(), review: { status: 'published' as const } };
+
+    try {
+      const response = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json().catch(() => null)) as { redirectTo?: string; message?: string } | null;
+      if (!response.ok) {
+        setError(data?.message ?? 'Impossible de finaliser la publication.');
+        return;
+      }
+
+      const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
+      router.push(destination);
+    } catch (error_) {
+      console.error('Failed to publish onboarding draft', error_);
+      setError('Impossible de finaliser la publication.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -141,6 +167,7 @@ function OwnerOnboarding({ openModal, draft }: OwnerProps) {
                   )}
                 </div>
               </div>
+              {error ? <p className="text-sm text-destructive">{error}</p> : null}
             </form>
           </Form>
         </div>
@@ -155,6 +182,7 @@ interface TenantProps {
 }
 
 function TenantOnboarding({ openModal, draft }: TenantProps) {
+  const router = useRouter();
   const parsedDraft = tenantOnboardingSchema.safeParse(draft ?? {});
   const form = useForm<TenantOnboardingInput>({
     resolver: zodResolver(tenantOnboardingSchema),
@@ -170,12 +198,16 @@ function TenantOnboarding({ openModal, draft }: TenantProps) {
   });
   const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsOpen(openModal);
   }, [openModal]);
 
-  useAutoSave(form.watch, 'TENANT');
+  const handleTenantAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
+  useAutoSave(form.watch, 'TENANT', handleTenantAutoSaved);
 
   const step = TENANT_STEPS[currentStep];
 
@@ -189,6 +221,39 @@ function TenantOnboarding({ openModal, draft }: TenantProps) {
 
   const previous = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
+  const handleFinalize = async () => {
+    setSaving(true);
+    setError(null);
+    const isValid = await form.trigger();
+    if (!isValid) {
+      setSaving(false);
+      return;
+    }
+
+    const payload = { ...form.getValues(), review: { status: 'ready' as const } };
+
+    try {
+      const response = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json().catch(() => null)) as { redirectTo?: string; message?: string } | null;
+      if (!response.ok) {
+        setError(data?.message ?? "Impossible de finaliser l'onboarding.");
+        return;
+      }
+
+      const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/tenant`;
+      router.push(destination);
+    } catch (error_) {
+      console.error('Failed to finalise tenant onboarding', error_);
+      setError("Impossible de finaliser l'onboarding.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
@@ -200,18 +265,26 @@ function TenantOnboarding({ openModal, draft }: TenantProps) {
         <Form {...form}>
           <form className="space-y-6">
             <TenantStepRenderer form={form} stepId={step.id} />
-            <div className="flex items-center justify-end gap-2">
-              <Button type="button" variant="outline" onClick={previous} disabled={currentStep === 0}>
-                Précédent
-              </Button>
-              {currentStep < TENANT_STEPS.length - 1 ? (
-                <Button type="button" onClick={next}>
-                  Suivant
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-muted-foreground">
+                {lastSaved ? `Sauvegardé ${lastSaved.toLocaleTimeString()}` : 'Sauvegarde automatique active'}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" onClick={previous} disabled={currentStep === 0}>
+                  Précédent
                 </Button>
-              ) : (
-                <Button type="button" onClick={() => next()}>Finaliser</Button>
-              )}
+                {currentStep < TENANT_STEPS.length - 1 ? (
+                  <Button type="button" onClick={next}>
+                    Suivant
+                  </Button>
+                ) : (
+                  <Button type="button" onClick={handleFinalize} disabled={saving}>
+                    {saving ? 'Finalisation...' : 'Finaliser'}
+                  </Button>
+                )}
+              </div>
             </div>
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </form>
         </Form>
       </DialogContent>
@@ -698,10 +771,18 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(draft),
-      }).then(() => {
-        onSaved?.(new Date());
-      });
+      })
+        .then((response) => {
+          if (!response.ok) {
+            console.error('Échec de la sauvegarde automatique du brouillon');
+            return;
+          }
+          onSaved?.(new Date());
+        })
+        .catch((error) => {
+          console.error('Erreur lors de la sauvegarde automatique', error);
+        });
     }, 800);
     return () => clearTimeout(timeout);
-  }, [draft, role]);
+  }, [draft, role, onSaved]);
 }
