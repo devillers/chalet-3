@@ -13,6 +13,17 @@ const defaults = {
   CLOUDINARY_ONBOARDING_FOLDER: 'chalet-manager/onboarding',
 } as const;
 
+type CloudinaryConfigKey =
+  | 'CLOUDINARY_CLOUD_NAME'
+  | 'CLOUDINARY_API_KEY'
+  | 'CLOUDINARY_API_SECRET';
+
+const cloudinaryPlaceholderValues: Record<CloudinaryConfigKey, readonly string[]> = {
+  CLOUDINARY_CLOUD_NAME: ['your-cloud-name', defaults.CLOUDINARY_CLOUD_NAME],
+  CLOUDINARY_API_KEY: ['000000000000000', defaults.CLOUDINARY_API_KEY],
+  CLOUDINARY_API_SECRET: ['super-secret', defaults.CLOUDINARY_API_SECRET],
+};
+
 const vercelUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL.replace(/^https?:\/\//, '')}`
   : undefined;
@@ -120,6 +131,43 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export type AppEnvironment = typeof env;
+
+const isPlaceholder = (value: string | undefined, placeholders: readonly string[]): boolean => {
+  if (!value) {
+    return true;
+  }
+
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return true;
+  }
+
+  return placeholders.some(
+    (placeholder) => normalized.localeCompare(placeholder, undefined, { sensitivity: 'accent' }) === 0,
+  );
+};
+
+const shouldValidateCloudinary = env.NODE_ENV !== 'test';
+
+const unresolvedCloudinaryKeys = shouldValidateCloudinary
+  ? (Object.keys(cloudinaryPlaceholderValues) as CloudinaryConfigKey[]).filter((key) =>
+      isPlaceholder(process.env[key], cloudinaryPlaceholderValues[key]),
+    )
+  : [];
+
+if (unresolvedCloudinaryKeys.length > 0) {
+  console.warn('⚠️  Cloudinary environment variables are not fully configured.', {
+    keys: unresolvedCloudinaryKeys,
+  });
+  console.warn(
+    '    File uploads will be disabled until CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET are set.',
+  );
+}
+
+export const cloudinaryConfig = {
+  isConfigured: unresolvedCloudinaryKeys.length === 0,
+  missingKeys: unresolvedCloudinaryKeys,
+};
 
 
 
