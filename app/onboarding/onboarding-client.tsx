@@ -23,6 +23,7 @@ interface OnboardingClientProps {
   role: 'OWNER' | 'TENANT';
   openModal: boolean;
   draft: Record<string, unknown> | null;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface StepConfig {
@@ -49,19 +50,20 @@ const TENANT_STEPS: StepConfig[] = [
   { id: 'review', label: 'Résumé', description: 'Vérifiez et finalisez' },
 ];
 
-export default function OnboardingClient({ role, openModal, draft }: OnboardingClientProps) {
+export default function OnboardingClient({ role, openModal, draft, onOpenChange }: OnboardingClientProps) {
   if (role === 'OWNER') {
-    return <OwnerOnboarding openModal={openModal} draft={draft} />;
+    return <OwnerOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} />;
   }
-  return <TenantOnboarding openModal={openModal} draft={draft} />;
+  return <TenantOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} />;
 }
 
 interface OwnerProps {
   openModal: boolean;
   draft: Record<string, unknown> | null;
+  onOpenChange?: (open: boolean) => void;
 }
 
-function OwnerOnboarding({ openModal, draft }: OwnerProps) {
+function OwnerOnboarding({ openModal, draft, onOpenChange }: OwnerProps) {
   const router = useRouter();
   const parsedDraft = ownerOnboardingSchema.safeParse(draft ?? {});
   const form = useForm<OwnerOnboardingInput>({
@@ -136,8 +138,16 @@ function OwnerOnboarding({ openModal, draft }: OwnerProps) {
     }
   };
 
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      setIsOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange],
+  );
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Onboarding propriétaire</DialogTitle>
@@ -179,9 +189,10 @@ function OwnerOnboarding({ openModal, draft }: OwnerProps) {
 interface TenantProps {
   openModal: boolean;
   draft: Record<string, unknown> | null;
+  onOpenChange?: (open: boolean) => void;
 }
 
-function TenantOnboarding({ openModal, draft }: TenantProps) {
+function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   const router = useRouter();
   const parsedDraft = tenantOnboardingSchema.safeParse(draft ?? {});
   const form = useForm<TenantOnboardingInput>({
@@ -254,8 +265,16 @@ function TenantOnboarding({ openModal, draft }: TenantProps) {
     }
   };
 
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      setIsOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange],
+  );
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Onboarding locataire</DialogTitle>

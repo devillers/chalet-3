@@ -2,10 +2,12 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { authOptions } from '@/lib/auth/config';
-import { defaultLocale, Locale } from '@/lib/i18n';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import DashboardOnboardingTrigger from '@/components/dashboard-onboarding-trigger';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { authOptions } from '@/lib/auth/config';
+import { getOnboardingDraft } from '@/lib/db/onboarding';
+import { defaultLocale, Locale } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: 'Tableau de bord locataire — Chalet Manager',
@@ -14,11 +16,34 @@ export const metadata: Metadata = {
 
 interface TenantDashboardPageProps {
   params: Promise<{ locale: Locale }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function TenantDashboardPage({ params }: TenantDashboardPageProps) {
+const resolveSearchParams = async (
+  searchParams: TenantDashboardPageProps['searchParams'],
+): Promise<Record<string, string | string[] | undefined>> => {
+  const resolved = await searchParams;
+  return resolved ?? {};
+};
+
+const isModalOpen = (modalParam: string | string[] | undefined): boolean => {
+  if (Array.isArray(modalParam)) {
+    return modalParam.includes('1');
+  }
+  return modalParam === '1';
+};
+
+const allowCompletedAccess = (modeParam: string | string[] | undefined): boolean => {
+  if (Array.isArray(modeParam)) {
+    return modeParam.includes('edit');
+  }
+  return modeParam === 'edit';
+};
+
+export default async function TenantDashboardPage({ params, searchParams }: TenantDashboardPageProps) {
   const resolvedParams = await params;
   const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
+  const resolvedSearchParams = await resolveSearchParams(searchParams);
 
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -32,6 +57,11 @@ export default async function TenantDashboardPage({ params }: TenantDashboardPag
   }
 
   const displayName = session.user.name ?? 'Invité';
+  const draft = session.user.id ? await getOnboardingDraft(session.user.id) : null;
+  const shouldForceOpen = !session.user.onboardingCompleted;
+  const allowEdit = allowCompletedAccess(resolvedSearchParams.mode);
+  const openFromQuery = isModalOpen(resolvedSearchParams.modal);
+  const shouldOpenModal = shouldForceOpen || allowEdit || openFromQuery;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 space-y-8">
@@ -42,9 +72,12 @@ export default async function TenantDashboardPage({ params }: TenantDashboardPag
           Suivez vos séjours à venir, préparez votre arrivée et échangez facilement avec nos équipes dédiées.
         </p>
         <div className="flex flex-wrap gap-3 pt-4">
-          <Button asChild>
-            <Link href="/onboarding?mode=edit&modal=1">Actualiser mon onboarding</Link>
-          </Button>
+          <DashboardOnboardingTrigger
+            role="TENANT"
+            draft={draft?.data ?? null}
+            label="Actualiser mon onboarding"
+            defaultOpen={shouldOpenModal}
+          />
         </div>
       </header>
 
