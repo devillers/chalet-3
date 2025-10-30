@@ -52,9 +52,10 @@ const envSchema = z
     MONGODB_URI_TEST: z.string().url().optional(),
     MONGODB_DB: z.string().optional(),
     CLOUDINARY_CLOUD_NAME: z
-      .string()
-      .default(defaults.CLOUDINARY_CLOUD_NAME)
-      .transform((value) => sanitizeCloudinaryCloudName(value)),
+    .string()
+    .default(defaults.CLOUDINARY_CLOUD_NAME)
+    .transform((value) => sanitizeCloudinaryCloudName(value).toLowerCase()),
+
     CLOUDINARY_API_KEY: z.string().default(defaults.CLOUDINARY_API_KEY),
     CLOUDINARY_API_SECRET: z.string().default(defaults.CLOUDINARY_API_SECRET),
     CLOUDINARY_TEST_FOLDER: z.string().optional(),
