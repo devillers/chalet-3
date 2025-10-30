@@ -1,11 +1,13 @@
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import { authOptions } from '@/lib/auth/config';
-import { defaultLocale, Locale } from '@/lib/i18n';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import DashboardOnboardingTrigger from '@/components/dashboard-onboarding-trigger';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { authOptions } from '@/lib/auth/config';
+import { getOnboardingDraft } from '@/lib/db/onboarding';
+import { defaultLocale, Locale } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title: 'Tableau de bord propriétaire — Chalet Manager',
@@ -14,11 +16,34 @@ export const metadata: Metadata = {
 
 interface OwnerDashboardPageProps {
   params: Promise<{ locale: Locale }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function OwnerDashboardPage({ params }: OwnerDashboardPageProps) {
+const resolveSearchParams = async (
+  searchParams: OwnerDashboardPageProps['searchParams'],
+): Promise<Record<string, string | string[] | undefined>> => {
+  const resolved = await searchParams;
+  return resolved ?? {};
+};
+
+const isModalOpen = (modalParam: string | string[] | undefined): boolean => {
+  if (Array.isArray(modalParam)) {
+    return modalParam.includes('1');
+  }
+  return modalParam === '1';
+};
+
+const allowCompletedAccess = (modeParam: string | string[] | undefined): boolean => {
+  if (Array.isArray(modeParam)) {
+    return modeParam.includes('edit');
+  }
+  return modeParam === 'edit';
+};
+
+export default async function OwnerDashboardPage({ params, searchParams }: OwnerDashboardPageProps) {
   const resolvedParams = await params;
   const locale = (resolvedParams?.locale ?? defaultLocale) as Locale;
+  const resolvedSearchParams = await resolveSearchParams(searchParams);
 
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -32,6 +57,11 @@ export default async function OwnerDashboardPage({ params }: OwnerDashboardPageP
   }
 
   const displayName = session.user.name ?? 'Propriétaire';
+  const draft = session.user.id ? await getOnboardingDraft(session.user.id) : null;
+  const shouldForceOpen = !session.user.onboardingCompleted;
+  const allowEdit = allowCompletedAccess(resolvedSearchParams.mode);
+  const openFromQuery = isModalOpen(resolvedSearchParams.modal);
+  const shouldOpenModal = shouldForceOpen || allowEdit || openFromQuery;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-12 space-y-8">
@@ -43,9 +73,12 @@ export default async function OwnerDashboardPage({ params }: OwnerDashboardPageP
           propriétés.
         </p>
         <div className="flex flex-wrap gap-3 pt-4">
-          <Button asChild>
-            <Link href="/onboarding?mode=edit&modal=1">Mettre à jour mon onboarding</Link>
-          </Button>
+          <DashboardOnboardingTrigger
+            role="OWNER"
+            draft={draft?.data ?? null}
+            label="Mettre à jour mon onboarding"
+            defaultOpen={shouldOpenModal}
+          />
         </div>
       </header>
 
