@@ -28,55 +28,26 @@ export async function upsertOnboardingDraft(
       userId,
       draftId: existingDraft._id.toString(),
     });
-    const updated = await OnboardingDraftModel.findByIdAndUpdate(
-      existingDraft._id,
-      { role, data },
-      { new: true },
-    );
-    if (updated) {
-      console.debug('Brouillon mis à jour avec succès.', {
-        userId,
-        draftId: updated._id.toString(),
-      });
-      return updated;
-    }
-
-    console.warn('Échec de la mise à jour du brouillon existant, nouvelle tentative via userId.', {
-      userId,
-      draftId: existingDraft._id.toString(),
-    });
-
-    const fallback = await OnboardingDraftModel.findOne({ userId });
-    if (fallback) {
-      console.debug('Brouillon récupéré après tentative de mise à jour infructueuse.', {
-        userId,
-        draftId: fallback._id.toString(),
-      });
-      return fallback;
-    }
+  } else {
+    console.debug('Création d\'un nouveau brouillon.', { userId, role });
   }
 
-  console.debug('Création d\'un nouveau brouillon.', { userId, role });
-  try {
-    return await OnboardingDraftModel.create({ userId, role, data });
-  } catch (error) {
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: number }).code === 11000) {
-      console.warn('Conflit de clé unique lors de la création du brouillon, récupération du document existant.', {
-        userId,
-        role,
-      });
-      const existing = await OnboardingDraftModel.findOne({ userId });
-      if (existing) {
-        console.debug('Brouillon existant renvoyé après conflit de clé unique.', {
-          userId,
-          draftId: existing._id.toString(),
-        });
-        return existing;
-      }
-    }
+  const draft = await OnboardingDraftModel.findOneAndUpdate(
+    { userId },
+    { userId, role, data },
+    { new: true, upsert: true },
+  );
 
-    throw error;
+  if (!draft) {
+    throw new Error('Échec de l\'enregistrement du brouillon d\'onboarding.');
   }
+
+  console.debug(existingDraft ? 'Brouillon mis à jour avec succès.' : 'Brouillon créé avec succès.', {
+    userId,
+    draftId: draft._id.toString(),
+  });
+
+  return draft;
 }
 
 export async function clearOnboardingDraft(userId: string): Promise<void> {
