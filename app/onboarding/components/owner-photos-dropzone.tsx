@@ -70,11 +70,15 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const photos = useMemo(() => (Array.isArray(value) ? value : []), [value]);
+  const photos = useMemo(
+    () => (Array.isArray(value) ? value.filter(isValidOwnerPhoto) : []),
+    [value],
+  );
 
   const updatePhotos = useCallback(
     (next: OwnerPhoto[]): OwnerPhoto[] => {
-      const normalized = normalizeHero(next);
+      const validPhotos = next.filter(isValidOwnerPhoto);
+      const normalized = normalizeHero(validPhotos);
       onChange(normalized);
       onBlur?.();
       return normalized;
@@ -194,7 +198,7 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
               format: payload.format ?? file.type.replace('image/', ''),
               bytes: payload.bytes ?? file.size,
             },
-          ];
+          ].filter(isValidOwnerPhoto);
 
           nextPhotos = updatePhotos(nextPhotos);
         }
@@ -360,14 +364,36 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
 }
 
 function normalizeHero(photos: OwnerPhoto[]): OwnerPhoto[] {
-  if (photos.length === 0) {
-    return photos;
+  const validPhotos = photos.filter(isValidOwnerPhoto);
+  if (validPhotos.length === 0) {
+    return validPhotos;
   }
 
-  const heroIndex = photos.findIndex((photo) => photo.isHero);
+  const heroIndex = validPhotos.findIndex((photo) => photo.isHero);
   if (heroIndex >= 0) {
-    return photos.map((photo, index) => ({ ...photo, isHero: index === heroIndex }));
+    return validPhotos.map((photo, index) => ({ ...photo, isHero: index === heroIndex }));
   }
 
-  return photos.map((photo, index) => ({ ...photo, isHero: index === 0 }));
+  return validPhotos.map((photo, index) => ({ ...photo, isHero: index === 0 }));
+}
+
+function isValidOwnerPhoto(photo: unknown): photo is OwnerPhoto {
+  if (!photo || typeof photo !== 'object') {
+    return false;
+  }
+
+  const candidate = photo as Partial<OwnerPhoto>;
+  if (typeof candidate.publicId !== 'string' || candidate.publicId.trim().length === 0) {
+    return false;
+  }
+
+  if (typeof candidate.url !== 'string' || candidate.url.trim().length === 0) {
+    return false;
+  }
+
+  if (typeof candidate.isHero !== 'boolean') {
+    return false;
+  }
+
+  return true;
 }
