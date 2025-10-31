@@ -16,6 +16,7 @@ export const ownerOnboardingSchema = z.object({
     title: z.string().trim().min(3, 'Nom du logement trop court'),
     city: z.string().trim().min(2, 'Ville trop courte'),
     capacity: z.number().min(1, 'Capacité minimale 1'),
+    description: z.string().trim().optional(),
     regNumber: z.string().trim().optional(),
   }), // required
   photos: z

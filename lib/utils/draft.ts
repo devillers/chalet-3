@@ -10,9 +10,8 @@ export const isPlainObject = (value: unknown): value is Record<string, unknown> 
 
 export const sanitizeDraft = (value: unknown): unknown => {
   if (Array.isArray(value)) {
-    const sanitizedArray = value
-      .map((item) => sanitizeDraft(item))
-      .filter((item) => item !== undefined);
+    // Keep arrays even if empty, but drop undefined items
+    const sanitizedArray = value.map((item) => sanitizeDraft(item)).filter((item) => item !== undefined);
     return sanitizedArray;
   }
 
@@ -23,17 +22,10 @@ export const sanitizeDraft = (value: unknown): unknown => {
       if (sanitizedValue === undefined) {
         continue;
       }
-      if (isPlainObject(sanitizedValue) && Object.keys(sanitizedValue).length === 0) {
-        continue;
-      }
-      if (Array.isArray(sanitizedValue) && sanitizedValue.length === 0) {
-        continue;
-      }
+      // Keep empty objects/arrays for draft persistence
       sanitizedObject[key] = sanitizedValue;
     }
-    if (Object.keys(sanitizedObject).length === 0) {
-      return undefined;
-    }
+    // Keep empty objects for drafts (user may fill them later)
     return sanitizedObject;
   }
 

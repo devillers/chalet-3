@@ -571,6 +571,24 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="property.description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Décrivez votre logement (équipements, environnement, atouts)"
+                    rows={4}
+                    aria-invalid={!!form.formState.errors.property?.description}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
               control={form.control}

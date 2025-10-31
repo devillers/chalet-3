@@ -70,7 +70,7 @@ export function OwnerPhotosDropzone({ value, onChange, onBlur }: OwnerPhotosDrop
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const photos = useMemo(() => value ?? [], [value]);
+  const photos = useMemo(() => (Array.isArray(value) ? value : []), [value]);
 
   const updatePhotos = useCallback(
     (next: OwnerPhoto[]): OwnerPhoto[] => {

@@ -102,8 +102,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Ajoutez au moins une photo avant de publier.' }, { status: 400 });
     }
 
-    const existing = await PropertyModel.findOne({ ownerId: session.user.id });
-    const slug = await ensureUniqueSlug(prop.title, existing?._id);
+    const slug = await ensureUniqueSlug(prop.title);
     const hero = photos.find((p) => p.isHero) ?? photos[0];
 
     const images = photos.map((p) => ({
@@ -124,59 +123,25 @@ export async function POST(request: Request) {
       ? { hasInsurance: ownerData.compliance.hasInsurance, acceptsTerms: ownerData.compliance.acceptsTerms }
       : undefined;
 
-    const previousSlugs = existing
-      ? Array.from(
-          new Set([
-            ...(existing.previousSlugs ?? []),
-            ...(existing.slug !== slug ? [existing.slug] : []),
-          ]),
-        )
-      : [];
-
-    const propertyDocument = existing
-      ? await PropertyModel.findByIdAndUpdate(
-          existing._id,
-          {
-            title: prop.title,
-            slug,
-            previousSlugs,
-            status: 'published',
-            publishedAt: existing.publishedAt ?? new Date(),
-            ownerId: session.user.id,
-            regNumber: prop.regNumber ?? existing.regNumber,
-            capacity: prop.capacity ?? existing.capacity,
-            images,
-            heroImageId: hero?.publicId ?? existing.heroImageId,
-            seasonalPeriod: season
-              ? { start: new Date(season.start), end: new Date(season.end) }
-              : existing.seasonalPeriod,
-            address: {
-              ...(existing.address ?? {}),
-              city: prop.city,
-            },
-            pricing: pricing ?? existing.pricing,
-            compliance: compliance ?? existing.compliance,
-          },
-          { new: true },
-        )
-      : await PropertyModel.create({
-          title: prop.title,
-          slug,
-          previousSlugs,
-          status: 'published',
-          publishedAt: new Date(),
-          ownerId: session.user.id,
-          regNumber: prop.regNumber ?? '',
-          capacity: prop.capacity,
-          images,
-          address: { city: prop.city },
-          externalCalendars: [],
-          blocks: [],
-          heroImageId: hero?.publicId,
-          seasonalPeriod: season ? { start: new Date(season.start), end: new Date(season.end) } : undefined,
-          pricing,
-          compliance,
-        });
+    const propertyDocument = await PropertyModel.create({
+      title: prop.title,
+      slug,
+      previousSlugs: [],
+      status: 'published',
+      publishedAt: new Date(),
+      ownerId: session.user.id,
+      description: prop.description ?? undefined,
+      regNumber: prop.regNumber ?? '',
+      capacity: prop.capacity,
+      images,
+      address: { city: prop.city },
+      externalCalendars: [],
+      blocks: [],
+      heroImageId: hero?.publicId,
+      seasonalPeriod: season ? { start: new Date(season.start), end: new Date(season.end) } : undefined,
+      pricing,
+      compliance,
+    });
 
     if (!propertyDocument) {
       console.error('Création ou mise à jour de la propriété échouée.', {
@@ -185,7 +150,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Impossible de sauvegarder la propriété.' }, { status: 500 });
     }
 
-    await upsertOwnerProfile(session.user.id, ownerData.profile, propertyDocument._id);
+    await upsertOwnerProfile(
+      session.user.id,
+      ownerData.profile as { firstName: string; lastName: string; phone?: string },
+      propertyDocument._id,
+    );
 
     propertySummary = {
       id: propertyDocument._id,
