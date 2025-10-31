@@ -14,6 +14,22 @@ import {
 import { defaultLocale } from '@/lib/i18n';
 import { PropertyModel } from '@/lib/db/models/property';
 
+type OnboardingProfile =
+  | OwnerOnboardingInput['profile']
+  | TenantOnboardingInput['profile']
+  | undefined;
+
+function hasRequiredProfileNames(
+  profile: OnboardingProfile,
+): profile is { firstName: string; lastName: string; phone?: string } {
+  return (
+    typeof profile?.firstName === 'string' &&
+    profile.firstName.trim().length > 0 &&
+    typeof profile?.lastName === 'string' &&
+    profile.lastName.trim().length > 0
+  );
+}
+
 function slugify(input: string): string {
   return input
     .normalize('NFKD')
@@ -207,7 +223,22 @@ export async function POST(request: Request) {
     }
 
     // ✅ CORRECTION 4: Mettre à jour le profil utilisateur avec la propriété
-    await upsertOwnerProfile(session.user.id, ownerData.profile, propertyDocument._id);
+    if (!hasRequiredProfileNames(ownerData.profile)) {
+      console.error('Profil propriétaire incomplet lors de la finalisation de l\'onboarding.', {
+        userId: session.user.id,
+      });
+      return NextResponse.json({
+        message: 'Complétez votre profil avant de finaliser l\'onboarding.',
+      }, { status: 400 });
+    }
+
+    const ownerProfile = {
+      firstName: ownerData.profile.firstName.trim(),
+      lastName: ownerData.profile.lastName.trim(),
+      phone: ownerData.profile.phone,
+    };
+
+    await upsertOwnerProfile(session.user.id, ownerProfile, propertyDocument._id);
 
     propertySummary = {
       id: propertyDocument._id,
@@ -228,7 +259,22 @@ export async function POST(request: Request) {
     // ✅ Gestion du profil locataire
     const tenantData = parsed.data as TenantOnboardingInput;
 
-    await upsertTenantProfile(session.user.id, tenantData.profile);
+    if (!hasRequiredProfileNames(tenantData.profile)) {
+      console.error('Profil locataire incomplet lors de la finalisation de l\'onboarding.', {
+        userId: session.user.id,
+      });
+      return NextResponse.json({
+        message: 'Complétez votre profil avant de finaliser l\'onboarding.',
+      }, { status: 400 });
+    }
+
+    const tenantProfile = {
+      firstName: tenantData.profile.firstName.trim(),
+      lastName: tenantData.profile.lastName.trim(),
+      phone: tenantData.profile.phone,
+    };
+
+    await upsertTenantProfile(session.user.id, tenantProfile);
 
     await upsertTenantPreferences(session.user.id, {
       city: tenantData.search.city,
