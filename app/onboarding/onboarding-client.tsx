@@ -948,6 +948,8 @@ function TenantStepRenderer({ form, stepId }: TenantStepRendererProps) {
   }
 }
 
+// ✅ Version améliorée avec logs + validation complète + saison / photos / pricing
+
 function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
   watch: UseFormWatch<T>,
   role: 'OWNER' | 'TENANT',
@@ -956,6 +958,7 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
   const [draft, setDraft] = useState<T | null>(null);
   const lastSerializedDraft = useRef<string | null>(null);
 
+  // 📌 1. Met à jour le state local du draft à chaque modification
   useEffect(() => {
     const subscription = watch((value) => {
       setDraft(value as T);
@@ -963,30 +966,39 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
     return () => subscription.unsubscribe();
   }, [watch]);
 
+  // 📌 2. Sauvegarde automatique → seulement si le brouillon a changé
   useEffect(() => {
-    if (!draft) {
-      return;
-    }
+    if (!draft) return;
 
     const schema = role === 'OWNER' ? ownerOnboardingDraftSchema : tenantOnboardingDraftSchema;
+
+    // 🔹 Nettoyage (supprime les undefined, vide les strings trop longues…)
     const sanitized = sanitizeDraft(draft);
     const payload = isPlainObject(sanitized) ? sanitized : {};
+
+    // 🔹 Validation partielle (brouillon)
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
+      console.warn('❌ Draft validation failed (ignored):', parsed.error.flatten());
       return;
     }
 
+    // 🔹 Empêche les requêtes inutiles si aucun changement
     const serialized = JSON.stringify(parsed.data);
-    if (lastSerializedDraft.current === serialized) {
-      return;
-    }
+    if (lastSerializedDraft.current === serialized) return;
     lastSerializedDraft.current = serialized;
 
+    // 🕒 Déclenchement différé (debounce)
     const timeout = setTimeout(() => {
-      console.debug('Déclenchement de la sauvegarde automatique du brouillon.', {
+      console.debug('💾 Auto-save draft triggered.', {
         role,
         payloadKeys: Object.keys(parsed.data ?? {}),
+        hasSeason: !!(parsed.data as any).season,
+        hasPhotos: !!((parsed.data as any).photos?.length),
+        photosCount: ((parsed.data as any).photos?.length ?? 0),
+        hasPricing: !!(parsed.data as any).pricing,
       });
+
       void fetch('/api/onboarding/draft', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -995,21 +1007,23 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
       })
         .then((response) => {
           if (!response.ok) {
-            console.error('Échec de la sauvegarde automatique du brouillon', {
+            console.error('❌ Auto-save failed', {
               status: response.status,
               statusText: response.statusText,
             });
-            lastSerializedDraft.current = null;
+            lastSerializedDraft.current = null; // ➝ permet de relancer au prochain changement
             return;
           }
-          console.debug('Sauvegarde automatique du brouillon réussie.');
+          console.debug('✅ Draft auto-saved.');
           onSaved?.(new Date());
         })
         .catch((error) => {
-          console.error('Erreur lors de la sauvegarde automatique', error);
+          console.error('❌ Auto-save fetch error:', error);
           lastSerializedDraft.current = null;
         });
-    }, 800);
+    }, 800); // ✅ délai 800ms cohérent avec ton design UX
+
     return () => clearTimeout(timeout);
   }, [draft, role, onSaved]);
 }
+

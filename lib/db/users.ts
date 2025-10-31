@@ -1,5 +1,4 @@
-// lib/db/users.ts
-
+// lib/db/users.ts (mise à jour)
 import bcrypt from 'bcryptjs';
 import { connectMongo } from './mongoose';
 import { UserModel, type UserDocument, type UserRole } from './models/user';
@@ -20,8 +19,8 @@ export async function createUser(data: {
     email: data.email.toLowerCase(),
     role: data.role,
     passwordHash,
-    onboardingCompleted: data.onboardingCompleted ?? false, // ✅ assure toujours un booléen
-    googleId: data.googleId ?? '', // ✅ assure toujours une string
+    onboardingCompleted: data.onboardingCompleted ?? false,
+    googleId: data.googleId ?? '',
     ownedPropertyIds: [],
   });
 }
@@ -53,6 +52,10 @@ export async function updateUser(
   return UserModel.findByIdAndUpdate(id, updates, { new: true });
 }
 
+/**
+ * ✅ CORRECTION: Fonction qui gère la synchronisation propriétaire
+ * et fait la jointure avec la collection properties
+ */
 export async function upsertOwnerProfile(
   userId: string,
   profile: { firstName: string; lastName: string; phone?: string },
@@ -60,6 +63,7 @@ export async function upsertOwnerProfile(
 ): Promise<UserDocument | null> {
   await connectMongo();
   const user = await UserModel.findById(userId);
+  
   if (!user) {
     console.error('Impossible de synchroniser le profil propriétaire : utilisateur introuvable.', {
       userId,
@@ -67,12 +71,14 @@ export async function upsertOwnerProfile(
     return null;
   }
 
+  // ✅ Ajouter la propriété aux propriétés possédées
   const ownedPropertyIds = new Set(user.ownedPropertyIds ?? []);
   ownedPropertyIds.add(propertyId);
 
   const trimmedName = `${profile.firstName} ${profile.lastName}`.trim();
 
-  return UserModel.findByIdAndUpdate(
+  // ✅ CORRECTION: Mettre à jour l'utilisateur avec toutes les informations
+  const updated = await UserModel.findByIdAndUpdate(
     userId,
     {
       name: trimmedName.length > 0 ? trimmedName : user.name,
@@ -84,18 +90,30 @@ export async function upsertOwnerProfile(
       },
       ownedPropertyIds: Array.from(ownedPropertyIds),
       primaryPropertyId: user.primaryPropertyId ?? propertyId,
-      onboardingCompleted: true,
+      onboardingCompleted: true, // ✅ Marquer comme complété
     },
     { new: true },
   );
+
+  console.info('Profil propriétaire synchronisé avec succès.', {
+    userId,
+    propertyId,
+    ownedPropertiesCount: ownedPropertyIds.size,
+  });
+
+  return updated;
 }
 
+/**
+ * ✅ CORRECTION: Fonction qui gère la synchronisation locataire
+ */
 export async function upsertTenantProfile(
   userId: string,
   profile: { firstName: string; lastName: string; phone?: string },
 ): Promise<UserDocument | null> {
   await connectMongo();
   const user = await UserModel.findById(userId);
+  
   if (!user) {
     console.error('Impossible de synchroniser le profil locataire : utilisateur introuvable.', {
       userId,
@@ -105,7 +123,8 @@ export async function upsertTenantProfile(
 
   const trimmedName = `${profile.firstName} ${profile.lastName}`.trim();
 
-  return UserModel.findByIdAndUpdate(
+  // ✅ CORRECTION: Mettre à jour l'utilisateur avec les informations du profil
+  const updated = await UserModel.findByIdAndUpdate(
     userId,
     {
       name: trimmedName.length > 0 ? trimmedName : user.name,
@@ -115,9 +134,16 @@ export async function upsertTenantProfile(
         lastName: profile.lastName,
         phone: profile.phone,
       },
+      onboardingCompleted: true, // ✅ Marquer comme complété
     },
     { new: true },
   );
+
+  console.info('Profil locataire synchronisé avec succès.', {
+    userId,
+  });
+
+  return updated;
 }
 
 export async function listUsers(

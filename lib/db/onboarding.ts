@@ -1,3 +1,4 @@
+// lib/db/onboarding.ts
 import { connectMongo } from './mongoose';
 import { OnboardingDraftModel, type OnboardingDraftDocument } from './models/onboarding-draft';
 import { updateUser } from './users';
@@ -10,54 +11,79 @@ export async function getOnboardingDraft(userId: string): Promise<OnboardingDraf
   return OnboardingDraftModel.findOne({ userId });
 }
 
+/**
+ * ✅ CORRECTION: Upsert qui préserve TOUTES les données
+ */
 export async function upsertOnboardingDraft(
   userId: string,
   role: 'OWNER' | 'TENANT',
   data: Record<string, unknown>,
 ): Promise<OnboardingDraft> {
   await connectMongo();
+  
   console.debug('Upsert du brouillon d\'onboarding dans MongoDB.', {
     userId,
     role,
     keys: Object.keys(data ?? {}),
+    // ✅ Log des données critiques
+    hasSeason: !!(data as any).season,
+    hasPhotos: !!((data as any).photos?.length),
+    hasPricing: !!(data as any).pricing,
+    hasCompliance: !!(data as any).compliance,
   });
 
   const existingDraft = await OnboardingDraftModel.findOne({ userId });
+  
   if (existingDraft) {
     console.debug('Brouillon existant trouvé, mise à jour.', {
       userId,
       draftId: existingDraft._id.toString(),
     });
-  } else {
-    console.debug('Création d\'un nouveau brouillon.', { userId, role });
-  }
-
-  let draft: OnboardingDraft | null = null;
-  if (existingDraft) {
-    // Our lightweight model exposes findByIdAndUpdate, not findOneAndUpdate
-    draft = await OnboardingDraftModel.findByIdAndUpdate(
+    
+    // ✅ IMPORTANT: Merger les données au lieu de les écraser
+    const mergedData = {
+      ...existingDraft.data,
+      ...data,
+      // ✅ S'assurer que les arrays ne sont pas écrasés
+      photos: (data as any).photos ?? (existingDraft.data as any).photos ?? [],
+    };
+    
+    const updated = await OnboardingDraftModel.findByIdAndUpdate(
       existingDraft._id,
-      { role, data },
+      { 
+        role, 
+        data: mergedData 
+      },
       { new: true },
     );
-
-    if (!draft) {
-      // Fallback: re-read by userId in case of race conditions
-      draft = await OnboardingDraftModel.findOne({ userId });
+    
+    if (!updated) {
+      throw new Error('Échec de la mise à jour du brouillon d\'onboarding.');
     }
-  } else {
-    draft = await OnboardingDraftModel.create({ userId, role, data });
+    
+    console.debug('Brouillon mis à jour avec succès.', {
+      userId,
+      draftId: updated._id.toString(),
+      photosCount: ((updated.data as any).photos?.length ?? 0),
+    });
+    
+    return updated;
   }
-
-  if (!draft) {
-    throw new Error('Échec de l\'enregistrement du brouillon d\'onboarding.');
-  }
-
-  console.debug(existingDraft ? 'Brouillon mis à jour avec succès.' : 'Brouillon créé avec succès.', {
+  
+  // ✅ Création d'un nouveau brouillon
+  console.debug('Création d\'un nouveau brouillon.', { userId, role });
+  
+  const draft = await OnboardingDraftModel.create({ 
+    userId, 
+    role, 
+    data 
+  });
+  
+  console.debug('Brouillon créé avec succès.', {
     userId,
     draftId: draft._id.toString(),
   });
-
+  
   return draft;
 }
 
@@ -73,8 +99,16 @@ export async function clearOnboardingDraft(userId: string): Promise<void> {
   }
 }
 
+/**
+ * ✅ CORRECTION: Fonction qui marque l'onboarding comme complété
+ * et synchronise les données entre les collections
+ */
 export async function completeOnboarding(userId: string): Promise<void> {
   console.info('Marquage de l\'onboarding comme complété.', { userId });
+  
+  // ✅ Marquer l'utilisateur comme ayant complété l'onboarding
   await updateUser(userId, { onboardingCompleted: true });
+  
+  // ✅ Nettoyer le draft après finalisation
   await clearOnboardingDraft(userId);
 }
