@@ -105,7 +105,7 @@ export async function upsertOnboardingDraft(
 
     const operation = existingDraft ? 'update' : 'create';
 
-    const draft = await OnboardingDraftModel.findOneAndUpdate(
+    let draft = await OnboardingDraftModel.findOneAndUpdate(
       { userId },
       {
         userId,
@@ -114,6 +114,10 @@ export async function upsertOnboardingDraft(
       },
       { new: true, upsert: true },
     );
+
+    if (!draft) {
+      draft = await OnboardingDraftModel.findOne({ userId });
+    }
 
     if (!draft) {
       throw new Error('Échec de la sauvegarde du brouillon d\'onboarding.');
