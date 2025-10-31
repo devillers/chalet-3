@@ -48,11 +48,11 @@ export async function upsertOnboardingDraft(
       photos: (data as any).photos ?? (existingDraft.data as any).photos ?? [],
     };
     
-    const updated = await OnboardingDraftModel.findByIdAndUpdate(
-      existingDraft._id,
-      { 
-        role, 
-        data: mergedData 
+    const updated = await OnboardingDraftModel.findOneAndUpdate(
+      { userId },
+      {
+        role,
+        data: mergedData,
       },
       { new: true },
     );
