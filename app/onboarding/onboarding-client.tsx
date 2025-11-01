@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type FieldPath, type UseFormReturn, type UseFormWatch } from 'react-hook-form';
@@ -179,35 +179,56 @@ interface OwnerProps {
 
 function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps) {
   const router = useRouter();
+
+  // 1) React Hook Form
   const form = useForm<OwnerOnboardingInput>({
     resolver: zodResolver(ownerOnboardingSchema),
     defaultValues: resolveOwnerDefaultValues(draft, prefill),
   });
-  const isOpen = openModal;
+
+  // 2) États locaux
+  const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 3) Synchronisation prop -> état
+  useEffect(() => {
+    setIsOpen(openModal);
+  }, [openModal]);
+
+  // 4) Callbacks stables
   const handleAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      setIsOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange]
+  );
+
+  // 5) Hook custom après états / callbacks
   useAutoSave(form.watch, 'OWNER', handleAutoSaved);
 
+  // 6) Valeurs dérivées
   const step = OWNER_STEPS[currentStep];
 
+  // 7) Navigation steps
   const next = async () => {
     const fieldsToValidate = step.fields;
     const valid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true;
-    if (!valid) {
-      return;
-    }
+    if (!valid) return;
     setCurrentStep((prev) => Math.min(prev + 1, OWNER_STEPS.length - 1));
   };
 
   const previous = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
+  // 8) Publication
   const handlePublish = async () => {
     setSaving(true);
     setError(null);
+
     const isValid = await form.trigger();
     if (!isValid) {
       setSaving(false);
@@ -228,18 +249,21 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
     });
 
     try {
-      console.debug('Tentative de publication de l\'onboarding propriétaire.', {
+      console.debug("Tentative de publication de l'onboarding propriétaire.", {
         payloadKeys: Object.keys(payload ?? {}),
       });
+
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload),
       });
+
       const data = (await response
         .json()
         .catch(() => null)) as { redirectTo?: string; message?: string; property?: { slug: string } } | null;
+
       if (!response.ok) {
         console.error('La publication du brouillon a échoué.', {
           status: response.status,
@@ -250,14 +274,15 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         return;
       }
 
-      console.debug('Publication du brouillon réussie.', {
-        redirectTo: data?.redirectTo,
-      });
+      console.debug('Publication du brouillon réussie.', { redirectTo: data?.redirectTo });
+
       toast({
         title: 'VOTRE TABLEAU DE BORD EST BIEN PUBLIE',
         description: 'Your dashboard has been successfully published.',
       });
-      onOpenChange?.(false);
+
+      handleOpenChange(false); // ferme le Dialog localement + notifie le parent
+
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
     } catch (error_) {
@@ -269,22 +294,25 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Onboarding propriétaire</DialogTitle>
           <DialogDescription>{step.description}</DialogDescription>
         </DialogHeader>
+
         <div className="space-y-6">
           <Stepper steps={OWNER_STEPS} currentStep={currentStep} />
+
           <Form {...form}>
             <form className="space-y-6">
               <OwnerStepRenderer form={form} stepId={step.id} />
+
               <div className="flex items-center justify-between">
                 <div className="text-xs text-muted-foreground">
                   {lastSaved ? `Sauvegardé ${lastSaved.toLocaleTimeString()}` : 'Sauvegarde automatique active'}
                 </div>
+
                 <div className="flex items-center gap-2">
                   <Button type="button" variant="outline" onClick={previous} disabled={currentStep === 0}>
                     Étape précédente
@@ -300,6 +328,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
                   )}
                 </div>
               </div>
+
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
             </form>
           </Form>
@@ -309,6 +338,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
   );
 }
 
+
 interface TenantProps {
   openModal: boolean;
   draft: Record<string, unknown> | null;
@@ -317,35 +347,56 @@ interface TenantProps {
 
 function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   const router = useRouter();
+
+  // 1) React Hook Form
   const form = useForm<TenantOnboardingInput>({
     resolver: zodResolver(tenantOnboardingSchema),
     defaultValues: resolveTenantDefaultValues(draft),
   });
-  const isOpen = openModal;
+
+  // 2) États locaux
+  const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 3) Synchronisation prop -> état
+  useEffect(() => {
+    setIsOpen(openModal);
+  }, [openModal]);
+
+  // 4) Callbacks stables
   const handleTenantAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      setIsOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange]
+  );
+
+  // 5) Hook custom après états / callbacks
   useAutoSave(form.watch, 'TENANT', handleTenantAutoSaved);
 
+  // 6) Valeurs dérivées
   const step = TENANT_STEPS[currentStep];
 
+  // 7) Navigation steps
   const next = async () => {
     const fieldsToValidate = step.fields;
     const valid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true;
-    if (!valid) {
-      return;
-    }
+    if (!valid) return;
     setCurrentStep((prev) => Math.min(prev + 1, TENANT_STEPS.length - 1));
   };
 
   const previous = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
+  // 8) Finalisation
   const handleFinalize = async () => {
     setSaving(true);
     setError(null);
+
     const isValid = await form.trigger();
     if (!isValid) {
       setSaving(false);
@@ -358,13 +409,16 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
       console.debug("Tentative de finalisation de l'onboarding locataire.", {
         payloadKeys: Object.keys(payload ?? {}),
       });
+
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload),
       });
+
       const data = (await response.json().catch(() => null)) as { redirectTo?: string; message?: string } | null;
+
       if (!response.ok) {
         console.error("La finalisation de l'onboarding locataire a échoué.", {
           status: response.status,
@@ -375,14 +429,13 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
         return;
       }
 
-      console.debug("Onboarding locataire finalisé avec succès.", {
-        redirectTo: data?.redirectTo,
-      });
-      onOpenChange?.(false);
+      console.debug("Onboarding locataire finalisé avec succès.", { redirectTo: data?.redirectTo });
+
+      handleOpenChange(false); // ferme le Dialog localement + notifie le parent
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/tenant`;
       router.push(destination);
-    } catch (error_) {
-      console.error('Failed to finalise tenant onboarding', error_);
+    } catch (err) {
+      console.error('Failed to finalise tenant onboarding', err);
       setError("Impossible de finaliser l'onboarding.");
     } finally {
       setSaving(false);
@@ -390,21 +443,24 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Onboarding locataire</DialogTitle>
           <DialogDescription>{step.description}</DialogDescription>
         </DialogHeader>
+
         <Stepper steps={TENANT_STEPS} currentStep={currentStep} />
+
         <Form {...form}>
           <form className="space-y-6">
             <TenantStepRenderer form={form} stepId={step.id} />
+
             <div className="flex items-center justify-between">
               <div className="text-xs text-muted-foreground">
                 {lastSaved ? `Sauvegardé ${lastSaved.toLocaleTimeString()}` : 'Sauvegarde automatique active'}
               </div>
+
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" onClick={previous} disabled={currentStep === 0}>
                   Précédent
@@ -420,6 +476,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
                 )}
               </div>
             </div>
+
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
           </form>
         </Form>
@@ -427,6 +484,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
     </Dialog>
   );
 }
+
 
 interface StepperProps {
   steps: StepConfigBase[];
