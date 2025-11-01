@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type FieldPath, type UseFormReturn, type UseFormWatch } from 'react-hook-form';
@@ -183,15 +183,11 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
     resolver: zodResolver(ownerOnboardingSchema),
     defaultValues: resolveOwnerDefaultValues(draft, prefill),
   });
-  const [isOpen, setIsOpen] = useState(openModal);
+  const isOpen = openModal;
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setIsOpen(openModal);
-  }, [openModal]);
 
   const handleAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
   useAutoSave(form.watch, 'OWNER', handleAutoSaved);
@@ -261,7 +257,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         title: 'VOTRE TABLEAU DE BORD EST BIEN PUBLIE',
         description: 'Your dashboard has been successfully published.',
       });
-     onOpenChange?.(false);
+      onOpenChange?.(false);
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
     } catch (error_) {
@@ -272,16 +268,8 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
     }
   };
 
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      setIsOpen(next);
-      onOpenChange?.(next);
-    },
-    [onOpenChange],
-  );
-
   return (
-   <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
 
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
@@ -333,14 +321,11 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
     resolver: zodResolver(tenantOnboardingSchema),
     defaultValues: resolveTenantDefaultValues(draft),
   });
-const isOpen = openModal;
-
+  const isOpen = openModal;
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  
 
   const handleTenantAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
   useAutoSave(form.watch, 'TENANT', handleTenantAutoSaved);
@@ -393,7 +378,6 @@ const isOpen = openModal;
       console.debug("Onboarding locataire finalisé avec succès.", {
         redirectTo: data?.redirectTo,
       });
-      setIsOpen(false);
       onOpenChange?.(false);
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/tenant`;
       router.push(destination);
@@ -404,14 +388,6 @@ const isOpen = openModal;
       setSaving(false);
     }
   };
-
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      setIsOpen(next);
-      onOpenChange?.(next);
-    },
-    [onOpenChange],
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
