@@ -21,6 +21,7 @@ import {
   type TenantOnboardingInput,
 } from '@/lib/validators/onboarding';
 import { isPlainObject, mergeDraftInto, sanitizeDraft } from '@/lib/utils/draft';
+import { toast } from '@/hooks/use-toast';
 import { OwnerPhotosDropzone } from './components/owner-photos-dropzone';
 
 interface OnboardingClientProps {
@@ -255,6 +256,10 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
 
       console.debug('Publication du brouillon réussie.', {
         redirectTo: data?.redirectTo,
+      });
+      toast({
+        title: 'VOTRE TABLEAU DE BORD EST BIEN PUBLIE',
+        description: 'Your dashboard has been successfully published.',
       });
       setIsOpen(false);
       onOpenChange?.(false);
