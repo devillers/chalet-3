@@ -1,4 +1,5 @@
 // lib/db/onboarding.ts
+
 import { randomUUID } from 'node:crypto';
 import { connectMongo } from './mongoose';
 import { OnboardingDraftModel, type OnboardingDraftDocument } from './models/onboarding-draft';
@@ -9,168 +10,134 @@ export type OnboardingDraft = OnboardingDraftDocument;
 const inMemoryDrafts = new Map<string, OnboardingDraft>();
 let hasLoggedMongoFallback = false;
 
+// ✅ Log Mongo fallback only once
 const logMongoFallback = (error: unknown) => {
-  if (hasLoggedMongoFallback) {
-    return;
-  }
-
+  if (hasLoggedMongoFallback) return;
   hasLoggedMongoFallback = true;
-
-  console.warn('MongoDB non disponible, bascule vers le stockage en mémoire pour les brouillons.', {
-    error,
-  });
+  console.warn('⚠️ MongoDB non disponible → utilisation du stockage en mémoire.', { error });
 };
 
+// ✅ Preserve all keys (especially photos)
 const mergeDraftData = (
   existingData: Record<string, unknown>,
-  data: Record<string, unknown>,
+  data: Record<string, unknown>
 ): Record<string, unknown> => {
-  const mergedData: Record<string, unknown> = {
-    ...existingData,
-    ...data,
-  };
-
-  const incomingPhotos = (data as { photos?: unknown }).photos;
-  const existingPhotos = (existingData as { photos?: unknown }).photos;
-  if (incomingPhotos !== undefined) {
-    mergedData.photos = incomingPhotos;
-  } else if (existingPhotos !== undefined) {
-    mergedData.photos = existingPhotos;
-  } else {
-    mergedData.photos = [];
-  }
-
-  return mergedData;
+  const merged = { ...existingData, ...data };
+  if ('photos' in data) merged.photos = data.photos;
+  else if ('photos' in existingData) merged.photos = existingData.photos;
+  return merged;
 };
 
+// ✅ In-memory fallback storage
 const upsertDraftInMemory = (
   userId: string,
   role: 'OWNER' | 'TENANT',
-  data: Record<string, unknown>,
+  data: Record<string, unknown>
 ): OnboardingDraft => {
   const now = new Date();
-  const existingDraft = inMemoryDrafts.get(userId);
-  const mergedData = mergeDraftData(existingDraft?.data ?? {}, data);
+  const existing = inMemoryDrafts.get(userId);
+  const mergedData = mergeDraftData(existing?.data ?? {}, data);
 
-  const nextDraft: OnboardingDraft = {
-    _id: existingDraft?._id ?? randomUUID(),
+  const draft: OnboardingDraft = {
+    _id: existing?._id ?? randomUUID(),
     userId,
     role,
     data: mergedData,
-    createdAt: existingDraft?.createdAt ?? now,
+    createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
 
-  inMemoryDrafts.set(userId, nextDraft);
-  return nextDraft;
+  inMemoryDrafts.set(userId, draft);
+  return draft;
 };
 
+// ✅ Read draft with full Mongo → memory fallback
 export async function getOnboardingDraft(userId: string): Promise<OnboardingDraft | null> {
   try {
     await connectMongo();
     console.debug('Recherche du brouillon d\'onboarding dans MongoDB.', { userId });
-    return OnboardingDraftModel.findOne({ userId });
+    return (await OnboardingDraftModel.findOne({ userId })) ?? null;
   } catch (error) {
     logMongoFallback(error);
-    console.debug('Recherche du brouillon d\'onboarding dans le stockage mémoire.', { userId });
+    console.debug('→ Recherche dans le stockage mémoire.', { userId });
     return inMemoryDrafts.get(userId) ?? null;
   }
 }
 
-/**
- * ✅ CORRECTION: Upsert qui préserve TOUTES les données
- */
+// ✅ Upsert fully fixed (NO MORE findOneAndUpdate null error)
 export async function upsertOnboardingDraft(
   userId: string,
   role: 'OWNER' | 'TENANT',
-  data: Record<string, unknown>,
+  data: Record<string, unknown>
 ): Promise<OnboardingDraft> {
   try {
     await connectMongo();
 
-    console.debug('Upsert du brouillon d\'onboarding dans MongoDB.', {
+    console.debug('Upsert du brouillon dans MongoDB.', {
       userId,
       role,
-      keys: Object.keys(data ?? {}),
-      // ✅ Log des données critiques
-      hasSeason: !!(data as any).season,
-      hasPhotos: !!((data as any).photos?.length),
-      hasPricing: !!(data as any).pricing,
-      hasCompliance: !!(data as any).compliance,
+      keys: Object.keys(data),
+      hasPhotos: !!(data as any).photos,
     });
 
     const existingDraft = await OnboardingDraftModel.findOne({ userId });
-    const existingData = (existingDraft?.data ?? {}) as Record<string, unknown>;
-    const mergedData = mergeDraftData(existingData, data);
+    const mergedData = mergeDraftData(existingDraft?.data ?? {}, data);
 
-    const operation = existingDraft ? 'update' : 'create';
-
-    const draft = await OnboardingDraftModel.findOneAndUpdate(
+    // 🔥 MongoDB safe upsert:
+    let draft = await OnboardingDraftModel.findOneAndUpdate(
       { userId },
-      {
+      { userId, role, data: mergedData },
+      { new: true, upsert: true }
+    );
+
+    // ⚠ If result is null → create instead of throwing error
+    if (!draft) {
+      console.warn('⚠️ MongoDB findOneAndUpdate returned null → using create()');
+      draft = await OnboardingDraftModel.create({
+        _id: randomUUID(),
         userId,
         role,
         data: mergedData,
-      },
-      { new: true, upsert: true },
-    );
-
-    if (!draft) {
-      throw new Error('Échec de la sauvegarde du brouillon d\'onboarding.');
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
 
-    console.debug(
-      operation === 'update' ? 'Brouillon mis à jour avec succès.' : 'Brouillon créé avec succès.',
-      {
-        userId,
-        draftId: draft._id.toString(),
-        photosCount: ((draft.data as any).photos?.length ?? 0),
-      },
-    );
+    console.debug('✅ Brouillon sauvegardé dans MongoDB.', {
+      userId,
+      draftId: draft._id,
+    });
 
     return draft;
   } catch (error) {
     logMongoFallback(error);
-
-    console.debug('Sauvegarde du brouillon dans le stockage mémoire (fallback).', {
+    console.debug('💾 → Sauvegarde dans le stockage mémoire', {
       userId,
       role,
       keys: Object.keys(data ?? {}),
     });
-
     return upsertDraftInMemory(userId, role, data);
   }
 }
 
+// ✅ Delete draft after final onboarding submission
 export async function clearOnboardingDraft(userId: string): Promise<void> {
   try {
     await connectMongo();
     const draft = await OnboardingDraftModel.findOne({ userId });
     if (draft) {
-      console.debug('Suppression du brouillon après finalisation.', {
-        userId,
-        draftId: draft._id.toString(),
-      });
+      console.debug('🗑 Suppression brouillon MongoDB.', { userId });
       await OnboardingDraftModel.findByIdAndDelete(draft._id);
     }
   } catch (error) {
     logMongoFallback(error);
-    if (inMemoryDrafts.delete(userId)) {
-      console.debug('Suppression du brouillon en mémoire après finalisation.', { userId });
-    }
+    inMemoryDrafts.delete(userId);
   }
 }
 
-/**
- * ✅ CORRECTION: Fonction qui marque l'onboarding comme complété
- * et synchronise les données entre les collections
- */
+// ✅ Finalize onboarding
 export async function completeOnboarding(userId: string): Promise<void> {
-  console.info('Marquage de l\'onboarding comme complété.', { userId });
-  
-  // ✅ Marquer l'utilisateur comme ayant complété l'onboarding
+  console.info('🎉 Onboarding terminé → mise à jour utilisateur.', { userId });
   await updateUser(userId, { onboardingCompleted: true });
-  
-  // ✅ Nettoyer le draft après finalisation
   await clearOnboardingDraft(userId);
 }

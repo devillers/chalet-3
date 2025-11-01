@@ -1,3 +1,6 @@
+// lib/db/models/user.ts
+
+
 import type { LeanDocumentBase, SchemaDefinition } from '../mongoose';
 import { Schema, model } from '../mongoose';
 
