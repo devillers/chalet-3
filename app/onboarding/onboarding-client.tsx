@@ -1,5 +1,4 @@
 // app/onboarding/onboarding-client.tsx
-
 'use client';
 
 import { useCallback, useRef, useState, useEffect } from 'react';
@@ -12,6 +11,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +38,7 @@ import {
 import { isPlainObject, mergeDraftInto, sanitizeDraft } from '@/lib/utils/draft';
 import { toast } from '@/hooks/use-toast';
 import { OwnerPhotosDropzone } from './components/owner-photos-dropzone';
+import { X } from 'lucide-react';
 
 interface OnboardingClientProps {
   role: 'OWNER' | 'TENANT';
@@ -159,14 +160,10 @@ const resolveOwnerDefaultValues = (
 ): OwnerOnboardingInput => {
   const base = createOwnerDefaultValues();
   const parsedPrefill = ownerOnboardingDraftSchema.safeParse(prefill ?? {});
-  const withPrefill = parsedPrefill.success
-    ? mergeDraftInto({ ...base }, parsedPrefill.data)
-    : base;
+  const withPrefill = parsedPrefill.success ? mergeDraftInto({ ...base }, parsedPrefill.data) : base;
 
   const parsedDraft = ownerOnboardingDraftSchema.safeParse(draft ?? {});
-  if (!parsedDraft.success) {
-    return withPrefill;
-  }
+  if (!parsedDraft.success) return withPrefill;
   return mergeDraftInto(withPrefill, parsedDraft.data);
 };
 
@@ -175,9 +172,7 @@ const resolveTenantDefaultValues = (
 ): TenantOnboardingInput => {
   const base = createTenantDefaultValues();
   const parsedDraft = tenantOnboardingDraftSchema.safeParse(draft ?? {});
-  if (!parsedDraft.success) {
-    return base;
-  }
+  if (!parsedDraft.success) return base;
   return mergeDraftInto(base, parsedDraft.data);
 };
 
@@ -188,41 +183,17 @@ export default function OnboardingClient({
   onOpenChange,
   prefill,
 }: OnboardingClientProps) {
-  // 🔁 HYBRID CONTROL: si le parent ne fournit pas onOpenChange (Server Component),
-  // on gère un état local pour pouvoir fermer le Dialog.
-  const isControlled = typeof onOpenChange === 'function';
-  const [localOpen, setLocalOpen] = useState(openModal);
-
-  useEffect(() => {
-    if (!isControlled) setLocalOpen(openModal);
-  }, [openModal, isControlled]);
-
-  const effectiveOpen = isControlled ? openModal : localOpen;
-  const changeOpen = useCallback(
-    (next: boolean) => {
-      if (isControlled) onOpenChange?.(next);
-      else setLocalOpen(next);
-    },
-    [isControlled, onOpenChange]
-  );
-
   if (role === 'OWNER') {
     return (
       <OwnerOnboarding
-        openModal={effectiveOpen}
+        openModal={openModal}
         draft={draft}
-        onOpenChange={changeOpen}
+        onOpenChange={onOpenChange}
         prefill={prefill}
       />
     );
   }
-  return (
-    <TenantOnboarding
-      openModal={effectiveOpen}
-      draft={draft}
-      onOpenChange={changeOpen}
-    />
-  );
+  return <TenantOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} />;
 }
 
 interface OwnerProps {
@@ -242,27 +213,43 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
   });
 
   // 2) États locaux
+  const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 3) Sync prop -> state
+  useEffect(() => {
+    setIsOpen(openModal);
+  }, [openModal]);
+
   // 4) Callbacks stables
   const handleAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
+
   const handleOpenChange = useCallback(
     (next: boolean) => {
+      setIsOpen(next); // fermer instantanément côté client
+      if (!next) {
+        // Nettoie l’URL pour empêcher la réouverture par le Server Component
+        const url = new URL(window.location.href);
+        url.searchParams.delete('modal');
+        url.searchParams.delete('mode');
+        const clean = url.pathname + (url.search ? url.search : '') + (url.hash || '');
+        router.replace(clean);
+      }
       onOpenChange?.(next);
     },
-    [onOpenChange]
+    [onOpenChange, router]
   );
 
-  // 5) Hook custom après états / callbacks
+  // 5) Auto-save
   useAutoSave(form.watch, 'OWNER', handleAutoSaved);
 
-  // 6) Valeurs dérivées
+  // 6) Step dérivé
   const step = OWNER_STEPS[currentStep];
 
-  // 7) Navigation steps
+  // 7) Navigation
   const next = async () => {
     const fieldsToValidate = step.fields;
     const valid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true;
@@ -292,15 +279,11 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
 
     const payload = { ...currentValues, review: { status: 'published' as const } };
 
-    console.log('Bouton "Publier" cliqué : enregistrement des données en base de données.', {
+    console.log('Bouton "Publier" cliqué — enregistrement en base.', {
       payloadKeys: Object.keys(payload ?? {}),
     });
 
     try {
-      console.debug("Tentative de publication de l'onboarding propriétaire.", {
-        payloadKeys: Object.keys(payload ?? {}),
-      });
-
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -315,7 +298,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
       } | null;
 
       if (!response.ok) {
-        console.error('La publication du brouillon a échoué.', {
+        console.error('Publication échouée', {
           status: response.status,
           statusText: response.statusText,
           body: data,
@@ -324,14 +307,13 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         return;
       }
 
-      console.debug('Publication du brouillon réussie.', { redirectTo: data?.redirectTo });
-
       toast({
         title: 'VOTRE TABLEAU DE BORD EST BIEN PUBLIE',
         description: 'Your dashboard has been successfully published.',
       });
 
-      handleOpenChange(false); // notifie le parent (ou le fallback local du client) pour fermer le Dialog
+      // ferme localement + nettoie l’URL
+      handleOpenChange(false);
 
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
@@ -344,8 +326,21 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
   };
 
   return (
-    <Dialog open={openModal} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+        {/* Close (X) */}
+        <DialogClose asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2"
+            aria-label="Fermer"
+            type="button"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </DialogClose>
+
         <DialogHeader>
           <DialogTitle>Onboarding propriétaire</DialogTitle>
           <DialogDescription>{step.description}</DialogDescription>
@@ -427,27 +422,42 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   });
 
   // 2) États locaux
+  const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 3) Callbacks stables
+  // 3) Sync prop -> state
+  useEffect(() => {
+    setIsOpen(openModal);
+  }, [openModal]);
+
+  // 4) Callbacks stables
   const handleTenantAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
+
   const handleOpenChange = useCallback(
     (next: boolean) => {
+      setIsOpen(next); // fermeture immédiate côté client
+      if (!next) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('modal');
+        url.searchParams.delete('mode');
+        const clean = url.pathname + (url.search ? url.search : '') + (url.hash || '');
+        router.replace(clean);
+      }
       onOpenChange?.(next);
     },
-    [onOpenChange]
+    [onOpenChange, router]
   );
 
-  // 4) Hook custom après états / callbacks
+  // 5) Auto-save
   useAutoSave(form.watch, 'TENANT', handleTenantAutoSaved);
 
-  // 5) Valeurs dérivées
+  // 6) Valeurs dérivées
   const step = TENANT_STEPS[currentStep];
 
-  // 6) Navigation steps
+  // 7) Navigation
   const next = async () => {
     const fieldsToValidate = step.fields;
     const valid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true;
@@ -457,7 +467,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
 
   const previous = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
-  // 7) Finalisation
+  // 8) Finalisation
   const handleFinalize = async () => {
     setSaving(true);
     setError(null);
@@ -471,10 +481,6 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
     const payload = { ...form.getValues(), review: { status: 'ready' as const } };
 
     try {
-      console.debug("Tentative de finalisation de l'onboarding locataire.", {
-        payloadKeys: Object.keys(payload ?? {}),
-      });
-
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -488,7 +494,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
       } | null;
 
       if (!response.ok) {
-        console.error("La finalisation de l'onboarding locataire a échoué.", {
+        console.error("Finalisation locataire échouée", {
           status: response.status,
           statusText: response.statusText,
           body: data,
@@ -497,9 +503,9 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
         return;
       }
 
-      console.debug('Onboarding locataire finalisé avec succès.', { redirectTo: data?.redirectTo });
+      // ferme localement + nettoie l’URL
+      handleOpenChange(false);
 
-      handleOpenChange(false); // notifie le parent (ou le fallback local) pour fermer le Dialog
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/tenant`;
       router.push(destination);
     } catch (err) {
@@ -511,8 +517,21 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   };
 
   return (
-    <Dialog open={openModal} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+        {/* Close (X) */}
+        <DialogClose asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2"
+            aria-label="Fermer"
+            type="button"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </DialogClose>
+
         <DialogHeader>
           <DialogTitle>Onboarding locataire</DialogTitle>
           <DialogDescription>{step.description}</DialogDescription>
@@ -1102,7 +1121,7 @@ function TenantStepRenderer({ form, stepId }: TenantStepRendererProps) {
   }
 }
 
-// ✅ Auto-save (draft) avec validation partielle & debounce
+// ✅ Auto-save avec validation partielle et debounce
 function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
   watch: UseFormWatch<T>,
   role: 'OWNER' | 'TENANT',
@@ -1111,7 +1130,7 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
   const [draft, setDraft] = useState<T | null>(null);
   const lastSerializedDraft = useRef<string | null>(null);
 
-  // 📌 1. Met à jour le state local du draft à chaque modification
+  // 1. Met à jour le state local à chaque modification
   useEffect(() => {
     const subscription = watch((value) => {
       setDraft(value as T);
@@ -1119,29 +1138,25 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  // 📌 2. Sauvegarde automatique → seulement si le brouillon a changé
+  // 2. Sauvegarde auto (seulement si le brouillon a changé)
   useEffect(() => {
     if (!draft) return;
 
     const schema = role === 'OWNER' ? ownerOnboardingDraftSchema : tenantOnboardingDraftSchema;
 
-    // 🔹 Nettoyage
     const sanitized = sanitizeDraft(draft);
     const payload = isPlainObject(sanitized) ? sanitized : {};
 
-    // 🔹 Validation partielle (brouillon)
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
       console.warn('❌ Draft validation failed (ignored):', parsed.error.flatten());
       return;
     }
 
-    // 🔹 Empêche les requêtes inutiles si aucun changement
     const serialized = JSON.stringify(parsed.data);
     if (lastSerializedDraft.current === serialized) return;
     lastSerializedDraft.current = serialized;
 
-    // 🕒 Déclenchement différé (debounce)
     const timeout = setTimeout(() => {
       console.debug('💾 Auto-save draft triggered.', {
         role,
@@ -1164,7 +1179,7 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
               status: response.status,
               statusText: response.statusText,
             });
-            lastSerializedDraft.current = null; // ➝ relancera au prochain changement
+            lastSerializedDraft.current = null;
             return;
           }
           console.debug('✅ Draft auto-saved.');
