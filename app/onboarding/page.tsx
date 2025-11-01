@@ -1,6 +1,4 @@
 // app/onboarding/page.tsx
-
-
 import { Suspense } from 'react';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
@@ -29,16 +27,12 @@ const resolveSearchParams = async (
 };
 
 const isModalOpen = (modalParam: string | string[] | undefined): boolean => {
-  if (Array.isArray(modalParam)) {
-    return modalParam.includes('1');
-  }
+  if (Array.isArray(modalParam)) return modalParam.includes('1');
   return modalParam === '1';
 };
 
 const allowCompletedAccess = (modeParam: string | string[] | undefined): boolean => {
-  if (Array.isArray(modeParam)) {
-    return modeParam.includes('edit');
-  }
+  if (Array.isArray(modeParam)) return modeParam.includes('edit');
   return modeParam === 'edit';
 };
 
@@ -47,7 +41,12 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   if (!session?.user) {
     redirect('/signin');
   }
-  const role = session.user.role;
+
+  // ⬇️ Élargit localement le type pour inclure SUPERADMIN (au cas où)
+  type AnyRole = 'OWNER' | 'TENANT' | 'SUPERADMIN';
+  const role = (session.user.role as AnyRole) ?? 'TENANT';
+
+  // ⬇️ Accès admin : redirige immédiatement
   if (role === 'SUPERADMIN') {
     redirect('/superadmin');
   }
@@ -60,13 +59,17 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
     redirect(destination);
   }
 
+  // ⬇️ Récupération du brouillon (signature actuelle: userId uniquement)
   const draft = await getOnboardingDraft(session.user.id);
 
   const openModal = canBypassCompletionCheck || isModalOpen(resolvedSearchParams.modal);
 
+  // ⬇️ Le composant client n’accepte que 'OWNER' | 'TENANT'
+  const clientRole: 'OWNER' | 'TENANT' = role === 'OWNER' ? 'OWNER' : 'TENANT';
+
   return (
     <Suspense fallback={<div className="p-8">Chargement...</div>}>
-      <OnboardingClient role={role} openModal={openModal} draft={draft?.data ?? null} />
+      <OnboardingClient role={clientRole} openModal={openModal} draft={draft?.data ?? null} />
     </Suspense>
   );
 }
