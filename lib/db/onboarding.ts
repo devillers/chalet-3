@@ -98,16 +98,9 @@ export async function upsertOnboardingDraft(
         userId,
         role,
         data: mergedData,
-      },
-      { new: true, upsert: true },
-    );
-
-    if (!draft) {
-      draft = await OnboardingDraftModel.findOne({ userId });
-    }
-
-    if (!draft) {
-      throw new Error('Échec de la sauvegarde du brouillon d\'onboarding.');
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     }
 
     console.debug('✅ Brouillon sauvegardé dans MongoDB.', {
