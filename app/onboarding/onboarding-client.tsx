@@ -382,7 +382,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
                     </Button>
                   )}
                 </div>
-                ˜
+                
               </div>
 
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
