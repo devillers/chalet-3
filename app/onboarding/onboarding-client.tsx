@@ -269,7 +269,12 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         title: 'VOTRE TABLEAU DE BORD EST BIEN PUBLIE',
         description: 'Your dashboard has been successfully published.',
       });
+
       handleOpenChange(false);
+
+      setIsOpen(false);
+      onOpenChange?.(false);
+
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
     } catch (error_) {
