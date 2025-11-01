@@ -4,9 +4,22 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type FieldPath, type UseFormReturn, type UseFormWatch } from 'react-hook-form';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
@@ -140,12 +153,14 @@ const createTenantDefaultValues = (): TenantOnboardingInput => ({
 
 const resolveOwnerDefaultValues = (
   draft: Record<string, unknown> | null,
-  prefill?: Record<string, unknown>,
+  prefill?: Record<string, unknown>
 ): OwnerOnboardingInput => {
   const base = createOwnerDefaultValues();
   // Apply prefill first (so draft can still override)
   const parsedPrefill = ownerOnboardingDraftSchema.safeParse(prefill ?? {});
-  const withPrefill = parsedPrefill.success ? mergeDraftInto({ ...base }, parsedPrefill.data) : base;
+  const withPrefill = parsedPrefill.success
+    ? mergeDraftInto({ ...base }, parsedPrefill.data)
+    : base;
 
   const parsedDraft = ownerOnboardingDraftSchema.safeParse(draft ?? {});
   if (!parsedDraft.success) {
@@ -154,7 +169,9 @@ const resolveOwnerDefaultValues = (
   return mergeDraftInto(withPrefill, parsedDraft.data);
 };
 
-const resolveTenantDefaultValues = (draft: Record<string, unknown> | null): TenantOnboardingInput => {
+const resolveTenantDefaultValues = (
+  draft: Record<string, unknown> | null
+): TenantOnboardingInput => {
   const base = createTenantDefaultValues();
   const parsedDraft = tenantOnboardingDraftSchema.safeParse(draft ?? {});
   if (!parsedDraft.success) {
@@ -163,9 +180,22 @@ const resolveTenantDefaultValues = (draft: Record<string, unknown> | null): Tena
   return mergeDraftInto(base, parsedDraft.data);
 };
 
-export default function OnboardingClient({ role, openModal, draft, onOpenChange, prefill }: OnboardingClientProps) {
+export default function OnboardingClient({
+  role,
+  openModal,
+  draft,
+  onOpenChange,
+  prefill,
+}: OnboardingClientProps) {
   if (role === 'OWNER') {
-    return <OwnerOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} prefill={prefill} />;
+    return (
+      <OwnerOnboarding
+        openModal={openModal}
+        draft={draft}
+        onOpenChange={onOpenChange}
+        prefill={prefill}
+      />
+    );
   }
   return <TenantOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} />;
 }
@@ -260,9 +290,11 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         body: JSON.stringify(payload),
       });
 
-      const data = (await response
-        .json()
-        .catch(() => null)) as { redirectTo?: string; message?: string; property?: { slug: string } } | null;
+      const data = (await response.json().catch(() => null)) as {
+        redirectTo?: string;
+        message?: string;
+        property?: { slug: string };
+      } | null;
 
       if (!response.ok) {
         console.error('La publication du brouillon a échoué.', {
@@ -310,23 +342,47 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
 
               <div className="flex items-center justify-between">
                 <div className="text-xs text-muted-foreground">
-                  {lastSaved ? `Sauvegardé ${lastSaved.toLocaleTimeString()}` : 'Sauvegarde automatique active'}
+                  {lastSaved
+                    ? `Sauvegardé ${lastSaved.toLocaleTimeString()}`
+                    : 'Sauvegarde automatique active'}
                 </div>
-
                 <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" onClick={previous} disabled={currentStep === 0}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      console.log('Étape précédente — currentStep :', currentStep);
+                      previous();
+                    }}
+                    disabled={currentStep === 0}
+                  >
                     Étape précédente
                   </Button>
+
                   {currentStep < OWNER_STEPS.length - 1 ? (
-                    <Button type="button" onClick={next}>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        console.log('Étape suivante — currentStep :', currentStep);
+                        next();
+                      }}
+                    >
                       Étape suivante
                     </Button>
                   ) : (
-                    <Button type="button" onClick={handlePublish} disabled={saving}>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        console.log('Publication — currentStep :', currentStep);
+                        handlePublish();
+                      }}
+                      disabled={saving}
+                    >
                       {saving ? 'Publication...' : 'Publier'}
                     </Button>
                   )}
                 </div>
+                ˜
               </div>
 
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -337,7 +393,6 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
     </Dialog>
   );
 }
-
 
 interface TenantProps {
   openModal: boolean;
@@ -417,7 +472,10 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
         body: JSON.stringify(payload),
       });
 
-      const data = (await response.json().catch(() => null)) as { redirectTo?: string; message?: string } | null;
+      const data = (await response.json().catch(() => null)) as {
+        redirectTo?: string;
+        message?: string;
+      } | null;
 
       if (!response.ok) {
         console.error("La finalisation de l'onboarding locataire a échoué.", {
@@ -429,7 +487,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
         return;
       }
 
-      console.debug("Onboarding locataire finalisé avec succès.", { redirectTo: data?.redirectTo });
+      console.debug('Onboarding locataire finalisé avec succès.', { redirectTo: data?.redirectTo });
 
       handleOpenChange(false); // ferme le Dialog localement + notifie le parent
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/tenant`;
@@ -458,11 +516,18 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
 
             <div className="flex items-center justify-between">
               <div className="text-xs text-muted-foreground">
-                {lastSaved ? `Sauvegardé ${lastSaved.toLocaleTimeString()}` : 'Sauvegarde automatique active'}
+                {lastSaved
+                  ? `Sauvegardé ${lastSaved.toLocaleTimeString()}`
+                  : 'Sauvegarde automatique active'}
               </div>
 
               <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" onClick={previous} disabled={currentStep === 0}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={previous}
+                  disabled={currentStep === 0}
+                >
                   Précédent
                 </Button>
                 {currentStep < TENANT_STEPS.length - 1 ? (
@@ -485,7 +550,6 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   );
 }
 
-
 interface StepperProps {
   steps: StepConfigBase[];
   currentStep: number;
@@ -498,10 +562,17 @@ function Stepper({ steps, currentStep }: StepperProps) {
         const isActive = index === currentStep;
         const isCompleted = index < currentStep;
         return (
-          <div key={step.id} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
+          <div
+            key={step.id}
+            className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm"
+          >
             <span
               className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${
-                isActive ? 'bg-primary text-primary-foreground' : isCompleted ? 'bg-muted text-foreground' : 'bg-secondary'
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : isCompleted
+                  ? 'bg-muted text-foreground'
+                  : 'bg-secondary'
               }`}
             >
               {index + 1}
@@ -636,13 +707,13 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
                 <FormItem>
                   <FormLabel>Ville</FormLabel>
                   <FormControl>
-                  <Input
-                    placeholder="Chamonix"
-                    required
-                    minLength={2}
-                    aria-invalid={!!form.formState.errors.property?.city}
-                    {...field}
-                  />
+                    <Input
+                      placeholder="Chamonix"
+                      required
+                      minLength={2}
+                      aria-invalid={!!form.formState.errors.property?.city}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -693,7 +764,8 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
       return (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Téléversez vos images directement sur Cloudinary. Ajoutez au moins une image héros pour mettre en valeur le logement.
+            Téléversez vos images directement sur Cloudinary. Ajoutez au moins une image héros pour
+            mettre en valeur le logement.
           </p>
           <FormField
             control={form.control}
@@ -775,7 +847,13 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
               <FormItem>
                 <FormLabel>Frais de ménage (€)</FormLabel>
                 <FormControl>
-                  <Input type="number" min={0} step="1" {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
+                  <Input
+                    type="number"
+                    min={0}
+                    step="1"
+                    {...field}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -792,10 +870,15 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
             render={({ field }) => (
               <FormItem className="flex items-center gap-3">
                 <FormControl>
-                  <Checkbox checked={field.value ?? false} onCheckedChange={(checked) => field.onChange(Boolean(checked))} />
+                  <Checkbox
+                    checked={field.value ?? false}
+                    onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                  />
                 </FormControl>
                 <div>
-                  <FormLabel className="text-sm">Je possède une assurance responsabilité civile</FormLabel>
+                  <FormLabel className="text-sm">
+                    Je possède une assurance responsabilité civile
+                  </FormLabel>
                 </div>
                 <FormMessage />
               </FormItem>
@@ -807,7 +890,10 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
             render={({ field }) => (
               <FormItem className="flex items-center gap-3">
                 <FormControl>
-                  <Checkbox checked={field.value ?? false} onCheckedChange={(checked) => field.onChange(Boolean(checked))} />
+                  <Checkbox
+                    checked={field.value ?? false}
+                    onCheckedChange={(checked) => field.onChange(Boolean(checked))}
+                  />
                 </FormControl>
                 <div>
                   <FormLabel className="text-sm">J&apos;accepte les conditions générales</FormLabel>
@@ -822,8 +908,9 @@ function OwnerStepRenderer({ form, stepId }: OwnerStepRendererProps) {
       return (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Vérifiez les informations avant publication. Vous pouvez rester en brouillon tant que la photo héros, la ville, la
-            capacité et le numéro d&apos;enregistrement ne sont pas définis.
+            Vérifiez les informations avant publication. Vous pouvez rester en brouillon tant que la
+            photo héros, la ville, la capacité et le numéro d&apos;enregistrement ne sont pas
+            définis.
           </p>
         </div>
       );
@@ -906,7 +993,12 @@ function TenantStepRenderer({ form, stepId }: TenantStepRendererProps) {
               <FormItem>
                 <FormLabel>Nombre de personnes</FormLabel>
                 <FormControl>
-                  <Input type="number" min={1} {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
+                  <Input
+                    type="number"
+                    min={1}
+                    {...field}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -954,7 +1046,14 @@ function TenantStepRenderer({ form, stepId }: TenantStepRendererProps) {
                 <FormControl>
                   <Input
                     value={(field.value ?? []).join(', ')}
-                    onChange={(event) => field.onChange(event.target.value.split(',').map((item) => item.trim()).filter(Boolean))}
+                    onChange={(event) =>
+                      field.onChange(
+                        event.target.value
+                          .split(',')
+                          .map((item) => item.trim())
+                          .filter(Boolean)
+                      )
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -968,7 +1067,13 @@ function TenantStepRenderer({ form, stepId }: TenantStepRendererProps) {
               <FormItem>
                 <FormLabel>Budget mensuel (€)</FormLabel>
                 <FormControl>
-                  <Input type="number" min={0} step="1" {...field} onChange={(event) => field.onChange(Number(event.target.value))} />
+                  <Input
+                    type="number"
+                    min={0}
+                    step="1"
+                    {...field}
+                    onChange={(event) => field.onChange(Number(event.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -992,7 +1097,7 @@ function TenantStepRenderer({ form, stepId }: TenantStepRendererProps) {
 function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
   watch: UseFormWatch<T>,
   role: 'OWNER' | 'TENANT',
-  onSaved?: (date: Date) => void,
+  onSaved?: (date: Date) => void
 ) {
   const [draft, setDraft] = useState<T | null>(null);
   const lastSerializedDraft = useRef<string | null>(null);
@@ -1033,8 +1138,8 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
         role,
         payloadKeys: Object.keys(parsed.data ?? {}),
         hasSeason: !!(parsed.data as any).season,
-        hasPhotos: !!((parsed.data as any).photos?.length),
-        photosCount: ((parsed.data as any).photos?.length ?? 0),
+        hasPhotos: !!(parsed.data as any).photos?.length,
+        photosCount: (parsed.data as any).photos?.length ?? 0,
         hasPricing: !!(parsed.data as any).pricing,
       });
 
@@ -1065,4 +1170,3 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
     return () => clearTimeout(timeout);
   }, [draft, role, onSaved]);
 }
-
