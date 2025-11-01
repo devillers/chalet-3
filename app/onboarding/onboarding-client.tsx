@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type FieldPath, type UseFormReturn, type UseFormWatch } from 'react-hook-form';
@@ -217,22 +217,15 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
   });
 
   // 2) États locaux
-  const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 3) Synchronisation prop -> état
-  useEffect(() => {
-    setIsOpen(openModal);
-  }, [openModal]);
-
   // 4) Callbacks stables
   const handleAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      setIsOpen(next);
       onOpenChange?.(next);
     },
     [onOpenChange]
@@ -313,7 +306,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         description: 'Your dashboard has been successfully published.',
       });
 
-      handleOpenChange(false); // ferme le Dialog localement + notifie le parent
+      handleOpenChange(false); // notifie le parent pour fermer le Dialog
 
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
@@ -326,7 +319,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={openModal} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Onboarding propriétaire</DialogTitle>
