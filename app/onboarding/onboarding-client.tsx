@@ -158,7 +158,6 @@ const resolveOwnerDefaultValues = (
   prefill?: Record<string, unknown>
 ): OwnerOnboardingInput => {
   const base = createOwnerDefaultValues();
-  // Apply prefill first (so draft can still override)
   const parsedPrefill = ownerOnboardingDraftSchema.safeParse(prefill ?? {});
   const withPrefill = parsedPrefill.success
     ? mergeDraftInto({ ...base }, parsedPrefill.data)
@@ -189,17 +188,41 @@ export default function OnboardingClient({
   onOpenChange,
   prefill,
 }: OnboardingClientProps) {
+  // 🔁 HYBRID CONTROL: si le parent ne fournit pas onOpenChange (Server Component),
+  // on gère un état local pour pouvoir fermer le Dialog.
+  const isControlled = typeof onOpenChange === 'function';
+  const [localOpen, setLocalOpen] = useState(openModal);
+
+  useEffect(() => {
+    if (!isControlled) setLocalOpen(openModal);
+  }, [openModal, isControlled]);
+
+  const effectiveOpen = isControlled ? openModal : localOpen;
+  const changeOpen = useCallback(
+    (next: boolean) => {
+      if (isControlled) onOpenChange?.(next);
+      else setLocalOpen(next);
+    },
+    [isControlled, onOpenChange]
+  );
+
   if (role === 'OWNER') {
     return (
       <OwnerOnboarding
-        openModal={openModal}
+        openModal={effectiveOpen}
         draft={draft}
-        onOpenChange={onOpenChange}
+        onOpenChange={changeOpen}
         prefill={prefill}
       />
     );
   }
-  return <TenantOnboarding openModal={openModal} draft={draft} onOpenChange={onOpenChange} />;
+  return (
+    <TenantOnboarding
+      openModal={effectiveOpen}
+      draft={draft}
+      onOpenChange={changeOpen}
+    />
+  );
 }
 
 interface OwnerProps {
@@ -308,7 +331,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         description: 'Your dashboard has been successfully published.',
       });
 
-      handleOpenChange(false); // notifie le parent pour fermer le Dialog
+      handleOpenChange(false); // notifie le parent (ou le fallback local du client) pour fermer le Dialog
 
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
@@ -377,7 +400,6 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
                     </Button>
                   )}
                 </div>
-                
               </div>
 
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -405,34 +427,27 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   });
 
   // 2) États locaux
-  const [isOpen, setIsOpen] = useState(openModal);
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 3) Synchronisation prop -> état
-  useEffect(() => {
-    setIsOpen(openModal);
-  }, [openModal]);
-
-  // 4) Callbacks stables
+  // 3) Callbacks stables
   const handleTenantAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      setIsOpen(next);
       onOpenChange?.(next);
     },
     [onOpenChange]
   );
 
-  // 5) Hook custom après états / callbacks
+  // 4) Hook custom après états / callbacks
   useAutoSave(form.watch, 'TENANT', handleTenantAutoSaved);
 
-  // 6) Valeurs dérivées
+  // 5) Valeurs dérivées
   const step = TENANT_STEPS[currentStep];
 
-  // 7) Navigation steps
+  // 6) Navigation steps
   const next = async () => {
     const fieldsToValidate = step.fields;
     const valid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true;
@@ -442,7 +457,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
 
   const previous = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
-  // 8) Finalisation
+  // 7) Finalisation
   const handleFinalize = async () => {
     setSaving(true);
     setError(null);
@@ -484,7 +499,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
 
       console.debug('Onboarding locataire finalisé avec succès.', { redirectTo: data?.redirectTo });
 
-      handleOpenChange(false); // ferme le Dialog localement + notifie le parent
+      handleOpenChange(false); // notifie le parent (ou le fallback local) pour fermer le Dialog
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/tenant`;
       router.push(destination);
     } catch (err) {
@@ -496,7 +511,7 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={openModal} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Onboarding locataire</DialogTitle>
@@ -1087,8 +1102,7 @@ function TenantStepRenderer({ form, stepId }: TenantStepRendererProps) {
   }
 }
 
-// ✅ Version améliorée avec logs + validation complète + saison / photos / pricing
-
+// ✅ Auto-save (draft) avec validation partielle & debounce
 function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
   watch: UseFormWatch<T>,
   role: 'OWNER' | 'TENANT',
@@ -1111,7 +1125,7 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
 
     const schema = role === 'OWNER' ? ownerOnboardingDraftSchema : tenantOnboardingDraftSchema;
 
-    // 🔹 Nettoyage (supprime les undefined, vide les strings trop longues…)
+    // 🔹 Nettoyage
     const sanitized = sanitizeDraft(draft);
     const payload = isPlainObject(sanitized) ? sanitized : {};
 
@@ -1150,7 +1164,7 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
               status: response.status,
               statusText: response.statusText,
             });
-            lastSerializedDraft.current = null; // ➝ permet de relancer au prochain changement
+            lastSerializedDraft.current = null; // ➝ relancera au prochain changement
             return;
           }
           console.debug('✅ Draft auto-saved.');
@@ -1160,7 +1174,7 @@ function useAutoSave<T extends OwnerOnboardingInput | TenantOnboardingInput>(
           console.error('❌ Auto-save fetch error:', error);
           lastSerializedDraft.current = null;
         });
-    }, 800); // ✅ délai 800ms cohérent avec ton design UX
+    }, 800);
 
     return () => clearTimeout(timeout);
   }, [draft, role, onSaved]);
