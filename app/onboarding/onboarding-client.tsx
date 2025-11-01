@@ -21,6 +21,7 @@ import {
   type TenantOnboardingInput,
 } from '@/lib/validators/onboarding';
 import { isPlainObject, mergeDraftInto, sanitizeDraft } from '@/lib/utils/draft';
+import { toast } from '@/hooks/use-toast';
 import { OwnerPhotosDropzone } from './components/owner-photos-dropzone';
 
 interface OnboardingClientProps {
@@ -197,6 +198,14 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
 
   const step = OWNER_STEPS[currentStep];
 
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      setIsOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange],
+  );
+
   const next = async () => {
     const fieldsToValidate = step.fields;
     const valid = fieldsToValidate.length > 0 ? await form.trigger(fieldsToValidate) : true;
@@ -256,8 +265,11 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
       console.debug('Publication du brouillon réussie.', {
         redirectTo: data?.redirectTo,
       });
-      setIsOpen(false);
-      onOpenChange?.(false);
+      toast({
+        title: 'VOTRE TABLEAU DE BORD EST BIEN PUBLIE',
+        description: 'Your dashboard has been successfully published.',
+      });
+      handleOpenChange(false);
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
     } catch (error_) {
@@ -267,14 +279,6 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
       setSaving(false);
     }
   };
-
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      setIsOpen(next);
-      onOpenChange?.(next);
-    },
-    [onOpenChange],
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
