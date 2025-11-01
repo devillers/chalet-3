@@ -90,17 +90,14 @@ export async function upsertOnboardingDraft(
       { new: true, upsert: true }
     );
 
-    // ⚠ If result is null → create instead of throwing error
+    // ⚠ If result is null → re-read document to validate persistence
     if (!draft) {
-      console.warn('⚠️ MongoDB findOneAndUpdate returned null → using create()');
-      draft = await OnboardingDraftModel.create({
-        _id: randomUUID(),
-        userId,
-        role,
-        data: mergedData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      console.warn('⚠️ MongoDB findOneAndUpdate returned null → fallback to findOne()');
+      draft = await OnboardingDraftModel.findOne({ userId });
+
+      if (!draft) {
+        console.warn('⚠️ Fallback findOne() returned null → draft may not have persisted yet.');
+      }
     }
 
     console.debug('✅ Brouillon sauvegardé dans MongoDB.', {
@@ -111,6 +108,7 @@ export async function upsertOnboardingDraft(
     return draft;
   } catch (error) {
     logMongoFallback(error);
+    console.error('❌ Erreur lors de l\'upsert du brouillon MongoDB.', { error });
     console.debug('💾 → Sauvegarde dans le stockage mémoire', {
       userId,
       role,
