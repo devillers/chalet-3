@@ -261,8 +261,7 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
         title: 'VOTRE TABLEAU DE BORD EST BIEN PUBLIE',
         description: 'Your dashboard has been successfully published.',
       });
-      setIsOpen(false);
-      onOpenChange?.(false);
+     onOpenChange?.(false);
       const destination = data?.redirectTo ?? `/${defaultLocale}/dashboard/owner`;
       router.push(destination);
     } catch (error_) {
@@ -282,7 +281,8 @@ function OwnerOnboarding({ openModal, draft, onOpenChange, prefill }: OwnerProps
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+   <Dialog open={isOpen} onOpenChange={onOpenChange}>
+
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Onboarding propriétaire</DialogTitle>
@@ -333,15 +333,14 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
     resolver: zodResolver(tenantOnboardingSchema),
     defaultValues: resolveTenantDefaultValues(draft),
   });
-  const [isOpen, setIsOpen] = useState(openModal);
+const isOpen = openModal;
+
   const [currentStep, setCurrentStep] = useState(0);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setIsOpen(openModal);
-  }, [openModal]);
+  
 
   const handleTenantAutoSaved = useCallback((date: Date) => setLastSaved(date), []);
   useAutoSave(form.watch, 'TENANT', handleTenantAutoSaved);
@@ -415,7 +414,8 @@ function TenantOnboarding({ openModal, draft, onOpenChange }: TenantProps) {
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Onboarding locataire</DialogTitle>
