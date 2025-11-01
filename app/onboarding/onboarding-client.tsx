@@ -1,3 +1,5 @@
+// app/onboarding/onboarding-client.tsx
+
 'use client';
 
 import { useCallback, useRef, useState, useEffect } from 'react';
