@@ -10,22 +10,26 @@ import {
   Linkedin,
 } from 'lucide-react';
 import { pacifico } from '@/lib/fonts';
+import type { Locale } from '@/lib/i18n';
 
 interface FooterProps {
-  locale: string; // e.g. 'fr' or 'en'
-  translations: any; // You can later refine this type
+  locale: Locale;
+  translations: Record<string, unknown>;
 }
 
 export default function Footer({ locale, translations }: FooterProps) {
   const currentYear = new Date().getFullYear();
 
-  const footer = translations.footer ?? {};
-  const navigation = footer.sections ?? {};
-  const contact = footer.contact ?? {};
-  const newsletter = footer.newsletter ?? {};
-  const brand = footer.brand ?? {};
-  const bottomBar = footer.bottomBar ?? {}; // ✅ ajouté
-  const bottomLinks = (bottomBar.links ?? navigation.legal?.links ?? []) as any[];
+  const footer = ((translations as any).footer ?? {}) as Record<string, unknown>;
+  const navigation = (footer.sections ?? {}) as Record<string, unknown>;
+  const contact = (footer.contact ?? {}) as Record<string, unknown>;
+  const newsletter = (footer.newsletter ?? {}) as Record<string, unknown>;
+  const brand = (footer.brand ?? {}) as Record<string, unknown>;
+  const bottomBar = (footer.bottomBar ?? {}) as Record<string, unknown>;
+  const servicesSection = (navigation as any).services ?? {};
+  const companySection = (navigation as any).company ?? {};
+  const legalSection = (navigation as any).legal ?? {};
+  const bottomLinks = ((bottomBar.links ?? legalSection.links ?? []) as any[]).filter(Boolean);
   const adminLoginLabel = locale === 'fr' ? 'Connexion Admin' : 'Admin Login';
   const adminLoginLink = { name: adminLoginLabel, href: '/auth/login' };
   const displayBottomLinks = Array.isArray(bottomLinks)
@@ -33,7 +37,46 @@ export default function Footer({ locale, translations }: FooterProps) {
       ? bottomLinks
       : [...bottomLinks, adminLoginLink]
     : [adminLoginLink];
-  const brandName: string = translations.nav?.brandName || 'Chalet Manager';
+  const resolvedBottomLinks = displayBottomLinks.filter(
+    (item) => item && typeof item.name === 'string' && typeof item.href === 'string',
+  );
+  const brandName: string = (translations as any).nav?.brandName || 'Chalet Manager';
+  const brandDescription = typeof (brand as any).description === 'string' ? (brand as any).description : undefined;
+  const contactEmail = typeof (contact as any).email === 'string' ? (contact as any).email : undefined;
+  const contactPhone = typeof (contact as any).phone === 'string' ? (contact as any).phone : undefined;
+  const locationLines = Array.isArray((contact as any).locationLines)
+    ? ((contact as any).locationLines as string[])
+    : [];
+  const newsletterTitle = typeof (newsletter as any).title === 'string' ? (newsletter as any).title : undefined;
+  const newsletterDescription =
+    typeof (newsletter as any).description === 'string' ? (newsletter as any).description : undefined;
+  const newsletterPlaceholder =
+    typeof (newsletter as any).placeholder === 'string' ? (newsletter as any).placeholder : '';
+  const newsletterButton = typeof (newsletter as any).button === 'string' ? (newsletter as any).button : '';
+  const followUsLabel = typeof (newsletter as any).followUs === 'string' ? (newsletter as any).followUs : undefined;
+  const copyrightText = typeof (bottomBar as any).copyright === 'string'
+    ? (bottomBar as any).copyright
+    : '';
+
+  const localizeHref = (href: string) => {
+    if (!href || typeof href !== 'string') {
+      return '#';
+    }
+
+    if (!href.startsWith('/')) {
+      return href;
+    }
+
+    if (href === '/') {
+      return `/${locale}`;
+    }
+
+    if (href.startsWith(`/${locale}/`) || href === `/${locale}`) {
+      return href;
+    }
+
+    return `/${locale}${href}`;
+  };
 
   return (
     <footer className="bg-neutral-900 text-neutral-600 text-[12px] font-light" role="contentinfo">
@@ -47,46 +90,46 @@ export default function Footer({ locale, translations }: FooterProps) {
               <span className={`${pacifico.className} text-xl text-neutral-100`}>{brandName}</span>
             </div>
 
-            {brand.description && (
-              <p className="text-neutral-600 mb-6 leading-relaxed">{brand.description}</p>
+            {brandDescription && (
+              <p className="text-neutral-600 mb-6 leading-relaxed">{brandDescription}</p>
             )}
 
             <div className="space-y-3">
-              {contact.email && (
+              {contactEmail && (
                 <div className="flex items-center space-x-3">
                   <Mail className="h-5 w-5 text-amber-700 flex-shrink-0" aria-hidden="true" />
                   <a
-                    href={`mailto:${contact.email}`}
+                    href={`mailto:${contactEmail}`}
                     className="text-neutral-600 hover:text-white transition-colors   rounded"
                   >
-                    {contact.email}
+                    {contactEmail}
                   </a>
                 </div>
               )}
 
-              {contact.phone && (
+              {contactPhone && (
                 <div className="flex items-center space-x-3">
                   <Phone className="h-5 w-5 text-amber-700 flex-shrink-0" aria-hidden="true" />
                   <a
-                    href={`tel:${contact.phone.replace(/\s+/g, '')}`}
+                    href={`tel:${contactPhone.replace(/\s+/g, '')}`}
                     className="text-neutral-600 hover:text-white transition-colors   rounded"
                   >
-                    {contact.phone}
+                    {contactPhone}
                   </a>
                 </div>
               )}
 
-              {Array.isArray(contact.locationLines) && contact.locationLines.length > 0 && (
+              {locationLines.length > 0 && (
                 <div className="flex items-start space-x-3">
                   <MapPin
                     className="h-5 w-5 text-amber-700 flex-shrink-0 mt-0.5"
                     aria-hidden="true"
                   />
                   <span className="text-neutral-600">
-                    {contact.locationLines.map((line: string, index: number) => (
+                    {locationLines.map((line: string, index: number) => (
                       <span key={index}>
                         {line}
-                        {index !== contact.locationLines.length - 1 && <br />}
+                        {index !== locationLines.length - 1 && <br />}
                       </span>
                     ))}
                   </span>
@@ -98,13 +141,14 @@ export default function Footer({ locale, translations }: FooterProps) {
           {/* Colonne 2 : Services */}
           <div>
             <h3 className="text-lg uppercase text-neutral-100 font-thin mb-6">
-              {navigation.services?.title}
+              {(servicesSection as any).title}
             </h3>
             <ul className="space-y-3">
-              {navigation.services?.links?.map((item: any) => (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
+              {Array.isArray((servicesSection as any).links) &&
+                (servicesSection as any).links.map((item: any) => (
+                  <li key={item.name}>
+                    <Link
+                    href={localizeHref(item.href)}
                     className="text-neutral-600 hover:text-white transition-colors duration-200 block   rounded"
                   >
                     {item.name}
@@ -117,13 +161,14 @@ export default function Footer({ locale, translations }: FooterProps) {
           {/* Colonne 3 : Entreprise */}
           <div>
             <h3 className="text-lg uppercase text-neutral-100 font-thin mb-6">
-              {navigation.company?.title}
+              {(companySection as any).title}
             </h3>
             <ul className="space-y-3">
-              {navigation.company?.links?.map((item: any) => (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
+              {Array.isArray((companySection as any).links) &&
+                (companySection as any).links.map((item: any) => (
+                  <li key={item.name}>
+                    <Link
+                    href={localizeHref(item.href)}
                     className="text-neutral-600 hover:text-white transition-colors duration-200 block   rounded"
                   >
                     {item.name}
@@ -135,17 +180,15 @@ export default function Footer({ locale, translations }: FooterProps) {
 
           {/* Colonne 4 : Newsletter & Réseaux sociaux */}
           <div>
-            <h3 className="text-lg uppercase text-neutral-100 font-thin mb-6">
-              {newsletter.title}
-            </h3>
+            <h3 className="text-lg uppercase text-neutral-100 font-thin mb-6">{newsletterTitle}</h3>
 
-            {newsletter.description && (
+            {newsletterDescription && (
               <div className="mb-6">
-                <p className="text-neutral-600 text-xs mb-3">{newsletter.description}</p>
+                <p className="text-neutral-600 text-xs mb-3">{newsletterDescription}</p>
                 <form className="space-y-2">
                   <input
                     type="email"
-                    placeholder={newsletter.placeholder}
+                    placeholder={newsletterPlaceholder}
                     className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg   text-white placeholder-neutral-500"
                   />
                   <button
@@ -153,15 +196,15 @@ export default function Footer({ locale, translations }: FooterProps) {
                     className="w-full px-4 py-2 bg-amber-700 text-white rounded-lg font-medium 
                                hover:bg-primary-800 transition-colors duration-200"
                   >
-                    {newsletter.button}
+                    {newsletterButton}
                   </button>
                 </form>
               </div>
             )}
 
-            {newsletter.followUs && (
+            {followUsLabel && (
               <div>
-                <p className="text-xs text-neutral-600 mb-3">{newsletter.followUs}</p>
+                <p className="text-xs text-neutral-600 mb-3">{followUsLabel}</p>
                 <div className="flex space-x-3">
                   {[
                     { name: 'Facebook', href: '#', icon: Facebook },
@@ -193,13 +236,13 @@ export default function Footer({ locale, translations }: FooterProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-[11px] text-neutral-600 uppercase">
-              © {currentYear} {brandName}. {bottomBar?.copyright}
+              © {currentYear} {brandName}. {copyrightText}
             </div>
             <div className="flex items-center space-x-6">
-              {displayBottomLinks.map((item: any) => (
+              {resolvedBottomLinks.map((item: any) => (
                 <Link
                   key={item.name}
-                  href={item.href}
+                  href={localizeHref(item.href)}
                   className={[
                     'text-[11px] uppercase hover:text-white transition-colors duration-200   rounded',
                     item.href === adminLoginLink.href ? 'text-amber-700' : 'text-neutral-600',
@@ -211,7 +254,7 @@ export default function Footer({ locale, translations }: FooterProps) {
 
               {bottomLinks.length === 0 && (
                 <Link
-                  href="/auth/login"
+                  href={localizeHref(adminLoginLink.href)}
                   className="text-[11px] text-amber-700 uppercase hover:text-white transition-colors duration-200   rounded"
                 >
                   {locale === 'fr' ? 'Connexion Admin' : 'Admin Login'}
